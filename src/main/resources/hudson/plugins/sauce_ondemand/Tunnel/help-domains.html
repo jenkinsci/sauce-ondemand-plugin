@@ -1,0 +1,14 @@
+<div>
+    Specify the host name(s) that this tunnel represents. Multiple host names can be specified with
+    whitespace as a separator. Whenever tests running inside Sauce OnDemand accesses the "remote port" on these
+    host name, those connections are forwarded to the "local port" of the "local host".
+
+    <p>
+    Sauce OnDemand has a natural restriction where the remote host name needs to be unique across
+    all the tunnels under your user account. However, this doesn't work well if you are trying to
+    run the same test in different environments in parallel, or perform multiple builds of the same
+    job concurrently. To resolve this problem, you can specify <tt>AUTO</tt> here to let Hudson
+    generate a unique host name &mdash; this host name will be then exposed to your build
+    as the environment variable <tt>SAUCE_ONDEMAND_HOST</tt>. If you do that, your test needs
+    to drive Selenium accordingly to use this as the host name.
+</div>
