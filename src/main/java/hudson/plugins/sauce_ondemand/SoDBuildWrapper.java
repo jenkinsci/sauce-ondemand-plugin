@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2010, InfraDNA, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.rest.Credential;
@@ -25,13 +48,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 /**
  * {@link BuildWrapper} that sets up the SoD SSH tunnel.
  * @author Kohsuke Kawaguchi
  */
-public class SoDBuildWrapper extends BuildWrapper {
+public class SoDBuildWrapper extends BuildWrapper implements Serializable {
     /**
      * Tunnel configuration.
      */
@@ -40,6 +64,10 @@ public class SoDBuildWrapper extends BuildWrapper {
     @DataBoundConstructor
     public SoDBuildWrapper(List<Tunnel> tunnels) {
         this.tunnels = tunnels;
+    }
+
+    public SoDBuildWrapper(Tunnel... tunnels) {
+        this(asList(tunnels));
     }
 
     public List<Tunnel> getTunnels() {
@@ -56,7 +84,7 @@ public class SoDBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
-        final String autoRemoteHostName = Util.getDigestOf(build.getFullDisplayName());
+        final String autoRemoteHostName = "hudson-"+Util.getDigestOf(build.getFullDisplayName())+".hudson";
         final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new TunnelStarter(autoRemoteHostName));
 
         return new Environment() {
@@ -167,4 +195,6 @@ public class SoDBuildWrapper extends BuildWrapper {
      * Time out for how long we wait until the tunnel to be set up.
      */
     public static int TIMEOUT = Integer.getInteger(SoDBuildWrapper.class.getName()+".timeout", 60 * 1000);
+
+    private static final long serialVersionUID = 1L;
 }
