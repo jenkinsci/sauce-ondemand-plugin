@@ -97,9 +97,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String password) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             try {
-                new SauceTunnelFactory(new Credential(username,Secret.toString(Secret.fromString(password)))).list();
+                new SauceTunnelFactory(new Credential(username,Secret.toString(Secret.fromString(apiKey)))).list();
                 return FormValidation.ok("Success");
             } catch (IOException e) {
                 return FormValidation.error(e,"Failed to connect to Sauce OnDemand");

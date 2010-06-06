@@ -10,7 +10,7 @@
         <f:password />
       </f:entry>
       <f:block>
-        <f:validateButton title="${%Test Connection}" with="username,password" method="validate"/>
+        <f:validateButton title="${%Test Connection}" with="username,apiKey" method="validate"/>
       </f:block>
     </j:scope>
   </f:section>
