@@ -31,6 +31,7 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
+import hudson.model.Items;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
@@ -41,18 +42,18 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
- * Persists the access credential to SoD.
+ * Persists the access credential to Sauce OnDemand.
  *
  * @author Kohsuke Kawaguchi
  */
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     /**
-     * User name to access SoD.
+     * User name to access Sauce OnDemand.
      */
     private String username;
     /**
-     * Password for SoD.
+     * Password for Sauce OnDemand.
      */
     private Secret apiKey;
 
@@ -66,6 +67,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void start() throws Exception {
+        // backward compatibility with the legacy class name
+        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
+        
         load();
     }
 

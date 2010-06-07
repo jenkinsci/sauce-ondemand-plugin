@@ -45,11 +45,11 @@ import java.io.IOException;
 import java.util.Random;
 
 /**
- * Test for {@link SoDBuildWrapper}.
+ * Test for {@link SauceOnDemandBuildWrapper}.
  *
  * @author Kohsuke Kawaguchi
  */
-public class SodBuildWrapperTest extends HudsonTestCase {
+public class SauceOnDemandBuildWrapperTest extends HudsonTestCase {
     private Server server;
     private int jettyLocalPort;
     private final int secret = new Random().nextInt();
@@ -86,10 +86,10 @@ public class SodBuildWrapperTest extends HudsonTestCase {
      */
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
-        SoDBuildWrapper before = new SoDBuildWrapper(new Tunnel(1, 2, "abc", "def"), new Tunnel(3, 4, "ghi", "jkl"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(1, 2, "abc", "def"), new Tunnel(3, 4, "ghi", "jkl"));
         p.getBuildWrappersList().add(before);
         configRoundtrip(p);
-        SoDBuildWrapper after = p.getBuildWrappersList().get(SoDBuildWrapper.class);
+        SauceOnDemandBuildWrapper after = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
 
         assertEquals(before.getTunnels().size(), after.getTunnels().size());
         for (int i = 0; i < before.getTunnels().size(); i++) {
@@ -106,7 +106,7 @@ public class SodBuildWrapperTest extends HudsonTestCase {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SoDBuildWrapper before = new SoDBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "AUTO"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "AUTO"));
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p);
     }
@@ -118,13 +118,13 @@ public class SodBuildWrapperTest extends HudsonTestCase {
 
         FreeStyleProject p = createFreeStyleProject();
         p.setAssignedNode(s);
-        SoDBuildWrapper before = new SoDBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "test"+secret+".org"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "test"+secret+".org"));
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p);
     }
 
     /**
-     * Sets the SoD credential from ~/.sauce-ondemand.
+     * Sets the Sauce OnDemand credential from ~/.sauce-ondemand.
      * For the tests to run, this file needs to be present.
      */
     private void setCredential() throws IOException {

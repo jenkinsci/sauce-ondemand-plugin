@@ -33,6 +33,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
+import hudson.model.Hudson;
+import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
@@ -52,21 +54,21 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 /**
- * {@link BuildWrapper} that sets up the SoD SSH tunnel.
+ * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
  * @author Kohsuke Kawaguchi
  */
-public class SoDBuildWrapper extends BuildWrapper implements Serializable {
+public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
     /**
      * Tunnel configuration.
      */
     private List<Tunnel> tunnels;
 
     @DataBoundConstructor
-    public SoDBuildWrapper(List<Tunnel> tunnels) {
+    public SauceOnDemandBuildWrapper(List<Tunnel> tunnels) {
         this.tunnels = tunnels;
     }
 
-    public SoDBuildWrapper(Tunnel... tunnels) {
+    public SauceOnDemandBuildWrapper(Tunnel... tunnels) {
         this(asList(tunnels));
     }
 
@@ -194,7 +196,11 @@ public class SoDBuildWrapper extends BuildWrapper implements Serializable {
     /**
      * Time out for how long we wait until the tunnel to be set up.
      */
-    public static int TIMEOUT = Integer.getInteger(SoDBuildWrapper.class.getName()+".timeout", 60 * 1000);
+    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 60 * 1000);
 
     private static final long serialVersionUID = 1L;
+
+    static {
+        Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
+    }
 }
