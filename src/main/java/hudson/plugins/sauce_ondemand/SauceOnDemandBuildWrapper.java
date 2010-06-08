@@ -65,7 +65,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(List<Tunnel> tunnels) {
-        this.tunnels = tunnels;
+        this.tunnels = Util.fixNull(tunnels);
     }
 
     public SauceOnDemandBuildWrapper(Tunnel... tunnels) {
