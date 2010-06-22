@@ -33,8 +33,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
-import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
@@ -165,6 +163,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     SauceTunnel t = r.tunnels.get(i);
                     try {
                         t.waitUntilRunning(timeout);
+                        if (!t.isRunning())
+                            throw new IOException("Tunnel didn't come online. Aborting.");
                     } catch (InterruptedException e) {
                         throw new IOException2("Aborted",e);
                     }
@@ -196,11 +196,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Time out for how long we wait until the tunnel to be set up.
      */
-    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 60 * 1000);
+    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 180 * 1000);
 
     private static final long serialVersionUID = 1L;
-
-    static {
-        Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
-    }
 }

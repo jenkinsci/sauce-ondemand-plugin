@@ -69,7 +69,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     public void start() throws Exception {
         // backward compatibility with the legacy class name
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
-        
+        Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
+        // the real name must be registered at the end
+        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper",SauceOnDemandBuildWrapper.class);
+
         load();
     }
 
