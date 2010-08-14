@@ -6,6 +6,19 @@
   <version>1.0-SNAPSHOT</version>
   <name>sauce-ondemand-test</name>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- without redirecting test output to file, we can't capture the session ID -->
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          <forkMode>once</forkMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>com.saucelabs.selenium</groupId>
