@@ -45,7 +45,7 @@ public class SauceOnDemandReportFactory extends Data {
             CaseResult cr = (CaseResult) testObject;
             List<String> ids = findSessionIDs(cr);
             if (!ids.isEmpty())
-                return Collections.singletonList(new SauceOnDemandReport(ids));
+                return Collections.singletonList(new SauceOnDemandReport(cr,ids));
         }
         return Collections.emptyList();
     }

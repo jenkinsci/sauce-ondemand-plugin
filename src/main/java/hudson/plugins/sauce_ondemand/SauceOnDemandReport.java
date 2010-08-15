@@ -23,21 +23,29 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandReport extends TestAction {
+    public final CaseResult parent;
     /**
      * Session IDs.
      */
     private final List<String> ids;
 
-    public SauceOnDemandReport(List<String> ids) {
+    public SauceOnDemandReport(CaseResult parent, List<String> ids) {
+        this.parent = parent;
         this.ids = ids;
+    }
+
+    public List<String> getIDs() {
+        return Collections.unmodifiableList(ids);
     }
 
     public String getIconFileName() {
