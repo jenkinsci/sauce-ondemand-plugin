@@ -28,10 +28,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.tasks.junit.CaseResult;
-import hudson.tasks.junit.ClassResult;
-import hudson.tasks.junit.PackageResult;
-import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -49,14 +45,14 @@ public class VideoRecorder extends TestDataPublisher {
     }
 
     @Override
-    public VideoFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-        return new VideoFactory();
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
+        return new SauceOnDemandReportFactory();
     }
 
 //    private boolean containsSessionID(TestResult testResult) {
 //        for (SuiteResult sr : testResult.getSuites()) {
 //            for (CaseResult cr : sr.getCases()) {
-//                if (VideoFactory.findSessionID(cr)!=null) {
+//                if (SauceOnDemandReportFactory.findSessionID(cr)!=null) {
 //                    return true;
 //                }
 //            }

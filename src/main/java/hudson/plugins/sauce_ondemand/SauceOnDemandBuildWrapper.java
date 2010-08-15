@@ -48,8 +48,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.*;
+import static java.util.Collections.*;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.

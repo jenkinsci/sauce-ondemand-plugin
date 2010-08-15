@@ -24,50 +24,50 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.tasks.junit.CaseResult;
-import hudson.tasks.junit.SuiteResult;
-import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Contribute s{@link SauceOnDemandReport} to {@link CaseResult}.
  *
  * @author Kohsuke Kawaguchi
  */
-public class VideoFactory extends Data {
+public class SauceOnDemandReportFactory extends Data {
     @Override
-    public List<TestAction> getTestAction(TestObject testObject) {
+    public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
         if (testObject instanceof CaseResult) {
             CaseResult cr = (CaseResult) testObject;
-            String id = findSessionID(cr);
-            return Collections.<TestAction>singletonList(new SauceOnDemandReport(id));
+            List<String> ids = findSessionIDs(cr);
+            if (!ids.isEmpty())
+                return Collections.singletonList(new SauceOnDemandReport(ids));
         }
         return Collections.emptyList();
     }
 
-    static String findSessionID(CaseResult cr) {
-        String id = findSessionID(cr.getStdout());
-        if (id==null)   id = findSessionID(cr.getStderr());
-        return id;
+    static List<String> findSessionIDs(CaseResult cr) {
+        List<String> r = new ArrayList<String>();
+        for (String text : new String[]{cr.getStdout(),cr.getStderr()}) {
+            if (text==null) continue;
+            Matcher m = SESSION_ID.matcher(text);
+            while (m.find()) {
+                r.add(m.group(1));
+            }
+        }
+        return r;
     }
 
-    static String findSessionID(SuiteResult sr) {
-        String id = findSessionID(sr.getStdout());
-        if (id==null)   id = findSessionID(sr.getStderr());
-        return id;
+    static boolean hasSessionID(CaseResult cr) {
+        return hasSessionID(cr.getStdout()) || hasSessionID(cr.getStderr());
     }
 
-    private static String findSessionID(String s) {
-        if (s == null)  return null;
-
-        Matcher m = SESSION_ID.matcher(s);
-        if (m.find())
-            return m.group(1);
-        return null;
+    private static boolean hasSessionID(String s) {
+        return s!=null && SESSION_ID.matcher(s).find();
     }
 
     private static final Pattern SESSION_ID = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");

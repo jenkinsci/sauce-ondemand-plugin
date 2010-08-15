@@ -41,8 +41,7 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public String getIconFileName() {
-        // TODO
-        return "setting.gif";
+        return "/plugin/sauce-ondemand/images/24x24/video.gif";
     }
 
     public String getDisplayName() {
