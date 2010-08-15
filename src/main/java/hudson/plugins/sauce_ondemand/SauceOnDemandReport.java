@@ -23,9 +23,17 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
+import hudson.util.TimeUnit2;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.WebMethod;
 
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,6 +52,10 @@ public class SauceOnDemandReport extends TestAction {
         this.ids = ids;
     }
 
+    public AbstractBuild<?,?> getBuild() {
+        return parent.getOwner();
+    }
+
     public List<String> getIDs() {
         return Collections.unmodifiableList(ids);
     }
@@ -58,5 +70,40 @@ public class SauceOnDemandReport extends TestAction {
 
     public String getUrlName() {
         return "sauce-ondemand-report";
+    }
+
+    public ById getById(String id) {
+        return new ById(id);
+    }
+
+    public class ById {
+        private final String id;
+
+        public ById(String id) {
+            this.id = id;
+        }
+
+        @WebMethod(name="video.flv")
+        public void doVideo(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+            serve(req,rsp,"video.flv");
+        }
+
+        @WebMethod(name="selenium-server.log")
+        public void doServerLog(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+            serve(req,rsp,"selenium-server.log");
+        }
+
+        private void serve(StaplerRequest req, StaplerResponse rsp, String fileName) throws IOException, ServletException {
+            DownloadQueue d = PluginImpl.get().download;
+
+            File f = d.toLocalFile(getBuild(), id, fileName);
+            if (f.exists()) {// already downloaded. serve it
+                rsp.serveFile(req,f.toURI().toURL(), TimeUnit2.DAYS.toMillis(365));
+            } else {
+                // try to fetch right away but for the time being, fail
+                d.requestHighPriority(id,getBuild());
+                rsp.sendError(StaplerResponse.SC_SERVICE_UNAVAILABLE,"Not downloaded yet. Please check back");
+            }
+        }
     }
 }

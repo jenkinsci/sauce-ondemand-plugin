@@ -37,9 +37,11 @@ import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.WebApp;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Persists the access credential to Sauce OnDemand.
@@ -57,6 +59,11 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      */
     private Secret apiKey;
 
+    /**
+     * Download video and reports.
+     */
+    public final DownloadQueue download = new DownloadQueue();
+
     public String getUsername() {
         return username;
     }
@@ -72,6 +79,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
         // the real name must be registered at the end
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper",SauceOnDemandBuildWrapper.class);
+
+        Map<String,String> mimeTypes = WebApp.get(Hudson.getInstance().servletContext).mimeTypes;
+        if (!mimeTypes.containsKey("flv"))  mimeTypes.put("flv","video/x-flv");
 
         load();
     }

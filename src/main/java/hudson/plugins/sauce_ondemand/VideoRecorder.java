@@ -28,6 +28,8 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -46,19 +48,18 @@ public class VideoRecorder extends TestDataPublisher {
 
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
+        // start downloading the reports in the background
+        DownloadQueue q = PluginImpl.get().download;
+        for (SuiteResult sr : testResult.getSuites()) {
+            for (CaseResult cr : sr.getCases()) {
+                for (String id : SauceOnDemandReportFactory.findSessionIDs(cr)) {
+                    q.requestLowPriority(id,build);
+                }
+            }
+        }
+
         return new SauceOnDemandReportFactory();
     }
-
-//    private boolean containsSessionID(TestResult testResult) {
-//        for (SuiteResult sr : testResult.getSuites()) {
-//            for (CaseResult cr : sr.getCases()) {
-//                if (SauceOnDemandReportFactory.findSessionID(cr)!=null) {
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
 
     @Extension
     public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
