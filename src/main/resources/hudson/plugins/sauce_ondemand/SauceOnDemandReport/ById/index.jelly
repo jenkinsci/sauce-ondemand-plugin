@@ -30,6 +30,7 @@ THE SOFTWARE.
         <j:when test="${it.hasVideo()}">
           <!-- load it inline -->
           <div id='${it.id}' style="width:600px; height:450px" class="video" />
+          <a href="byId/${it.id}/selenium-server.log">selenium-server.log</a>
         </j:when>
         <j:otherwise>
           <div id='${it.id}' class='videoloading' style="width:600px; height:450px; text-align:center; background-color:black">
