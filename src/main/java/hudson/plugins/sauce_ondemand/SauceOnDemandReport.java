@@ -38,6 +38,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Show videos for the tests.
+ *
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandReport extends TestAction {
@@ -77,7 +79,8 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public class ById {
-        private final String id;
+        public final String id;
+        private final DownloadQueue d = PluginImpl.get().download;
 
         public ById(String id) {
             this.id = id;
@@ -93,17 +96,27 @@ public class SauceOnDemandReport extends TestAction {
             serve(req,rsp,"selenium-server.log");
         }
 
-        private void serve(StaplerRequest req, StaplerResponse rsp, String fileName) throws IOException, ServletException {
-            DownloadQueue d = PluginImpl.get().download;
+        public boolean hasVideo() {
+            return d.toLocalFile(getBuild(), id, "video.flv").exists();
+        }
 
+        private void serve(StaplerRequest req, StaplerResponse rsp, String fileName) throws IOException, ServletException {
             File f = d.toLocalFile(getBuild(), id, fileName);
             if (f.exists()) {// already downloaded. serve it
                 rsp.serveFile(req,f.toURI().toURL(), TimeUnit2.DAYS.toMillis(365));
             } else {
                 // try to fetch right away but for the time being, fail
-                d.requestHighPriority(id,getBuild());
+                withRequest();
                 rsp.sendError(StaplerResponse.SC_SERVICE_UNAVAILABLE,"Not downloaded yet. Please check back");
             }
+        }
+
+        /**
+         * Requests a download now.
+         */
+        public ById withRequest() {
+            d.requestHighPriority(id,getBuild());
+            return this;
         }
     }
 }
