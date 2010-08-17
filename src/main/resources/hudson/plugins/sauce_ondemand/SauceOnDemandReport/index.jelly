@@ -37,17 +37,16 @@ THE SOFTWARE.
           flowplayer(e.id, "${rootURL}/plugin/sauce-ondemand/flowplayer/flowplayer-3.2.2.swf", {
               clip:  {
                   url:'byId/'+e.id+'/video.flv',
-                  // provider: 'streamer',
+//                  provider: 'streamer',
                   autoPlay: false,
                   autoBuffering: true
-              }<!-- , TODO:
-              plugins: {
-                  streamer: {
-                      url: 'http://saucelabs.com/flowplayer/flowplayer.pseudostreaming-3.1.3.swf'
-                      //queryString: escape('?start=${start}')
-                  }
+//              },
+//              plugins: {
+//                  streamer: {
+//                      url: '${rootURL}/plugin/sauce-ondemand/flowplayer/flowplayer.pseudostreaming-3.2.3.swf'
+//                      //queryString: escape('?start=${start}')
+//                  }
               }
-              -->
           });
         };
 
