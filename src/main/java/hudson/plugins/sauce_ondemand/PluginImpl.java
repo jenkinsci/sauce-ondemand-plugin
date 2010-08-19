@@ -62,7 +62,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     /**
      * Download video and reports.
      */
-    public final DownloadQueue download = new DownloadQueue();
+    public transient final DownloadQueue download = new DownloadQueue();
 
     public String getUsername() {
         return username;
