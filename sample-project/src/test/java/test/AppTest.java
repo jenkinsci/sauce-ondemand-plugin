@@ -1,6 +1,6 @@
 package test;
 
-import com.saucelabs.selenium.client.client.factory.SeleniumFactory;
+import com.saucelabs.selenium.client.factory.SeleniumFactory;
 import com.thoughtworks.selenium.Selenium;
 import junit.framework.TestCase;
 
