@@ -26,12 +26,12 @@ package hudson.plugins.sauce_ondemand;
 import hudson.Extension;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisDescriptor;
-import hudson.model.Hudson;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * {@link Axis} that configures {@code SELENIUM_DRIVER}.
@@ -60,5 +60,10 @@ public class BrowserAxis extends Axis {
         public Collection<Browser> getBrowsers() {
             return Arrays.asList(Browser.values());
         }
+    }
+
+    public void addBuildVariable(String value, Map<String,String> map) {
+        Browser b = Browser.valueOf(value);
+        map.put(name,b!=null?b.getUri():null);  // should never be null, but let's be defensive in case of downgrade.
     }
 }
