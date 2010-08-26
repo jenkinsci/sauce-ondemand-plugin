@@ -9,6 +9,8 @@
     run the same test in different environments in parallel, or perform multiple builds of the same
     job concurrently. To resolve this problem, you can specify <tt>AUTO</tt> here to let Hudson
     generate a unique host name &mdash; this host name will be then exposed to your build
-    as the environment variable <tt>SAUCE_ONDEMAND_HOST</tt>. If you do that, your test needs
-    to drive Selenium accordingly to use this as the host name.
+    as the environment variable <tt>SAUCE_ONDEMAND_HOST</tt>, and its HTTP URL (e.g., "http://foobar/") is exposed as
+    <tt><a href="http://selenium-client-factory.infradna.com/integrate-maven.html">SELENIUM_STARTING_URL</a></tt>.
+    Your test should use <a href="http://selenium-client-factory.infradna.com/">Selenium client factory</a>,
+    or otherwise your test needs to drive Selenium accordingly to use this as the host name.
 </div>

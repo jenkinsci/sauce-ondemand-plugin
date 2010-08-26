@@ -93,8 +93,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
              */
             @Override
             public void buildEnvVars(Map<String, String> env) {
-                if (hasAutoRemoteHost())
+                if (hasAutoRemoteHost()) {
                     env.put("SAUCE_ONDEMAND_HOST",autoRemoteHostName);
+                    env.put("SELENIUM_STARTING_URL","http://"+autoRemoteHostName+':'+getPort()+'/');
+                }
+            }
+
+            private int getPort() {
+                for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
+                    return t.remotePort;
+                return 80;
             }
 
             @Override
