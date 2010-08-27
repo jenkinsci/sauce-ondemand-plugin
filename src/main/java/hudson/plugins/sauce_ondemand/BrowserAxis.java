@@ -64,6 +64,7 @@ public class BrowserAxis extends Axis {
 
     public void addBuildVariable(String value, Map<String,String> map) {
         Browser b = Browser.valueOf(value);
-        map.put(name,b!=null?b.getUri():null);  // should never be null, but let's be defensive in case of downgrade.
+        if (b!=null)    // should never be null, but let's be defensive in case of downgrade.
+            map.put(getName(),b.getUri());
     }
 }
