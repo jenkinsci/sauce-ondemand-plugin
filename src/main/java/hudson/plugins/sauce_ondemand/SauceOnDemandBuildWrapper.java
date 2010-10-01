@@ -204,7 +204,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Time out for how long we wait until the tunnel to be set up.
      */
-    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 180 * 1000);
+    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 300 * 1000);
 
     private static final long serialVersionUID = 1L;
 }
