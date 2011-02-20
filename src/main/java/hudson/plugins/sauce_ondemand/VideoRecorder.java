@@ -41,31 +41,16 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
+@Deprecated
 public class VideoRecorder extends TestDataPublisher {
-    @DataBoundConstructor
-    public VideoRecorder() {
+
+    VideoRecorder() {
+    }
     }
 
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-        // start downloading the reports in the background
-        DownloadQueue q = PluginImpl.get().download;
-        for (SuiteResult sr : testResult.getSuites()) {
-            for (CaseResult cr : sr.getCases()) {
-                for (String id : SauceOnDemandReportFactory.findSessionIDs(cr)) {
-                    q.requestLowPriority(id,build);
-                }
-            }
-        }
-
-        return new SauceOnDemandReportFactory();
+        throw new AssertionError("should be replaced by SauceOnDemandReportPublisher");
     }
 
-    @Extension
-    public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
-        @Override
-        public String getDisplayName() {
-            return "Video and server log from Sauce OnDemand";
-        }
-    }
 }

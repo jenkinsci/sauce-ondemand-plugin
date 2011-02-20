@@ -59,11 +59,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      */
     private Secret apiKey;
 
-    /**
-     * Download video and reports.
-     */
-    public transient final DownloadQueue download = new DownloadQueue();
-
     public String getUsername() {
         return username;
     }
@@ -79,9 +74,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
         // the real name must be registered at the end
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper",SauceOnDemandBuildWrapper.class);
-
-        Map<String,String> mimeTypes = WebApp.get(Hudson.getInstance().servletContext).mimeTypes;
-        if (!mimeTypes.containsKey("flv"))  mimeTypes.put("flv","video/x-flv");
 
         load();
     }

@@ -29,53 +29,6 @@ THE SOFTWARE.
       <l:task href=".." title="${%Back To Test Result}" icon="images/24x24/up.gif" />
     </l:side-panel>
     <l:main-panel>
-      <h1>Sauce OnDemand Video &amp; Server Log</h1>
-
-      <script src="${rootURL}/plugin/sauce-ondemand/flowplayer/flowplayer-3.2.2.min.js" type="text/javascript"/>
-      <script>
-        hudsonRules["DIV.video"] = function(e) {
-          flowplayer(e.id, "${rootURL}/plugin/sauce-ondemand/flowplayer/flowplayer-3.2.2.swf", {
-              clip:  {
-                  url:'byId/'+e.id+'/video.flv',
-//                  provider: 'streamer',
-                  autoPlay: false,
-                  autoBuffering: true
-//              },
-//              plugins: {
-//                  streamer: {
-//                      url: '${rootURL}/plugin/sauce-ondemand/flowplayer/flowplayer.pseudostreaming-3.2.3.swf'
-//                      //queryString: escape('?start=${start}')
-//                  }
-              }
-          });
-        };
-
-        hudsonRules["DIV.videoloading"] = function(e) {
-          var f = function() {
-              new Ajax.Request("byId/"+e.id+"/", {
-                  onSuccess: function(rsp) {
-                      var hist = e.parentNode;
-                      var p = hist.parentNode;
-                      var next = hist.nextSibling;
-                      p.removeChild(hist);
-
-                      var div = document.createElement('div');
-                      div.innerHTML = rsp.responseText;
-
-                      var node = div.firstChild;
-                      p.insertBefore(node, next);
-
-                      Behaviour.applySubtree(node);
-                  }
-              });
-          };
-          // if run as test, just do it once and do it now to make sure it's working,
-          // but don't repeat.
-          if(isRunAsTest) f();
-          else    window.setTimeout(f, 5000);
-        };
-
-      </script>
 
       <j:forEach var="id" items="${it.getIDs()}">
         <h2>${id}</h2>
