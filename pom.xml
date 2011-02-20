@@ -4,48 +4,37 @@
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.374</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
   
   <artifactId>sauce-ondemand</artifactId>
   <version>1.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson Sauce OnDemand plugin</name>
-  <url>http://wiki.hudson-ci.org/display/HUDSON/Sauce+OnDemand+Plugin</url>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
 
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
   <dependencies>
-    <!--dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-war</artifactId>
-      <type>war</type>
-      <version>1.372-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-core</artifactId>
-      <version>1.372-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-test-harness</artifactId>
-      <version>1.372-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>maven-plugin</artifactId>
-      <version>1.372-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>ui-samples-plugin</artifactId>
-      <version>1.372-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency-->
-
     <dependency>
       <groupId>com.saucelabs</groupId>
       <artifactId>sauce-rest-api</artifactId>
