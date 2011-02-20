@@ -24,6 +24,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
 
@@ -39,36 +40,56 @@ import java.util.regex.Pattern;
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandReportFactory extends Data {
+
+    public static final SauceOnDemandReportFactory INSTANCE = new SauceOnDemandReportFactory();
+
+    /**
+     * Makes this a singleton -- since it's stateless, there's no need to keep one around for every build.
+     * @return
+     */
+    public Object readResolve() {
+        return INSTANCE;
+    }
+
     @Override
     public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
         if (testObject instanceof CaseResult) {
             CaseResult cr = (CaseResult) testObject;
-            List<String> ids = findSessionIDs(cr);
-            if (!ids.isEmpty())
-                return Collections.singletonList(new SauceOnDemandReport(cr,ids));
+            String jobName = cr.getFullName();
+            List<String> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+            boolean matchingJobNames = true;
+            if (ids.isEmpty()) {
+                // fall back to old-style log parsing (when no job-name is present in output)
+                ids = findSessionIDs(null, cr.getStdout(), cr.getStderr());
+                matchingJobNames = false;
+            }
+            if (!ids.isEmpty()) {
+                return Collections.singletonList(new SauceOnDemandReport(cr,ids, matchingJobNames));
+            }
         }
         return Collections.emptyList();
     }
 
-    static List<String> findSessionIDs(CaseResult cr) {
-        List<String> r = new ArrayList<String>();
-        for (String text : new String[]{cr.getStdout(),cr.getStderr()}) {
+    /**
+     * Returns all sessions matching a given jobName in the provided logs.
+     * If no session is found for the jobName, return all session that do not provide job-name (old format)
+     */
+    static List<String> findSessionIDs(String jobName, String... output) {
+        List<String> sessions = new ArrayList<String>();
+        Pattern p = jobName != null ? SESSION_ID_PATTERN : OLD_SESSION_ID_PATTERN;
+        for (String text : output) {
             if (text==null) continue;
-            Matcher m = SESSION_ID.matcher(text);
+            Matcher m = p.matcher(text);
             while (m.find()) {
-                r.add(m.group(1));
+                String sessionId = m.group(1);
+                if (jobName == null || jobName.equals(m.group(2))) {
+                    sessions.add(sessionId);
+                }
             }
         }
-        return r;
+        return sessions;
     }
 
-    static boolean hasSessionID(CaseResult cr) {
-        return hasSessionID(cr.getStdout()) || hasSessionID(cr.getStderr());
-    }
-
-    private static boolean hasSessionID(String s) {
-        return s!=null && SESSION_ID.matcher(s).find();
-    }
-
-    private static final Pattern SESSION_ID = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");
+    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+) job-name=(.*)");
+    private static final Pattern OLD_SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");
 }

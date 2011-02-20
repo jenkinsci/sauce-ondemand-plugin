@@ -46,6 +46,9 @@ public class VideoRecorder extends TestDataPublisher {
 
     VideoRecorder() {
     }
+
+    public Object readResolve() {
+        return new SauceOnDemandReportPublisher();
     }
 
     @Override

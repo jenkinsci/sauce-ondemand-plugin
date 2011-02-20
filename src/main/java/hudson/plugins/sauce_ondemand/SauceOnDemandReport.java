@@ -27,13 +27,19 @@ import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
 import hudson.util.TimeUnit2;
+import org.apache.commons.codec.binary.Hex;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.WebMethod;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,25 +55,43 @@ public class SauceOnDemandReport extends TestAction {
      */
     private final List<String> ids;
 
-    public SauceOnDemandReport(CaseResult parent, List<String> ids) {
+    /**
+     * Could we match session IDs to test names ?
+     */
+    private final boolean matchingJobNames;
+
+    public SauceOnDemandReport(CaseResult parent, List<String> ids, boolean matchingJobNames) {
         this.parent = parent;
         this.ids = ids;
+        this.matchingJobNames = matchingJobNames;
     }
 
     public AbstractBuild<?,?> getBuild() {
         return parent.getOwner();
     }
 
+    public boolean isMatchingJobNames() {
+        return matchingJobNames;
+    }
+
     public List<String> getIDs() {
         return Collections.unmodifiableList(ids);
     }
 
+    public String getId() {
+        return ids.get(0);
+    }
+
+    public String getAuth() throws IOException {
+        return getById(getId()).getAuth();
+    }
+
     public String getIconFileName() {
-        return "/plugin/sauce-ondemand/images/24x24/video.gif";
+        return matchingJobNames ? null : "/plugin/sauce-ondemand/images/24x24/video.gif";
     }
 
     public String getDisplayName() {
-        return "Video & Server Log";
+        return "Sauce OnDemand report";
     }
 
     public String getUrlName() {
@@ -80,43 +104,33 @@ public class SauceOnDemandReport extends TestAction {
 
     public class ById {
         public final String id;
-        private final DownloadQueue d = PluginImpl.get().download;
 
         public ById(String id) {
             this.id = id;
         }
 
-        @WebMethod(name="video.flv")
-        public void doVideo(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-            serve(req,rsp,"video.flv");
-        }
+        public String getAuth() throws IOException {
+            try {
+                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey();
+                String msg = id;
 
-        @WebMethod(name="selenium-server.log")
-        public void doServerLog(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-            serve(req,rsp,"selenium-server.log");
-        }
-
-        public boolean hasVideo() {
-            return d.toLocalFile(getBuild(), id, "video.flv").exists();
-        }
-
-        private void serve(StaplerRequest req, StaplerResponse rsp, String fileName) throws IOException, ServletException {
-            File f = d.toLocalFile(getBuild(), id, fileName);
-            if (f.exists()) {// already downloaded. serve it
-                rsp.serveFile(req,f.toURI().toURL(), TimeUnit2.DAYS.toMillis(365));
-            } else {
-                // try to fetch right away but for the time being, fail
-                withRequest();
-                rsp.sendError(StaplerResponse.SC_SERVICE_UNAVAILABLE,"Not downloaded yet. Please check back");
+                byte[] keyBytes = key.getBytes();
+                SecretKeySpec sks = new SecretKeySpec(keyBytes, "HmacMD5");
+                Mac mac = Mac.getInstance("HmacMD5");
+                mac.init(sks);
+                byte[] hmacBytes = mac.doFinal(msg.getBytes());
+                byte[] hexBytes = new Hex().encode(hmacBytes);
+                String hexStr = new String(hexBytes, "ISO-8859-1");
+                return hexStr;
+            } catch (NoSuchAlgorithmException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+            } catch (InvalidKeyException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+            } catch (UnsupportedEncodingException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
             }
+
         }
 
-        /**
-         * Requests a download now.
-         */
-        public ById withRequest() {
-            d.requestHighPriority(id,getBuild());
-            return this;
-        }
     }
 }

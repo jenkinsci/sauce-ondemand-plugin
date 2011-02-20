@@ -29,10 +29,11 @@ THE SOFTWARE.
       <l:task href=".." title="${%Back To Test Result}" icon="images/24x24/up.gif" />
     </l:side-panel>
     <l:main-panel>
+      <h1>Sauce OnDemand Reports</h1>
 
       <j:forEach var="id" items="${it.getIDs()}">
         <h2>${id}</h2>
-        <st:include page="index.jelly" it="${it.getById(id).withRequest()}" />
+        <st:include page="index.jelly" it="${it.getById(id)}" />
       </j:forEach>
     </l:main-panel>
   </l:layout>

@@ -23,63 +23,14 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.rest.Credential;
-import com.thoughtworks.selenium.DefaultSelenium;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleProject;
-import hudson.model.Slave;
-import org.jvnet.hudson.test.HudsonTestCase;
-import org.jvnet.hudson.test.TestBuilder;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.servlet.ServletHandler;
-import org.mortbay.jetty.servlet.ServletHolder;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Random;
+import hudson.model.*;
 
 /**
  * Test for {@link SauceOnDemandBuildWrapper}.
  *
  * @author Kohsuke Kawaguchi
  */
-public class SauceOnDemandBuildWrapperTest extends HudsonTestCase {
-    private Server server;
-    private int jettyLocalPort;
-    private final int secret = new Random().nextInt();
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        server = new Server();
-        ServletHandler handler = new ServletHandler();
-        handler.addServletWithMapping(new ServletHolder(new HttpServlet() {
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                resp.setContentType("text/html");
-                resp.getWriter().println("<html><head><title>test"+secret+"</title></head><body>it works</body></html>");
-            }
-        }),"/");
-        server.setHandler(handler);
-
-        SocketConnector connector = new SocketConnector();
-        server.addConnector(connector);
-        server.start();
-        jettyLocalPort = connector.getLocalPort();
-        System.out.println("Started Jetty at "+ jettyLocalPort);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        server.stop();
-    }
+public class SauceOnDemandBuildWrapperTest extends BaseTezt {
 
     /**
      * Configuration roundtrip testing.
@@ -108,7 +59,7 @@ public class SauceOnDemandBuildWrapperTest extends HudsonTestCase {
         FreeStyleProject p = createFreeStyleProject();
         SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "AUTO"));
         p.getBuildWrappersList().add(before);
-        invokeSeleniumFromBuild(p);
+        invokeSeleniumFromBuild(p, new SauceBuilder());
     }
 
     public void testRunFromSlave() throws Exception {
@@ -120,49 +71,7 @@ public class SauceOnDemandBuildWrapperTest extends HudsonTestCase {
         p.setAssignedNode(s);
         SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "test"+secret+".org"));
         p.getBuildWrappersList().add(before);
-        invokeSeleniumFromBuild(p);
+        invokeSeleniumFromBuild(p, new SauceBuilder());
     }
 
-    /**
-     * Sets the Sauce OnDemand credential from ~/.sauce-ondemand.
-     * For the tests to run, this file needs to be present.
-     */
-    private void setCredential() throws IOException {
-        Credential c = new Credential();
-        PluginImpl.get().setCredential(c.getUsername(),c.getKey());
-    }
-
-    /**
-     * Executes a Selenium test as if it were run from the build.
-     */
-    private void invokeSeleniumFromBuild(FreeStyleProject p) throws Exception {
-        p.getBuildersList().add(new TestBuilder() {
-            @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                Credential c = new Credential();
-                String h = build.getEnvironment(listener).get("SAUCE_ONDEMAND_HOST");
-                DefaultSelenium selenium = new DefaultSelenium(
-                            "saucelabs.com",
-                            4444,
-                            "{\"username\": \""+c.getUsername()+"\"," +
-                            "\"access-key\": \""+c.getKey()+"\"," +
-                            "\"os\": \"Windows 2003\"," +
-                            "\"browser\": \"firefox\"," +
-                            "\"browser-version\": \"3.\"," +
-                            "\"job-name\": \"This is an example test\"}",
-                            h!=null ? "http://"+h+'/' : "http://test"+secret+".org/");
-                selenium.start();
-                try {
-                    selenium.open("/");
-                    // if the server really hit our Jetty, we should see the same title that includes the secret code.
-                    assertEquals("test"+secret,selenium.getTitle());
-                } finally {
-                    selenium.stop();
-                }
-                return true;
-            }
-        });
-
-        buildAndAssertSuccess(p);
-    }
 }
