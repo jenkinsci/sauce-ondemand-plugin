@@ -40,8 +40,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Show videos for the tests.
@@ -111,7 +115,11 @@ public class SauceOnDemandReport extends TestAction {
 
         public String getAuth() throws IOException {
             try {
-                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey();
+                DateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd-HH");
+                dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+                String dateText = dateFormatGmt.format(new Date());
+                
+                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + dateText;
                 String msg = id;
 
                 byte[] keyBytes = key.getBytes();
