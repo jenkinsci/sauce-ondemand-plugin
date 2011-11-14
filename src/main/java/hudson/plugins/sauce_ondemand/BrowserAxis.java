@@ -23,13 +23,15 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.BrowserFactory;
 import hudson.Extension;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisDescriptor;
+import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,13 +59,21 @@ public class BrowserAxis extends Axis {
             return "Sauce OnDemand Cross-browser tests";
         }
 
-        public Collection<Browser> getBrowsers() {
-            return Arrays.asList(Browser.values());
+        public List<com.saucelabs.ci.Browser> getBrowsers() {
+            try {
+                return BrowserFactory.getInstance().values();
+            } catch (IOException e) {
+                //todo handle exception
+                e.printStackTrace(); 
+            } catch (JSONException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            return Collections.emptyList();
         }
     }
 
     public void addBuildVariable(String value, Map<String,String> map) {
-        Browser b = Browser.valueOf(value);
+        com.saucelabs.ci.Browser b = BrowserFactory.getInstance().forKey(value);
         if (b!=null)    // should never be null, but let's be defensive in case of downgrade.
             map.put(getName(),b.getUri());
     }

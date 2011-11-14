@@ -72,7 +72,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 for (String id : sessionIDs) {
                     hasResult = true;
                     try {
-                        factory.update(id, new UpdateJob(cr.getFullName(), false, Collections.<String>emptyList(), build.getNumber(), cr.isPassed(), Collections.<String, Object>emptyMap()));
+                        factory.update(id, new UpdateJob(cr.getFullName(), false, Collections.<String>emptyList(), Integer.toString(build.getNumber()), cr.isPassed(), Collections.<String, Object>emptyMap()));
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
                     }

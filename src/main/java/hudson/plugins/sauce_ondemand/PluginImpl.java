@@ -25,6 +25,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.rest.Credential;
 import com.saucelabs.rest.SauceTunnelFactory;
+import com.saucelabs.sauceconnect.SauceConnect;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
@@ -37,11 +38,11 @@ import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.WebApp;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.net.URISyntaxException;
 
 /**
  * Persists the access credential to Sauce OnDemand.
@@ -108,9 +109,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             try {
+                new File
+                (SauceConnect.class.getProtectionDomain().getCodeSource().getLocation().toURI());
                 new SauceTunnelFactory(new Credential(username,Secret.toString(Secret.fromString(apiKey)))).list();
                 return FormValidation.ok("Success");
             } catch (IOException e) {
+                return FormValidation.error(e,"Failed to connect to Sauce OnDemand");
+            } catch (URISyntaxException e) {
                 return FormValidation.error(e,"Failed to connect to Sauce OnDemand");
             }
         }
