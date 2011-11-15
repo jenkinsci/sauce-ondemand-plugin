@@ -37,14 +37,8 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
-import sun.misc.BASE64Encoder;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

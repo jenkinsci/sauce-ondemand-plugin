@@ -2,7 +2,13 @@ package com.saucelabs.ci;
 
 import com.saucelabs.sauceconnect.SauceConnect;
 import de.schlichtherle.truezip.file.TArchiveDetector;
+import de.schlichtherle.truezip.file.TConfig;
 import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.fs.archive.zip.JarDriver;
+import de.schlichtherle.truezip.socket.sl.IOPoolLocator;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
@@ -21,7 +27,7 @@ import java.util.zip.ZipInputStream;
  * @author Ross Rowe
  */
 public abstract class SauceLibraryManager {
-    
+
     private static final Logger logger = Logger.getLogger(SauceLibraryManager.class);
     private static final String VERSION_CHECK_URL = "https://saucelabs.com/versions.json";
     private static final int BUFFER = 1024;
@@ -40,10 +46,10 @@ public abstract class SauceLibraryManager {
      * @throws java.net.URISyntaxException
      */
     public boolean checkForLaterVersion() throws IOException, JSONException, URISyntaxException {
-        
+
         logger.info("Checking for updates to Sauce Connect");
-        String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
-//        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
+//        String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
+        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
         int version = extractVersionFromResponse(response);
         //compare version attribute against SauceConnect.RELEASE()
         return version > (Integer) SauceConnect.RELEASE();
@@ -60,8 +66,8 @@ public abstract class SauceLibraryManager {
      */
     public void triggerReload() throws JSONException, IOException, URISyntaxException {
         logger.info("Updating Sauce Connect");
-        String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
-//        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
+//        String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
+        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
         File jarFile = retrieveNewVersion(response);
         updatePluginJar(jarFile);
     }
@@ -97,14 +103,13 @@ public abstract class SauceLibraryManager {
      */
     public File retrieveNewVersion(String response) throws JSONException, IOException {
         //perform HTTP get for download_url
-        String downloadUrl = extractDownloadUrlFromResponse(response);
-        byte[] bytes = getSauceAPIFactory().doHTTPGet(downloadUrl);
-//        byte[] bytes = FileUtils.readFileToByteArray(new File("C:/Sauce-Connect.zip"));
+//        String downloadUrl = extractDownloadUrlFromResponse(response);
+//        byte[] bytes = getSauceAPIFactory().doHTTPGet(downloadUrl);
+        byte[] bytes = FileUtils.readFileToByteArray(new File("C:/Sauce-Connect.zip"));
         //unzip contents to temp directory
         return unzipByteArray(bytes);
     }
-    
-    
+
 
     /**
      * Extracts the contents of the byte array to the temp drive.
@@ -173,9 +178,22 @@ public abstract class SauceLibraryManager {
      */
     public void addFileToJar(File pluginJarFile, TFile updatedSauceConnectJarFile) throws IOException {
 
-        TFile.setDefaultArchiveDetector(new TArchiveDetector("jar"));
-        search(new TFile(pluginJarFile), updatedSauceConnectJarFile);
-        TFile.umount();
+        TConfig config = TConfig.push();
+        try {
+            String extension = FilenameUtils.getExtension(pluginJarFile.getName());
+            if (!extension.equals("jar")) {
+               extension = extension + "|jar"; 
+            }
+            config.setArchiveDetector(new TArchiveDetector(extension,
+                    new JarDriver(IOPoolLocator.SINGLETON)));
+            search(new TFile(pluginJarFile), updatedSauceConnectJarFile);
+            TFile.umount();
+        }
+        finally {
+            // Pop the current configuration off the inheritable thread local stack.
+            config.close();
+        }
+
     }
 
     /**
