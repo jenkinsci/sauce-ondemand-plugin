@@ -162,7 +162,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 tunnelManager.addTunnelToMap(buildName, process);
                 r.tunnelManagers.add(tunnelManager);
             }
-            return null;
+            return r;
         }
     }
     

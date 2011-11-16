@@ -55,7 +55,7 @@ public class BaseTezt extends HudsonTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        server = new Server();
+        server = new Server(8080);
         ServletHandler handler = new ServletHandler();
         handler.addServletWithMapping(new ServletHolder(new HttpServlet() {
             @Override
