@@ -42,8 +42,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static scala.actors.threadpool.Arrays.asList;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
@@ -51,13 +54,19 @@ import java.util.Map;
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
     private static final long serialVersionUID = 1L;
-
+    
     private List<Tunnel> tunnels;
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(List<Tunnel> tunnels) {
         this.tunnels = Util.fixNull(tunnels);
     }
+
+    public SauceOnDemandBuildWrapper(Tunnel... tunnels) {
+        this(asList(tunnels));
+    }
+
+   
 
     private boolean hasAutoRemoteHost() {
         for (Tunnel t : tunnels)
@@ -98,6 +107,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
         };
     }
+
+    public List<Tunnel> getTunnels() {
+        return Collections.unmodifiableList(tunnels);
+    }
+
 
     private interface ITunnelHolder {
         void close(TaskListener listener);
@@ -151,7 +165,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return null;
         }
     }
-
+    
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
         @Override

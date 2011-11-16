@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.jar.JarFile;
  * Handles opening a SSH Tunnel using the Sauce Connect 2 logic. The class  maintains a cache of {@link Process } instances mapped against
  * the corresponding plan key.  This class can be considered a singleton, and is instantiated via the 'component' element of the atlassian-plugin.xml
  * file (ie. using Spring).
- * 
+ *
  * @author Ross Rowe
  */
 public class SauceConnectTwoManager implements SauceTunnelManager {
@@ -39,7 +40,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private final ReentrantLock accessLock = new ReentrantLock();
     /**
      * Semaphore initialized with a single permit that is used to ensure that the main worker thread
-     * waits until the Sauce Connect process is fully initialized before tests are run. 
+     * waits until the Sauce Connect process is fully initialized before tests are run.
      */
     private final Semaphore semaphore = new Semaphore(1);
 
@@ -78,7 +79,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @param localHost
      * @param intLocalPort
      * @param intRemotePort
-     * @param domainList
+     * @param domain
      * @return
      * @throws IOException
      */
@@ -103,16 +104,17 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             //File jarFile = new File("/Developer/workspace/bamboo_sauce/target/bamboo-sauceondemand-plugin-1.4.0.jar");
             String path = System.getProperty("java.home")
                     + fileSeparator + "bin" + fileSeparator + "java";
-            ProcessBuilder processBuilder =
-                    new ProcessBuilder(path, "-cp",
-                            builder.toString(),
-                            SauceConnect.class.getName(),
-                            username,
-                            apiKey,
-                            "-p",
-                            domain
-                    );
-            logger.info("Launching Sauce Connect");
+            String[] args = new String[]{path, "-cp",
+                    builder.toString(),
+                    SauceConnect.class.getName(),
+                    username,
+                    apiKey,
+                    "-p",
+                    domain};
+            ProcessBuilder processBuilder = new ProcessBuilder(args);
+            if (logger.isInfoEnabled()) {
+                logger.info("Launching Sauce Connect " + Arrays.toString(args));
+            }
             final Process process = processBuilder.start();
             try {
                 semaphore.acquire();
@@ -145,25 +147,29 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private List<String> extractSauceConnectJar(File jarFile) throws IOException {
         List<String> files = new ArrayList<String>();
-        JarFile jar = new JarFile(jarFile);
-        java.util.Enumeration entries = jar.entries();
-        final File destDir = new File(System.getProperty("java.io.tmpdir"));
-        while (entries.hasMoreElements()) {
-            JarEntry file = (JarEntry) entries.nextElement();
+        if (jarFile.getName().equals("sauce-connect-3.0.jar")) {
+            files.add(jarFile.getPath());
+        } else {
+            JarFile jar = new JarFile(jarFile);
+            java.util.Enumeration entries = jar.entries();
+            final File destDir = new File(System.getProperty("user.home"));
+            while (entries.hasMoreElements()) {
+                JarEntry file = (JarEntry) entries.nextElement();
 
-            if (file.getName().endsWith("sauce-connect-3.0.jar")) {
-                File f = new File(destDir, file.getName());
+                if (file.getName().endsWith("sauce-connect-3.0.jar")) {
+                    File f = new File(destDir, file.getName());
 
-                if (f.exists()) {
-                    f.delete();
+                    if (f.exists()) {
+                        f.delete();
+                    }
+                    f.getParentFile().mkdirs();
+                    f.createNewFile();
+                    f.deleteOnExit();
+                    InputStream is = jar.getInputStream(file); // get the input stream
+                    FileOutputStream fos = new java.io.FileOutputStream(f);
+                    IOUtils.copy(is, fos);
+                    files.add(f.getPath());
                 }
-                f.getParentFile().mkdirs();
-                f.createNewFile();
-                f.deleteOnExit();
-                InputStream is = jar.getInputStream(file); // get the input stream
-                FileOutputStream fos = new java.io.FileOutputStream(f);
-                IOUtils.copy(is, fos);
-                files.add(f.getPath());
             }
         }
         return files;

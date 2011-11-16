@@ -25,7 +25,9 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.rest.Credential;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleProject;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mortbay.jetty.Server;
@@ -73,7 +75,11 @@ public class BaseTezt extends HudsonTestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
+        try {
+            super.tearDown();
+        } catch(IncompatibleClassChangeError e) {
+            //do nothing, attempt to continue
+        } 
         server.stop();
     }
 
