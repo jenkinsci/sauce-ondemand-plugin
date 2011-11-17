@@ -78,8 +78,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
-        final String autoRemoteHostName = "hudson-" + Util.getDigestOf(build.getFullDisplayName()) + ".hudson";
-        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(Util.getDigestOf(build.getFullDisplayName()), autoRemoteHostName));
+        //autoRemoteHostName not currently used
+        String buildNameDigest = Util.getDigestOf(build.getFullDisplayName());
+        final String autoRemoteHostName = "hudson-" + buildNameDigest + ".hudson";
+        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, autoRemoteHostName));
 
         return new Environment() {
             /**
@@ -88,10 +90,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 if (hasAutoRemoteHost()) {
-                    env.put("SAUCE_ONDEMAND_HOST", autoRemoteHostName);
-                    env.put("SELENIUM_STARTING_URL", "http://" + autoRemoteHostName + ':' + getPort() + '/');
+                    env.put("SAUCE_ONDEMAND_HOST", getHostName());
+                    env.put("SELENIUM_STARTING_URL", "http://" + getHostName() + ':' + getPort() + '/');
                 }
             }
+
+            private String getHostName() {
+               for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
+                    return t.localHost;
+                return "localhost";
+            }
+
 
             private int getPort() {
                 for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
@@ -120,7 +129,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
 
         private List<SauceTunnelManager> tunnelManagers = new ArrayList<SauceTunnelManager>();
-        private String buildName;
+        private String buildName;                       
 
         public TunnelHolder(String buildName) {
             this.buildName = buildName;

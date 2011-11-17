@@ -57,7 +57,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "AUTO"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "localhost"));
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }

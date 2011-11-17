@@ -108,9 +108,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                     builder.toString(),
                     SauceConnect.class.getName(),
                     username,
-                    apiKey,
-                    "-p",
-                    domain};
+                    apiKey
+//                    "-p",
+//                    domain
+            };
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             if (logger.isInfoEnabled()) {
                 logger.info("Launching Sauce Connect " + Arrays.toString(args));

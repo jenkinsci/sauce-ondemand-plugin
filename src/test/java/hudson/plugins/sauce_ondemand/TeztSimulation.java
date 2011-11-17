@@ -42,7 +42,7 @@ public class TeztSimulation {
 
         String url = build.getEnvironment(listener).get("SELENIUM_STARTING_URL");
         if (url == null) {
-            url = "http://test"+secret+".org/";
+            url = "http://localhost:8080/";
         }
         System.setProperty("SELENIUM_STARTING_URL", url);
 
