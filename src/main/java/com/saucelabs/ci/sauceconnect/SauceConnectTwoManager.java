@@ -78,12 +78,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @param apiKey
      * @param localHost
      * @param intLocalPort
-     * @param intRemotePort
-     * @param domain
      * @return
      * @throws IOException
      */
-    public Object openConnection(String username, String apiKey, String localHost, int intLocalPort, int intRemotePort, String domain) throws IOException {
+    public Object openConnection(String username, String apiKey) throws IOException {
 
         try {
             //only allow one thread to launch Sauce Connect
@@ -109,8 +107,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                     SauceConnect.class.getName(),
                     username,
                     apiKey
-//                    "-p",
-//                    domain
             };
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             if (logger.isInfoEnabled()) {

@@ -1,7 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,7 +21,7 @@ public interface SauceTunnelManager
 
     public void addTunnelToMap(String planKey, Object tunnel);
 
-    Object openConnection(String username, String apiKey, String localHost, int intLocalPort, int intRemotePort, String domain) throws IOException;
+    Object openConnection(String username, String apiKey) throws IOException;
 
     Map getTunnelMap();
 }

@@ -37,7 +37,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
      */
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(1, 2, "abc", "def"), new Tunnel(3, 4, "ghi", "jkl"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(1, "abc"), new Tunnel(2,"def"));
         p.getBuildWrappersList().add(before);
         configRoundtrip(p);
         SauceOnDemandBuildWrapper after = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
@@ -46,7 +46,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         for (int i = 0; i < before.getTunnels().size(); i++) {
             Tunnel b = before.getTunnels().get(i);
             Tunnel a = after.getTunnels().get(i);
-            assertEqualBeans(a,b,"remotePort,localPort,localHost,domains");
+            assertEqualBeans(a,b,"localPort,localHost");
         }
     }
 
@@ -57,7 +57,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "localhost"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(jettyLocalPort, "localhost"));
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }
@@ -69,7 +69,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
 
         FreeStyleProject p = createFreeStyleProject();
         p.setAssignedNode(s);
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(80, jettyLocalPort, "localhost", "test"+secret+".org"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(jettyLocalPort, "localhost"));
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }

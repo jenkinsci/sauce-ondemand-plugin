@@ -57,7 +57,6 @@
             <version>1.8.1</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>de.schlichtherle.truezip</groupId>
             <artifactId>truezip-file</artifactId>
@@ -87,7 +86,7 @@
             <version>2.0b3</version>
             <scope>test</scope>
         </dependency>
-        <!-- Currently sauce-connect is not hosted in a Maven repository, and must be installed manually -->
+        <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>

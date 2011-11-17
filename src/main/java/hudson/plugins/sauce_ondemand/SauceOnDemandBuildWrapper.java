@@ -66,15 +66,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this(asList(tunnels));
     }
 
-   
-
-    private boolean hasAutoRemoteHost() {
-        for (Tunnel t : tunnels)
-            if (t.isAutoRemoteHost())
-                return true;
-        return false;
-    }
-
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
@@ -89,10 +80,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
              */
             @Override
             public void buildEnvVars(Map<String, String> env) {
-                if (hasAutoRemoteHost()) {
-                    env.put("SAUCE_ONDEMAND_HOST", getHostName());
-                    env.put("SELENIUM_STARTING_URL", "http://" + getHostName() + ':' + getPort() + '/');
-                }
+                env.put("SAUCE_ONDEMAND_HOST", getHostName());
+                env.put("SELENIUM_STARTING_URL", "http://" + getHostName() + ':' + getPort() + '/');
             }
 
             private String getHostName() {
@@ -104,7 +93,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             private int getPort() {
                 for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.remotePort;
+                    return t.localPort;
                 return 80;
             }
 
@@ -164,10 +153,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public ITunnelHolder call() throws IOException {
             TunnelHolder r = new TunnelHolder(buildName);
 
-
             for (Tunnel tunnel : tunnels) {
                 SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
-                Object process = tunnelManager.openConnection(username, key, tunnel.localHost, tunnel.localPort, tunnel.remotePort, domain);
+                Object process = tunnelManager.openConnection(username, key);
                 tunnelManager.addTunnelToMap(buildName, process);
                 r.tunnelManagers.add(tunnelManager);
             }

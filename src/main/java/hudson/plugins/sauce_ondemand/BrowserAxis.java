@@ -27,6 +27,7 @@ import com.saucelabs.ci.BrowserFactory;
 import hudson.Extension;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisDescriptor;
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -40,6 +41,9 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  */
 public class BrowserAxis extends Axis {
+    
+    private static final Logger logger = Logger.getLogger(BrowserAxis.class);
+    
     @DataBoundConstructor
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
@@ -63,10 +67,9 @@ public class BrowserAxis extends Axis {
             try {
                 return BrowserFactory.getInstance().values();
             } catch (IOException e) {
-                //todo handle exception
-                e.printStackTrace(); 
+                logger.error("Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                logger.error("Error parsing JSON response", e);
             }
             return Collections.emptyList();
         }
