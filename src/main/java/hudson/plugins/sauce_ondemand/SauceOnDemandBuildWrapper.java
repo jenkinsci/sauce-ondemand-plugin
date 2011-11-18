@@ -23,9 +23,8 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.rest.Credential;
-import com.saucelabs.rest.SauceTunnel;
-import com.saucelabs.rest.SauceTunnelFactory;
+import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
+import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -37,7 +36,6 @@ import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
-import hudson.util.IOException2;
 import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,17 +46,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.*;
-import static java.util.Collections.*;
+import static scala.actors.threadpool.Arrays.asList;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
-    /**
-     * Tunnel configuration.
-     */
+    private static final long serialVersionUID = 1L;
+    
     private List<Tunnel> tunnels;
 
     @DataBoundConstructor
@@ -70,22 +66,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this(asList(tunnels));
     }
 
-    public List<Tunnel> getTunnels() {
-        return Collections.unmodifiableList(tunnels);
-    }
-
-    private boolean hasAutoRemoteHost() {
-        for (Tunnel t : tunnels)
-            if (t.isAutoRemoteHost())
-                return true;
-        return false;
-    }
-
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
-        final String autoRemoteHostName = "hudson-"+Util.getDigestOf(build.getFullDisplayName())+".hudson";
-        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new TunnelStarter(autoRemoteHostName));
+        //autoRemoteHostName not currently used
+        String buildNameDigest = Util.getDigestOf(build.getFullDisplayName());
+        final String autoRemoteHostName = "hudson-" + buildNameDigest + ".hudson";
+        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, autoRemoteHostName));
 
         return new Environment() {
             /**
@@ -93,15 +80,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
              */
             @Override
             public void buildEnvVars(Map<String, String> env) {
-                if (hasAutoRemoteHost()) {
-                    env.put("SAUCE_ONDEMAND_HOST",autoRemoteHostName);
-                    env.put("SELENIUM_STARTING_URL","http://"+autoRemoteHostName+':'+getPort()+'/');
-                }
+                env.put("SAUCE_ONDEMAND_HOST", getHostName());
+                env.put("SELENIUM_STARTING_URL", "http://" + getHostName() + ':' + getPort() + '/');
             }
+
+            private String getHostName() {
+               for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
+                    return t.localHost;
+                return "localhost";
+            }
+
 
             private int getPort() {
                 for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.remotePort;
+                    return t.localPort;
                 return 80;
             }
 
@@ -114,97 +106,68 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
+    public List<Tunnel> getTunnels() {
+        return Collections.unmodifiableList(tunnels);
+    }
+
+
     private interface ITunnelHolder {
-        public void close(TaskListener listener);
+        void close(TaskListener listener);
     }
 
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
-        final List<SauceTunnel> tunnels = new ArrayList<SauceTunnel>();
+
+        private List<SauceTunnelManager> tunnelManagers = new ArrayList<SauceTunnelManager>();
+        private String buildName;                       
+
+        public TunnelHolder(String buildName) {
+            this.buildName = buildName;
+        }
 
         public Object writeReplace() {
-            return Channel.current().export(ITunnelHolder.class,this);
+            return Channel.current().export(ITunnelHolder.class, this);
         }
 
         public void close(TaskListener listener) {
-            for (SauceTunnel tunnel : tunnels) {
-                try {
-                    tunnel.disconnectAll();
-                    tunnel.destroy();
-                } catch (IOException e) {
-                    e.printStackTrace(listener.error("Failed to shut down a tunnel"));
-                }
+            for (SauceTunnelManager tunnelManager : tunnelManagers) {
+                tunnelManager.closeTunnelsForPlan(buildName);
             }
+
         }
     }
 
-    private final class TunnelStarter implements Callable<ITunnelHolder,IOException> {
-        private final String username, key;
-        private final int timeout = TIMEOUT;
-        private String autoRemoteHostName;
+    private final class SauceConnectStarter implements Callable<ITunnelHolder, IOException> {
+        private String username;
+        private String key;
+        private String domain;
+        private String buildName;
 
-        private TunnelStarter(String randomHostName) {
+        public SauceConnectStarter(String buildName, String domain) {
             PluginImpl p = PluginImpl.get();
             this.username = p.getUsername();
             this.key = Secret.toString(p.getApiKey());
-            this.autoRemoteHostName = randomHostName;
+            this.domain = domain;
+            this.buildName = buildName;
         }
 
         public ITunnelHolder call() throws IOException {
-            TunnelHolder r = new TunnelHolder();
+            TunnelHolder r = new TunnelHolder(buildName);
 
-            boolean success = false;
-
-            try {
-                SauceTunnelFactory stf = new SauceTunnelFactory(new Credential(username, key));
-                for (Tunnel tunnel : tunnels) {
-                    List<String> domains;
-                    if (tunnel.isAutoRemoteHost()) {
-                        domains = singletonList(autoRemoteHostName);
-                    } else {
-                        domains = tunnel.getDomainList();
-                    }
-                    SauceTunnel t = stf.create(domains);
-                    r.tunnels.add(t);
-                }
-                for (int i = 0; i < tunnels.size(); i++) {
-                    Tunnel s = tunnels.get(i);
-                    SauceTunnel t = r.tunnels.get(i);
-                    try {
-                        t.waitUntilRunning(timeout);
-                        if (!t.isRunning())
-                            throw new IOException("Tunnel didn't come online. Aborting.");
-                    } catch (InterruptedException e) {
-                        throw new IOException2("Aborted",e);
-                    }
-                    t.connect(s.remotePort, s.localHost, s.localPort);
-                }
-                success = true;
-            } finally {
-                if (!success) {
-                    // if the tunnel set up failed, revert the ones that are already created
-                    for (SauceTunnel t : r.tunnels) {
-                        t.destroy();
-                    }
-                }
+            for (Tunnel tunnel : tunnels) {
+                SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
+                Object process = tunnelManager.openConnection(username, key);
+                tunnelManager.addTunnelToMap(buildName, process);
+                r.tunnelManagers.add(tunnelManager);
             }
             return r;
         }
-
-        private static final long serialVersionUID = 1L;
     }
-
+    
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
         @Override
         public String getDisplayName() {
-            return "Sauce OnDemand SSH tunnel";
+            return "Sauce Connect";
         }
     }
-
-    /**
-     * Time out for how long we wait until the tunnel to be set up.
-     */
-    public static int TIMEOUT = Integer.getInteger(SauceOnDemandBuildWrapper.class.getName()+".timeout", 300 * 1000);
-
-    private static final long serialVersionUID = 1L;
 }

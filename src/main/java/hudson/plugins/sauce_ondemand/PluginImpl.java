@@ -23,25 +23,29 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.SauceLibraryManager;
+import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import com.saucelabs.rest.Credential;
 import com.saucelabs.rest.SauceTunnelFactory;
+import com.saucelabs.sauceconnect.SauceConnect;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
 import hudson.model.Items;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.log4j.Logger;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.WebApp;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.net.URISyntaxException;
 
 /**
  * Persists the access credential to Sauce OnDemand.
@@ -50,6 +54,10 @@ import java.util.Map;
  */
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
+    
+    private static final Logger logger = Logger.getLogger(PluginImpl.class);
+
+    private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
      * User name to access Sauce OnDemand.
      */
@@ -70,10 +78,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     @Override
     public void start() throws Exception {
         // backward compatibility with the legacy class name
-        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
-        Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper",SauceOnDemandBuildWrapper.class);
+        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
+        Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
         // the real name must be registered at the end
-        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper",SauceOnDemandBuildWrapper.class);
+        Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper", SauceOnDemandBuildWrapper.class);
 
         load();
     }
@@ -85,14 +93,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     @Override
-    public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, FormException {
+    public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
         save();
     }
 
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)Hudson.getInstance().getDescriptorOrDie(getClass());
+        return (DescriptorImpl) Hudson.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static PluginImpl get() {
@@ -108,11 +116,53 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             try {
-                new SauceTunnelFactory(new Credential(username,Secret.toString(Secret.fromString(apiKey)))).list();
+                new File
+                        (SauceConnect.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                new SauceTunnelFactory(new Credential(username, Secret.toString(Secret.fromString(apiKey)))).list();
                 return FormValidation.ok("Success");
             } catch (IOException e) {
-                return FormValidation.error(e,"Failed to connect to Sauce OnDemand");
+                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
+            } catch (URISyntaxException e) {
+                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
             }
         }
+    }
+
+    /**
+     * 
+     * @return
+     */
+    @JavaScriptMethod
+    public String checkForUpdates() {
+        try {
+            boolean updateAvailable = libraryManager.checkForLaterVersion();
+            return updateAvailable ? "<div>Updates to Sauce Connect are available</div>" +
+                    "<a href=\"#\" onclick=\"var progress = document.getElementById('progress');" +
+                    "progress.style.display = 'block';" +
+                    "plugin.applyUpdates(function(t) {" +
+                    "document.getElementById('msg').innerHTML = t.responseObject();" + 
+                    "var progress = document.getElementById('progress');" +
+                    "progress.style.display = 'none';" +
+                    "})\">Update Sauce Connect<\\a>" : 
+                    "No update required, Sauce Connect is up to date";
+        } catch (Exception e) {
+            logger.error(e);
+        }
+        return "Failed to connect to Sauce OnDemand";
+    }
+
+    /**
+     * 
+     * @return
+     */
+    @JavaScriptMethod
+    public String applyUpdates() {
+        try {
+            libraryManager.triggerReload();
+            return "Update of the Sauce Connect library was successful";
+        } catch (Exception e) {
+            logger.error(e);
+        } 
+        return "Failed to apply updates, please see application logs";
     }
 }

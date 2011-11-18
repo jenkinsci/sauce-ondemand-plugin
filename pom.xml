@@ -1,16 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.jvnet.hudson.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>1.374</version>
-  </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>1.439</version>
+    </parent>
 
-  <artifactId>sauce-ondemand</artifactId>
-  <version>1.6-SNAPSHOT</version>
-  <packaging>hpi</packaging>
-  <name>Hudson Sauce OnDemand plugin</name>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
+    <artifactId>sauce-ondemand</artifactId>
+    <version>1.6-SNAPSHOT</version>
+    <packaging>hpi</packaging>
+    <name>Hudson Sauce OnDemand plugin</name>
+    <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
 
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
@@ -36,28 +37,98 @@
     </build>
 
     <dependencies>
-     <dependency>
-          <groupId>com.saucelabs</groupId>
-          <artifactId>sauce-rest-api</artifactId>
-          <version>1.3</version>
-      </dependency>
-     <dependency>
-          <groupId>org.seleniumhq.selenium.client-drivers</groupId>
-          <artifactId>selenium-java-client-driver</artifactId>
-          <version>1.0.1</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>com.saucelabs.selenium</groupId>
-          <artifactId>sauce-ondemand-driver</artifactId>
-          <version>1.3</version>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>com.saucelabs.selenium</groupId>
-          <artifactId>selenium-client-factory</artifactId>
-          <version>1.3</version>
-          <scope>test</scope>
-      </dependency>
-  </dependencies>
+        <!-- List Jetty first so that the version bundled with Sauce Connect does not cause
+        compile problems -->
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty</artifactId>
+            <version>6.1.26</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-launcher</artifactId>
+            <version>1.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-file</artifactId>
+            <version>7.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-file</artifactId>
+            <version>7.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-zip</artifactId>
+            <version>7.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs</groupId>
+            <artifactId>sauce-rest-api</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-remote-control</artifactId>
+            <version>2.0b3</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
+        <dependency>
+            <groupId>com.saucelabs</groupId>
+            <artifactId>sauce-connect</artifactId>
+            <version>3.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20080701</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs.selenium</groupId>
+            <artifactId>sauce-ondemand-driver</artifactId>
+            <version>2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs.selenium</groupId>
+            <artifactId>selenium-client-factory</artifactId>
+            <version>2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Include Guava dependency to avoid compile errors -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r05</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+	<repositories>
+		<repository>
+				<id>maven.jenkins-ci.org</id>
+				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+				<id>maven.jenkins-ci.org</id>
+				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>

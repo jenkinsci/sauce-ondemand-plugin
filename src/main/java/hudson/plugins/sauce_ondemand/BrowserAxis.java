@@ -23,13 +23,16 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.BrowserFactory;
 import hudson.Extension;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisDescriptor;
+import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +41,9 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  */
 public class BrowserAxis extends Axis {
+    
+    private static final Logger logger = Logger.getLogger(BrowserAxis.class);
+    
     @DataBoundConstructor
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
@@ -57,13 +63,20 @@ public class BrowserAxis extends Axis {
             return "Sauce OnDemand Cross-browser tests";
         }
 
-        public Collection<Browser> getBrowsers() {
-            return Arrays.asList(Browser.values());
+        public List<com.saucelabs.ci.Browser> getBrowsers() {
+            try {
+                return BrowserFactory.getInstance().values();
+            } catch (IOException e) {
+                logger.error("Error retrieving browsers from Saucelabs", e);
+            } catch (JSONException e) {
+                logger.error("Error parsing JSON response", e);
+            }
+            return Collections.emptyList();
         }
     }
 
     public void addBuildVariable(String value, Map<String,String> map) {
-        Browser b = Browser.valueOf(value);
+        com.saucelabs.ci.Browser b = BrowserFactory.getInstance().forKey(value);
         if (b!=null)    // should never be null, but let's be defensive in case of downgrade.
             map.put(getName(),b.getUri());
     }
