@@ -2,12 +2,6 @@
   <f:entry title="${%Tunnel Configuration}" field="tunnels">
     <f:repeatable minimum="1" field="tunnels" noAddButton="true">
       <table style="width:100%">
-        <f:entry title="${%Domains}" field="domains">
-          <f:expandableTextbox />
-        </f:entry>
-        <f:entry title="${%Remote Port}" field="remotePort">
-          <f:textbox default="80" />
-        </f:entry>
         <f:entry title="${%Local Host}" field="localHost">
           <f:textbox />
         </f:entry>
