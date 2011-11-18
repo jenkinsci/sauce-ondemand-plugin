@@ -119,4 +119,16 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+	<repositories>
+		<repository>
+				<id>maven.jenkins-ci.org</id>
+				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+				<id>maven.jenkins-ci.org</id>
+				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
