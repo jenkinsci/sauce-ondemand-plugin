@@ -48,10 +48,10 @@ public class TeztSimulation {
 
         System.setProperty("SELENIUM_DRIVER", Browser.Firefox3_0_Linux.getUri());
 
-        Selenium selenium = SeleniumFactory.create();
+        SauceOnDemandSelenium selenium = (SauceOnDemandSelenium) SeleniumFactory.create();
         selenium.start();
-        SauceOnDemandSelenium sauce = (SauceOnDemandSelenium) selenium;
-        String sessionId = sauce.getSessionIdValue();
+        String sessionId = selenium.getSessionId();
+
 
         try {
             selenium.open("/");

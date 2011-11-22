@@ -79,13 +79,13 @@
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-rest-api</artifactId>
             <version>1.5</version>
-        </dependency>
+        </dependency>        
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-remote-control</artifactId>
-            <version>2.0b3</version>
-            <scope>test</scope>
-        </dependency>
+          <groupId>org.seleniumhq.selenium.client-drivers</groupId>
+          <artifactId>selenium-java-client-driver</artifactId>
+          <version>1.0.1</version>
+         <scope>test</scope>
+      </dependency>
         <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
         <dependency>
             <groupId>com.saucelabs</groupId>
@@ -102,13 +102,13 @@
         <dependency>
             <groupId>com.saucelabs.selenium</groupId>
             <artifactId>sauce-ondemand-driver</artifactId>
-            <version>2.0</version>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.saucelabs.selenium</groupId>
             <artifactId>selenium-client-factory</artifactId>
-            <version>2.0</version>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
