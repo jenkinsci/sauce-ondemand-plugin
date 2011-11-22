@@ -4,13 +4,7 @@ import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,12 +47,34 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             List<Process> tunnelList = tunnelMap.get(planKey);
             for (Process sauceConnect : tunnelList) {
                 logger.info("Closing Sauce Connect");
+
+                closeStream(sauceConnect.getInputStream());
+                closeStream(sauceConnect.getOutputStream());
+                closeStream(sauceConnect.getErrorStream());
+
+
                 sauceConnect.destroy();
                 //release lock
                 accessLock.unlock();
             }
 
             tunnelMap.remove(planKey);
+        }
+    }
+
+    private void closeStream(OutputStream outputStream) {
+        try {
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
+    private void closeStream(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 

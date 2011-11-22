@@ -111,6 +111,12 @@
             <version>2.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.5.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Include Guava dependency to avoid compile errors -->
         <dependency>
             <groupId>com.google.guava</groupId>
