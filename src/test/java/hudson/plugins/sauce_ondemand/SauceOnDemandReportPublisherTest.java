@@ -49,7 +49,7 @@ public class SauceOnDemandReportPublisherTest extends BaseTezt {
         //testReportEmbedding(IOUtils.toString(getClass().getResourceAsStream("test-result.xml")), false);
     }
 
-    public void testReportEmbeddingOld() throws Exception {
+    public void reportEmbeddingOld() throws Exception {
         testReportEmbedding(IOUtils.toString(getClass().getResourceAsStream("test-result-old.xml")), true);
     }
 

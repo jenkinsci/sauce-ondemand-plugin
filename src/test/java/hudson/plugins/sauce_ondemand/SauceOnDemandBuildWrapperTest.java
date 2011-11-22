@@ -62,7 +62,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }
 
-    public void testRunFromSlave() throws Exception {
+    public void runFromSlave() throws Exception {
         setCredential();
 
         Slave s = createSlave();
