@@ -1,6 +1,7 @@
 package com.saucelabs.ci.sauceconnect;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Map;
 
 /**
@@ -24,4 +25,6 @@ public interface SauceTunnelManager
     Object openConnection(String username, String apiKey) throws IOException;
 
     Map getTunnelMap();
+
+    void setPrintStream(PrintStream logger);
 }

@@ -72,7 +72,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         //autoRemoteHostName not currently used
         String buildNameDigest = Util.getDigestOf(build.getFullDisplayName());
         final String autoRemoteHostName = "hudson-" + buildNameDigest + ".hudson";
-        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, autoRemoteHostName));
+        final ITunnelHolder tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, autoRemoteHostName, listener));
 
         return new Environment() {
             /**
@@ -141,13 +141,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private String key;
         private String domain;
         private String buildName;
+        private BuildListener listener;
 
-        public SauceConnectStarter(String buildName, String domain) {
+        public SauceConnectStarter(String buildName, String domain, BuildListener listener) {
             PluginImpl p = PluginImpl.get();
             this.username = p.getUsername();
             this.key = Secret.toString(p.getApiKey());
             this.domain = domain;
             this.buildName = buildName;
+            this.listener = listener;
         }
 
         public ITunnelHolder call() throws IOException {
@@ -155,6 +157,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             for (Tunnel tunnel : tunnels) {
                 SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
+                tunnelManager.setPrintStream(listener.getLogger());
                 Object process = tunnelManager.openConnection(username, key);
                 tunnelManager.addTunnelToMap(buildName, process);
                 r.tunnelManagers.add(tunnelManager);

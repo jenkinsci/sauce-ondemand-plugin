@@ -6,6 +6,9 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +40,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * waits until the Sauce Connect process is fully initialized before tests are run.
      */
     private final Semaphore semaphore = new Semaphore(1);
+    private PrintStream printStream;
 
     public SauceConnectTwoManager() {
         this.tunnelMap = new HashMap<String, List<Process>>();
@@ -55,7 +59,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
                 sauceConnect.destroy();
                 //release lock
-                accessLock.unlock();
+//                accessLock.unlock();
             }
 
             tunnelMap.remove(planKey);
@@ -92,8 +96,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      *
      * @param username
      * @param apiKey
-     * @param localHost
-     * @param intLocalPort
      * @return
      * @throws IOException
      */
@@ -101,18 +103,31 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
         try {
             //only allow one thread to launch Sauce Connect
-            accessLock.lock();
-            File jarFile = new File
-                    (SauceConnect.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-
-            List<String> jarFiles = extractSauceConnectJar(jarFile);
-
+//            accessLock.lock();
+            Class clazz = SauceConnect.class;
+            ProtectionDomain protectionDomain = clazz.getProtectionDomain();
+            CodeSource codeSource = protectionDomain.getCodeSource();
+            URL location = codeSource.getLocation();
             StringBuilder builder = new StringBuilder();
-            String pathSeparator = "";
-            for (String fileName : jarFiles) {
-                builder.append(pathSeparator).append(fileName);
-                pathSeparator = File.pathSeparator;
+            if (location == null) {
+                //we are running under a slave
+                ClassLoader loader = getClass().getClassLoader();
+                URL url = loader.getResource("com/saucelabs/sauceconnect/SauceConnect.class");
+                File classFile = new File(url.toURI());
+
+                File directory = classFile.getParentFile().getParentFile().getParentFile().getParentFile();
+                builder.append(directory.getPath());
+            } else {
+                File jarFile = new File(location.toURI());
+                List<String> jarFiles = extractSauceConnectJar(jarFile);
+
+                String pathSeparator = "";
+                for (String fileName : jarFiles) {
+                    builder.append(pathSeparator).append(fileName);
+                    pathSeparator = File.pathSeparator;
+                }
             }
+
 
             String fileSeparator = File.separator;
             //File jarFile = new File("/Developer/workspace/bamboo_sauce/target/bamboo-sauceondemand-plugin-1.4.0.jar");
@@ -127,6 +142,9 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             if (logger.isInfoEnabled()) {
                 logger.info("Launching Sauce Connect " + Arrays.toString(args));
+            }
+            if (printStream != null) {
+                printStream.println("Launching Sauce Connect " + Arrays.toString(args));
             }
             final Process process = processBuilder.start();
             try {
@@ -163,6 +181,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         if (jarFile.getName().equals("sauce-connect-3.0.jar")) {
             files.add(jarFile.getPath());
         } else {
+            System.out.println(jarFile);
             JarFile jar = new JarFile(jarFile);
             java.util.Enumeration entries = jar.entries();
             final File destDir = new File(System.getProperty("user.home"));
@@ -191,6 +210,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     public Map getTunnelMap() {
         return tunnelMap;
+    }
+
+    public void setPrintStream(PrintStream printStream) {
+        this.printStream = printStream;
     }
 
     private abstract class StreamGobbler extends Thread {
