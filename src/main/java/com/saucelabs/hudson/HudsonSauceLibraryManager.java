@@ -17,6 +17,12 @@ import java.net.URISyntaxException;
  * @author Ross Rowe
  */
 public class HudsonSauceLibraryManager extends SauceLibraryManager {
+    /**
+     * 
+     * @param jarFile
+     * @throws IOException
+     * @throws URISyntaxException
+     */
     @Override
     public void updatePluginJar(File jarFile) throws IOException, URISyntaxException {
         File runningJarFile = new File
@@ -24,7 +30,6 @@ public class HudsonSauceLibraryManager extends SauceLibraryManager {
         FileUtils.copyFileToDirectory(jarFile, runningJarFile.getParentFile());
         //there doesn't appear to be an easy way to get the .hpi file, so we have to convert the backup file name
         Plugin plugin = Hudson.getInstance().getPlugin(PluginImpl.class);
-//        PluginWrapper pluginWrapper = PluginManager.getPlugin("sauce-ondemand");
         PluginWrapper pluginWrapper = plugin.getWrapper();
         File backupFile = pluginWrapper.getBackupFile();
         String backupFileName = backupFile.getName();

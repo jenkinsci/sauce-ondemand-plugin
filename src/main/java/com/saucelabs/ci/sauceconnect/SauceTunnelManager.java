@@ -1,5 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
@@ -13,11 +14,6 @@ import java.util.Map;
 public interface SauceTunnelManager
 {
 
-    /**
-     * Timeout is hard-coded to 180 seconds.
-     */
-    public static final int SSH_TIMEOUT = 180 * 1000;
-
     public void closeTunnelsForPlan(String planKey);
 
     public void addTunnelToMap(String planKey, Object tunnel);
@@ -27,4 +23,6 @@ public interface SauceTunnelManager
     Map getTunnelMap();
 
     void setPrintStream(PrintStream logger);
+
+    void setSauceConnectJar(File sauceConnectJar);
 }

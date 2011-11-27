@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <testsuite errors="0" failures="0" tests="1" time="1" timestamp="2011-01-18T21:17:14">
 <testcase classname="hudson.plugins.sauce_ondemand.TeztSimulation" name="doTest" time="1" />
-<system-out><![CDATA[<![CDATA[
+    <system-out><![CDATA[<![CDATA[
 SauceOnDemandSessionID=SESSION_ID job-name=hudson.plugins.sauce_ondemand.TeztSimulation.doTest
-]]>]]></system-out>
+]]>]
+    </system-out>    
 </testsuite>
         
