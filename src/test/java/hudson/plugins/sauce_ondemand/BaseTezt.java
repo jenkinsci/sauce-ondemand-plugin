@@ -39,6 +39,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
@@ -56,6 +57,13 @@ public class BaseTezt extends HudsonTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         server = new Server(8080);
+		File sauceSettings = new File(new File(System.getProperty("user.home")),".sauce-ondemand");
+		if (!sauceSettings.exists()) {
+			String userName = System.getProperty("sauce.user");
+			String accessKey = System.getProperty("access.key");
+			Credential credential = new Credential(userName, accessKey);
+			credential.saveTo(sauceSettings);
+		}
         ServletHandler handler = new ServletHandler();
         handler.addServletWithMapping(new ServletHolder(new HttpServlet() {
             @Override
