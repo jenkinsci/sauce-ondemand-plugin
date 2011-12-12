@@ -1,0 +1,9 @@
+This project contains the source code for the Jenkins/Hudson Sauce OnDemand plugin.
+
+To build and unit test the plugin, execute:
+	
+	mvn package
+	
+To deploy a built version, execute
+
+	mvn release:prepare release:perform

@@ -90,7 +90,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 env.put("SAUCE_ONDEMAND_HOST", getHostName());
-                env.put("SELENIUM_STARTING_URL", "http://" + getHostName() + ':' + getPort() + '/');
+				env.put("SAUCE_ONDEMAND_PORT", getPort());
+                env.put("SELENIUM_STARTING_URL", getStartingUrl());
             }
 
             private String getHostName() {
@@ -103,7 +104,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             private int getPort() {
                 for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
                     return t.localPort;
-                return 80;
+                return 4445;
+            }
+
+            private String getStartingURL() {
+                for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
+                    return t.startingURL;
+                return "http://localhost/";
             }
 
             @Override

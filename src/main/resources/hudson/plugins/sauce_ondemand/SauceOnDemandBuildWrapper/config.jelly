@@ -2,10 +2,13 @@
   <f:entry title="${%Tunnel Configuration}" field="tunnels">
     <f:repeatable minimum="1" field="tunnels" noAddButton="true">
       <table style="width:100%">
-        <f:entry title="${%Local Host}" field="localHost">
+        <f:entry title="${%Selenium Host}" field="localHost">
           <f:textbox />
         </f:entry>
-        <f:entry title="${%Local Port}" field="localPort">
+        <f:entry title="${%Selenium Port}" field="localPort">
+          <f:textbox />
+        </f:entry>
+        <f:entry title="${%Starting URL}" field="startingURL">
           <f:textbox />
         </f:entry>
       </table>
