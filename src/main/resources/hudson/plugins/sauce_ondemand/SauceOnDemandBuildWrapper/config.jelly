@@ -12,10 +12,6 @@
           <f:textbox />
         </f:entry>
       </table>
-      <div align="right">
-        <input type="button" value="${%Add Tunnel Mapping}" class="repeatable-add show-if-last"/>
-        <input type="button" value="${%Delete Tunnel Mapping}" class="repeatable-delete show-if-not-only"/>
-      </div>
     </f:repeatable>
   </f:entry>
 </j:jelly>

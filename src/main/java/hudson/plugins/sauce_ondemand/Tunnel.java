@@ -27,6 +27,7 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -58,7 +59,13 @@ public class Tunnel extends AbstractDescribableImpl<Tunnel> implements Serializa
         }
 
         public FormValidation doCheckLocalPort(@QueryParameter String remotePort) {
-            return FormValidation.validatePositiveInteger(remotePort);
+            if (StringUtils.isBlank(remotePort)) {
+                return FormValidation.ok();
+            }
+            else {
+               return FormValidation.validatePositiveInteger(remotePort);
+            }
+
         }
     }
 
