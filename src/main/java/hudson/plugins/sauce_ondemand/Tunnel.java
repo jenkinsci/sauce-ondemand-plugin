@@ -42,7 +42,7 @@ import java.io.Serializable;
 public class Tunnel extends AbstractDescribableImpl<Tunnel> implements Serializable {
     public final int localPort;
     public final String localHost;
-    public final String startingURL
+    public final String startingURL;
 
     @DataBoundConstructor
     public Tunnel(int localPort, String localHost, String startingURL) {

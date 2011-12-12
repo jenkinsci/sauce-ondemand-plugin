@@ -56,7 +56,7 @@ public class SauceOnDemandReportPublisherTest extends BaseTezt {
     private void testReportEmbedding(String testReport, boolean oldStyle) throws Exception {
         setCredential();
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(8080, "localhost"));
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Tunnel(8080, "localhost", "http://localhost:8080/"));
         p.getBuildWrappersList().add(before);
         JUnitResultArchiver junit = new JUnitResultArchiver(
                 "test.xml",
