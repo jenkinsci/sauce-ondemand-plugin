@@ -103,7 +103,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             private int getPort() {
                 for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.localPort;
+                    return t.localPort == 0 ? 4445 : t.localPort;
                 return 4445;
             }
 
