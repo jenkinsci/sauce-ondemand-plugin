@@ -79,14 +79,21 @@
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-rest-api</artifactId>
             <version>1.5</version>
-        </dependency>        
+        </dependency> 
+        <!-- ci-sauce is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
+		 <dependency>
+	            <groupId>com.saucelabs</groupId>
+	            <artifactId>ci-sauce</artifactId>
+	            <version>1.0</version>
+	            <scope>compile</scope>
+	        </dependency>       
         <dependency>
           <groupId>org.seleniumhq.selenium.client-drivers</groupId>
           <artifactId>selenium-java-client-driver</artifactId>
           <version>1.0.1</version>
          <scope>test</scope>
       </dependency>
-        <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
+      <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>
