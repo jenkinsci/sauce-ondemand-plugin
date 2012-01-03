@@ -27,7 +27,6 @@ import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import com.saucelabs.rest.Credential;
 import com.saucelabs.rest.SauceTunnelFactory;
-import com.saucelabs.sauceconnect.SauceConnect;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
@@ -116,13 +115,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             try {
-                new File
-                        (SauceConnect.class.getProtectionDomain().getCodeSource().getLocation().toURI());
                 new SauceTunnelFactory(new Credential(username, Secret.toString(Secret.fromString(apiKey)))).list();
                 return FormValidation.ok("Success");
             } catch (IOException e) {
-                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
-            } catch (URISyntaxException e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
             }
         }
