@@ -2,7 +2,7 @@
   <f:entry>
     <j:forEach var="b" items="${descriptor.browsers}">
       <div>
-        <f:checkbox name="values" json="${b.name()}" checked="${instance.hasValue(b.name())}" /><label class="attach-previous">${b.displayName}</label>
+        <f:checkbox name="values" json="${b.key}" checked="${instance.hasValue(b.key)}" /><label class="attach-previous">${b.name}</label>
       </div>
     </j:forEach>
   </f:entry>
