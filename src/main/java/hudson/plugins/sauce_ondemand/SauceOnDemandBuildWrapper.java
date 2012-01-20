@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
 import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
@@ -35,8 +36,6 @@ import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
-import org.apache.tools.ant.taskdefs.Copy;
-import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -123,38 +122,22 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private File copySauceConnectToSlave(AbstractBuild build, BuildListener listener) throws IOException {
-        class CopyImpl extends Copy {
-            private int copySize;
 
-            public CopyImpl() {
-                setProject(new org.apache.tools.ant.Project());
-            }
-
-            @Override
-            protected void doFileOperations() {
-                copySize = super.fileCopyMap.size();
-                super.doFileOperations();
-            }
-
-            public int getNumCopied() {
-                return copySize;
-            }
-        }
-
-        FilePath projectWorkspaceOnSlave = build.getProject().getWorkspace();
+        FilePath projectWorkspaceOnSlave = build.getProject().getSomeWorkspace();
         try {
             File sauceConnectJar = SauceConnectUtils.extractSauceConnectJarFile();
-            FileSet fs = Util.createFileSet(sauceConnectJar.getParentFile(), sauceConnectJar.getName(), "");
-            CopyImpl copyTask = new CopyImpl();
-            copyTask.setTodir(new File(projectWorkspaceOnSlave.getRemote()));
-            copyTask.addFileset(fs);
-            copyTask.setOverwrite(true);
-            copyTask.setIncludeEmptyDirs(false);
-            copyTask.setFlatten(false);
+            //FileSet fs = Util.createFileSet(sauceConnectJar.getParentFile(), sauceConnectJar.getName(), "");
 
-            copyTask.execute();
+            MyFilePath.copyRecursiveTo(
+                    new FilePath(sauceConnectJar.getParentFile()),
+                    sauceConnectJar.getName(),
+                    null,
+                    false, false, projectWorkspaceOnSlave);
+
             return new File(projectWorkspaceOnSlave.getRemote(), sauceConnectJar.getName());
         } catch (URISyntaxException e) {
+            listener.error("Error copying sauce connect jar to slave", e);
+        } catch (InterruptedException e) {
             listener.error("Error copying sauce connect jar to slave", e);
         }
         return null;

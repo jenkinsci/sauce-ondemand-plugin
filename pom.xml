@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -33,7 +34,7 @@
                 </configuration>
             </plugin>
         </plugins>
-    
+
     </build>
 
     <dependencies>
@@ -79,25 +80,25 @@
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-rest-api</artifactId>
             <version>1.5</version>
-        </dependency> 
+        </dependency>
         <!-- ci-sauce is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
-		 <dependency>
-	            <groupId>com.saucelabs</groupId>
-	            <artifactId>ci-sauce</artifactId>
-	            <version>1.1</version>
-	            <scope>compile</scope>
-	        </dependency>       
         <dependency>
-          <groupId>org.seleniumhq.selenium.client-drivers</groupId>
-          <artifactId>selenium-java-client-driver</artifactId>
-          <version>1.0.1</version>
-         <scope>test</scope>
-      </dependency>
-      <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
+            <groupId>com.saucelabs</groupId>
+            <artifactId>ci-sauce</artifactId>
+            <version>1.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium.client-drivers</groupId>
+            <artifactId>selenium-java-client-driver</artifactId>
+            <version>1.0.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Sauce Connect is contained in the https://repository-saucelabs.forge.cloudbees.com/release Maven repository -->
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>
-            <version>3.0</version>
+            <version>3.0.18</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -123,6 +124,11 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.5.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>copy-to-slave</artifactId>
+            <version>1.4</version>
+        </dependency>
         <!-- Include Guava dependency to avoid compile errors -->
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -137,16 +143,16 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-	<repositories>
-		<repository>
-				<id>maven.jenkins-ci.org</id>
-				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-				<id>maven.jenkins-ci.org</id>
-				<url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
-		</pluginRepository>
-	</pluginRepositories>
+    <repositories>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven.jenkins-ci.org</id>
+            <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
