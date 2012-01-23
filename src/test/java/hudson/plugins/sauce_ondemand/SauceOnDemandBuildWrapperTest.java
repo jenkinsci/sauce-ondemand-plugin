@@ -35,7 +35,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
     /**
      * Configuration roundtrip testing.
      */
-    public void testConfigRoundtrip() throws Exception {
+    public void configRoundtrip() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
         SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Credentials("username", "accessKey"), new SeleniumInformation( "http://localhost"), "abc", 1, true);
         p.getBuildWrappersList().add(before);
