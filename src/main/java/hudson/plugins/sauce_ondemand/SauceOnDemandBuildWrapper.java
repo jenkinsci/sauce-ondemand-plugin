@@ -36,6 +36,7 @@ import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -43,11 +44,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static scala.actors.threadpool.Arrays.asList;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
@@ -55,67 +53,89 @@ import static scala.actors.threadpool.Arrays.asList;
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
+
+    private boolean enableSauceConnect;
+
     private static final long serialVersionUID = 1L;
 
-    private List<Tunnel> tunnels;
+    private ITunnelHolder tunnels;
+    private String seleniumHost;
+    private int seleniumPort;
+    private Credentials credentials;
+    private SeleniumInformation seleniumInformation;
 
     @DataBoundConstructor
-    public SauceOnDemandBuildWrapper(List<Tunnel> tunnels) {
-        this.tunnels = Util.fixNull(tunnels);
+    public SauceOnDemandBuildWrapper(Credentials
+                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect) {
+        this.credentials = credentials;
+        this.seleniumInformation = seleniumInformation;
+        this.enableSauceConnect = enableSauceConnect;
+        this.seleniumHost = seleniumHost;
+        this.seleniumPort = seleniumPort;
     }
 
-    public SauceOnDemandBuildWrapper(Tunnel... tunnels) {
-        this(asList(tunnels));
-    }
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
-        
         String buildNameDigest = Util.getDigestOf(build.getFullDisplayName());
-        final ITunnelHolder tunnels;
-        if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
-            File sauceConnectJar = copySauceConnectToSlave(build, listener);
-            tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, sauceConnectJar));
-        } else {
-            tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener));
+        if (isEnableSauceConnect()) {
+            if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
+                File sauceConnectJar = copySauceConnectToSlave(build, listener);
+                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, sauceConnectJar));
+            } else {
+                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener));
+            }
         }
 
-
         return new Environment() {
-            /**
-             * If the user wants automatic host name allocation, we expose that via an environment variable.
-             */
+
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 env.put("SAUCE_ONDEMAND_HOST", getHostName());
-				env.put("SAUCE_ONDEMAND_PORT", Integer.toString(getPort()));
-                env.put("SELENIUM_STARTING_URL", getStartingURL());
+                env.put("SAUCE_ONDEMAND_PORT", Integer.toString(getPort()));
+                if (getStartingURL() != null) {
+                    env.put("SELENIUM_STARTING_URL", getStartingURL());
+                }
             }
 
             private String getHostName() {
-                for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.localHost;
-                return "localhost";
+                if (StringUtils.isNotBlank(seleniumHost)) {
+                    return seleniumHost;
+                } else {
+                    if (isEnableSauceConnect()) {
+                        return "localhost";
+                    } else {
+                        return "ondemand.saucelabs.com";
+                    }
+                }
             }
 
-
             private int getPort() {
-                for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.localPort == 0 ? 4445 : t.localPort;
-                return 4445;
+                if (seleniumPort > 0) {
+                    return seleniumPort;
+                } else {
+                    if (isEnableSauceConnect()) {
+                        return 4445;
+                    } else {
+                        return 4444;
+                    }
+                }
             }
 
             private String getStartingURL() {
-                for (Tunnel t : SauceOnDemandBuildWrapper.this.tunnels)
-                    return t.startingURL;
-                return "http://localhost/";
+                if (getSeleniumInformation() != null) {
+                    return getSeleniumInformation().getStartingURL();
+                }
+                return null;
             }
 
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-                listener.getLogger().println("Shutting down Sauce OnDemand SSH tunnels");
-                tunnels.close(listener);
+                if (tunnels != null) {
+                    listener.getLogger().println("Shutting down Sauce OnDemand SSH tunnels");
+                    tunnels.close(listener);
+                }
                 return true;
             }
         };
@@ -126,8 +146,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         FilePath projectWorkspaceOnSlave = build.getProject().getSomeWorkspace();
         try {
             File sauceConnectJar = SauceConnectUtils.extractSauceConnectJarFile();
-            //FileSet fs = Util.createFileSet(sauceConnectJar.getParentFile(), sauceConnectJar.getName(), "");
-
             MyFilePath.copyRecursiveTo(
                     new FilePath(sauceConnectJar.getParentFile()),
                     sauceConnectJar.getName(),
@@ -143,10 +161,45 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return null;
     }
 
-    public List<Tunnel> getTunnels() {
-        return Collections.unmodifiableList(tunnels);
+    public String getSeleniumHost() {
+        return seleniumHost;
     }
 
+    public void setSeleniumHost(String seleniumHost) {
+        this.seleniumHost = seleniumHost;
+    }
+
+    public int getSeleniumPort() {
+        return seleniumPort;
+    }
+
+    public void setSeleniumPort(int seleniumPort) {
+        this.seleniumPort = seleniumPort;
+    }
+
+    public Credentials getCredentials() {
+        return credentials;
+    }
+
+    public void setCredentials(Credentials credentials) {
+        this.credentials = credentials;
+    }
+
+    public SeleniumInformation getSeleniumInformation() {
+        return seleniumInformation;
+    }
+
+    public void setSeleniumInformation(SeleniumInformation seleniumInformation) {
+        this.seleniumInformation = seleniumInformation;
+    }
+
+    public boolean isEnableSauceConnect() {
+        return enableSauceConnect;
+    }
+
+    public void setEnableSauceConnect(boolean enableSauceConnect) {
+        this.enableSauceConnect = enableSauceConnect;
+    }
 
     private interface ITunnelHolder {
         void close(TaskListener listener);
@@ -162,7 +215,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public Object writeReplace() {
-            return Channel.current().export(ITunnelHolder.class, this);
+            if (Channel.current() == null) {
+                return this;
+            } else {
+                return Channel.current().export(ITunnelHolder.class, this);
+            }
         }
 
         public void close(TaskListener listener) {
@@ -181,9 +238,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private File sauceConnectJar;
 
         public SauceConnectStarter(String buildName, BuildListener listener) {
-            PluginImpl p = PluginImpl.get();
-            this.username = p.getUsername();
-            this.key = Secret.toString(p.getApiKey());
+            if (getCredentials() != null) {
+                this.username = getCredentials().getUsername();
+                this.key = getCredentials().getApiKey();
+            } else {
+                PluginImpl p = PluginImpl.get();
+                this.username = p.getUsername();
+                this.key = Secret.toString(p.getApiKey());
+            }
             this.buildName = buildName;
             this.listener = listener;
         }
@@ -195,17 +257,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public ITunnelHolder call() throws IOException {
-            TunnelHolder r = new TunnelHolder(buildName);
-
-            for (Tunnel tunnel : tunnels) {
-                SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
-                tunnelManager.setSauceConnectJar(sauceConnectJar);
-                tunnelManager.setPrintStream(listener.getLogger());
-                Object process = tunnelManager.openConnection(username, key);
-                tunnelManager.addTunnelToMap(buildName, process);
-                r.tunnelManagers.add(tunnelManager);
-            }
-            return r;
+            TunnelHolder tunnelHolder = new TunnelHolder(buildName);
+            SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
+            tunnelManager.setSauceConnectJar(sauceConnectJar);
+            tunnelManager.setPrintStream(listener.getLogger());
+            Object process = tunnelManager.openConnection(username, key);
+            tunnelManager.addTunnelToMap(buildName, process);
+            tunnelHolder.tunnelManagers.add(tunnelManager);
+            return tunnelHolder;
         }
     }
 
@@ -213,7 +272,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
         @Override
         public String getDisplayName() {
-            return "Sauce Connect";
+            return "Sauce OnDemand Support";
         }
     }
 }

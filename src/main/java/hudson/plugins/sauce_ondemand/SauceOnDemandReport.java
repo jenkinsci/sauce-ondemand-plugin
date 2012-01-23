@@ -26,24 +26,17 @@ package hudson.plugins.sauce_ondemand;
 import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
-import hudson.util.TimeUnit2;
 import org.apache.commons.codec.binary.Hex;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.WebMethod;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -63,6 +56,8 @@ public class SauceOnDemandReport extends TestAction {
      * Could we match session IDs to test names ?
      */
     private final boolean matchingJobNames;
+    private static final String HMAC_KEY = "HMACMD5";
+    ;
 
     public SauceOnDemandReport(CaseResult parent, List<String> ids, boolean matchingJobNames) {
         this.parent = parent;
@@ -70,7 +65,7 @@ public class SauceOnDemandReport extends TestAction {
         this.matchingJobNames = matchingJobNames;
     }
 
-    public AbstractBuild<?,?> getBuild() {
+    public AbstractBuild<?, ?> getBuild() {
         return parent.getOwner();
     }
 
@@ -115,21 +110,19 @@ public class SauceOnDemandReport extends TestAction {
 
         public String getAuth() throws IOException {
             try {
-                DateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd-HH");
-                dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT"));
-                String dateText = dateFormatGmt.format(new Date());
-                
-                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + dateText;
-                String msg = id;
-
+                Calendar calendar = Calendar.getInstance();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH");
+                format.setTimeZone(TimeZone.getTimeZone("UTC"));
+                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + format.format(calendar.getTime());
                 byte[] keyBytes = key.getBytes();
-                SecretKeySpec sks = new SecretKeySpec(keyBytes, "HmacMD5");
-                Mac mac = Mac.getInstance("HmacMD5");
+                SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
+                Mac mac = Mac.getInstance(sks.getAlgorithm());
                 mac.init(sks);
-                byte[] hmacBytes = mac.doFinal(msg.getBytes());
+                byte[] hmacBytes = mac.doFinal(id.getBytes());
                 byte[] hexBytes = new Hex().encode(hmacBytes);
-                String hexStr = new String(hexBytes, "ISO-8859-1");
-                return hexStr;
+                return new String(hexBytes, "ISO-8859-1");
+
+
             } catch (NoSuchAlgorithmException e) {
                 throw new IOException("Could not generate Sauce-OnDemand access code", e);
             } catch (InvalidKeyException e) {

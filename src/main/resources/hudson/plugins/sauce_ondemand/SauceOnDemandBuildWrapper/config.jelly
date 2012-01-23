@@ -1,17 +1,40 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="${%Tunnel Configuration}" field="tunnels">
-    <f:repeatable minimum="1" field="tunnels" noAddButton="true">
-      <table style="width:100%">
-        <f:entry title="${%Selenium Host}" field="localHost">
-          <f:textbox />
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:block>
+        <f:entry field="enableSauceConnect">
+            <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
         </f:entry>
-        <f:entry title="${%Selenium Port}" field="localPort">
-          <f:textbox />
-        </f:entry>
-        <f:entry title="${%Starting URL}" field="startingURL">
-          <f:textbox />
-        </f:entry>
-      </table>
-    </f:repeatable>
-  </f:entry>
+
+        <f:optionalBlock field="seleniumInformation" checked="${instance.seleniumInformation != null}" title="${%Will Selenium 1 tests be run?}">
+            <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
+
+            <f:entry title="${%Starting URL}" field="startingURL">
+                <f:textbox value="${seleniumInformation.startingURL}"/>
+            </f:entry>
+
+        </f:optionalBlock>
+
+        <f:optionalBlock field="credentials" checked="${instance.credentials != null}" title="${%Override default authentication?}">
+            <j:set var="credentials" value="${instance.credentials}"/>
+            <f:entry title="${%Username}" field="username">
+                <f:textbox value="${credentials.username}"/>
+            </f:entry>
+            <f:entry title="${%API Access Key}" field="apiKey">
+                <f:password value="${credentials.apiKey}"/>
+            </f:entry>
+        </f:optionalBlock>
+        <f:section title="Sauce Connect Advanced Options">
+            <f:advanced>
+                <f:entry title="${%Sauce OnDemand Host}" field="seleniumHost">
+                    <f:textbox/>
+                </f:entry>
+                <f:entry title="${%Sauce OnDemand Port}" field="seleniumPort">
+                    <f:textbox/>
+                </f:entry>
+            </f:advanced>
+        </f:section>
+    </f:block>
+
+
 </j:jelly>
