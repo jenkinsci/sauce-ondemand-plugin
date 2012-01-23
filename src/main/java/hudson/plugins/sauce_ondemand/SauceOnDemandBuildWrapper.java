@@ -82,9 +82,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         if (isEnableSauceConnect()) {
             if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                 File sauceConnectJar = copySauceConnectToSlave(build, listener);
-                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, sauceConnectJar));
+                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, getPort(), sauceConnectJar));
             } else {
-                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener));
+                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, getPort()));
             }
         }
 
@@ -111,17 +111,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 }
             }
 
-            private int getPort() {
-                if (seleniumPort > 0) {
-                    return seleniumPort;
-                } else {
-                    if (isEnableSauceConnect()) {
-                        return 4445;
-                    } else {
-                        return 4444;
-                    }
-                }
-            }
+
 
             private String getStartingURL() {
                 if (getSeleniumInformation() != null) {
@@ -139,6 +129,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return true;
             }
         };
+    }
+
+    private int getPort() {
+        if (seleniumPort > 0) {
+            return seleniumPort;
+        } else {
+            if (isEnableSauceConnect()) {
+                return 4445;
+            } else {
+                return 4444;
+            }
+        }
     }
 
     private File copySauceConnectToSlave(AbstractBuild build, BuildListener listener) throws IOException {
@@ -209,9 +211,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         private List<SauceTunnelManager> tunnelManagers = new ArrayList<SauceTunnelManager>();
         private String buildName;
+        private String username;
 
-        public TunnelHolder(String buildName) {
+        public TunnelHolder(String buildName, String username) {
             this.buildName = buildName;
+            this.username = username;
         }
 
         public Object writeReplace() {
@@ -224,7 +228,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             for (SauceTunnelManager tunnelManager : tunnelManagers) {
-                tunnelManager.closeTunnelsForPlan(buildName);
+                tunnelManager.closeTunnelsForPlan(username, buildName);
             }
 
         }
@@ -236,8 +240,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private String buildName;
         private BuildListener listener;
         private File sauceConnectJar;
+        private int port;
 
-        public SauceConnectStarter(String buildName, BuildListener listener) {
+        public SauceConnectStarter(String buildName, BuildListener listener, int port) {
             if (getCredentials() != null) {
                 this.username = getCredentials().getUsername();
                 this.key = getCredentials().getApiKey();
@@ -248,20 +253,21 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
             this.buildName = buildName;
             this.listener = listener;
+            this.port = port;
         }
 
-        public SauceConnectStarter(String buildName, BuildListener listener, File sauceConnectJar) {
-            this(buildName, listener);
+        public SauceConnectStarter(String buildName, BuildListener listener, int port, File sauceConnectJar) {
+            this(buildName, listener, port);
             this.sauceConnectJar = sauceConnectJar;
 
         }
 
         public ITunnelHolder call() throws IOException {
-            TunnelHolder tunnelHolder = new TunnelHolder(buildName);
+            TunnelHolder tunnelHolder = new TunnelHolder(buildName, username);
             SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
             tunnelManager.setSauceConnectJar(sauceConnectJar);
             tunnelManager.setPrintStream(listener.getLogger());
-            Object process = tunnelManager.openConnection(username, key);
+            Object process = tunnelManager.openConnection(username, key, port);
             tunnelManager.addTunnelToMap(buildName, process);
             tunnelHolder.tunnelManagers.add(tunnelManager);
             return tunnelHolder;
