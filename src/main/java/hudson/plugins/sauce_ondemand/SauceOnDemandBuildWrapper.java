@@ -112,7 +112,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
 
-
             private String getStartingURL() {
                 if (getSeleniumInformation() != null) {
                     return getSeleniumInformation().getStartingURL();
@@ -242,21 +241,27 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private File sauceConnectJar;
         private int port;
 
-        public SauceConnectStarter(String buildName, BuildListener listener, int port) {
+        public SauceConnectStarter(String buildName, BuildListener listener, int port) throws IOException {
             if (getCredentials() != null) {
                 this.username = getCredentials().getUsername();
                 this.key = getCredentials().getApiKey();
             } else {
                 PluginImpl p = PluginImpl.get();
-                this.username = p.getUsername();
-                this.key = Secret.toString(p.getApiKey());
+                if (p.isReuseSauceAuth()) {
+                    com.saucelabs.rest.Credential storedCredentials = new com.saucelabs.rest.Credential();
+                    this.username = storedCredentials.getUsername();
+                    this.key = storedCredentials.getKey();
+                } else {
+                    this.username = p.getUsername();
+                    this.key = Secret.toString(p.getApiKey());
+                }
             }
             this.buildName = buildName;
             this.listener = listener;
             this.port = port;
         }
 
-        public SauceConnectStarter(String buildName, BuildListener listener, int port, File sauceConnectJar) {
+        public SauceConnectStarter(String buildName, BuildListener listener, int port, File sauceConnectJar) throws IOException {
             this(buildName, listener, port);
             this.sauceConnectJar = sauceConnectJar;
 

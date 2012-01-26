@@ -1,29 +1,49 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:section title="Sauce OnDemand">
-    <j:scope>
-      <j:set var="instance" value="${it}" />
-      <j:set var="descriptor" value="${instance.descriptor}" />
-      <f:entry title="${%Username}" field="username">
-        <f:textbox />
-      </f:entry>
-      <f:entry title="${%API Access Key}" field="apiKey">
-        <f:password />
-      </f:entry>
-      <f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">
-      <div id="progress" style="display:none;">
-        <img src="${imagesURL}/spinner.gif" />
-        </div>
-      <div id="msg"></div>      
-      <script>
-          var plugin = <st:bind value="${it}"/>      
-          plugin.checkForUpdates(function(t) {            
-            document.getElementById('msg').innerHTML = t.responseObject();            
-          })
-        </script>
-      </f:entry>  
-      <f:block>
-        <f:validateButton title="${%Test Connection}" with="username,apiKey" method="validate"/>
-      </f:block>
-    </j:scope>
-  </f:section>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <script LANGUAGE="JavaScript">
+            function enableDisable() {
+
+        if(document.getElementById('reuseSauceAuthCheckBox').checked)
+        {
+            document.getElementById('userBox').disabled=true;
+            document.getElementById('apiKeyBox').disabled=true;
+        }
+        else
+        {
+            document.getElementById('userBox').disabled=false;
+            document.getElementById('apiKeyBox').disabled=false;
+        }
+    }
+    </script>
+    <f:section title="Sauce OnDemand">
+        <j:scope>
+            <j:set var="instance" value="${it}"/>
+            <j:set var="descriptor" value="${instance.descriptor}"/>
+            <f:entry title="${%Username}" field="username">
+                <f:textbox id="userBox"/>
+            </f:entry>
+            <f:entry title="${%API Access Key}" field="apiKey">
+                <f:password id="apiKeyBox"/>
+            </f:entry>
+            <f:entry field="reuseSauceAuth">
+                <f:checkbox id="reuseSauceAuthCheckBox" onclick="debugger;enableDisable();" title="${%Use authentication details in ~/.sauce-ondemand?}"/>
+            </f:entry>
+            <f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">
+                <div id="progress" style="display:none;">
+                    <img src="${imagesURL}/spinner.gif"/>
+                </div>
+                <div id="msg"></div>
+                <script>
+                    var plugin =
+                    <st:bind value="${it}"/>
+                    plugin.checkForUpdates(function(t) {
+                    document.getElementById('msg').innerHTML = t.responseObject();
+                    })
+                </script>
+            </f:entry>
+            <f:block>
+                <f:validateButton title="${%Test Connection}" with="username,apiKey,reuseSauceAuth" method="validate"/>
+            </f:block>
+        </j:scope>
+    </f:section>
 </j:jelly>

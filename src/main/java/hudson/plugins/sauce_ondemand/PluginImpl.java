@@ -42,9 +42,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * Persists the access credential to Sauce OnDemand.
@@ -65,6 +63,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      * Password for Sauce OnDemand.
      */
     private Secret apiKey;
+    
+    private boolean reuseSauceAuth;
 
     public String getUsername() {
         return username;
@@ -93,6 +93,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
+        reuseSauceAuth = formData.getBoolean("reuseSauceAuth");
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
         save();
@@ -106,6 +107,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         return Hudson.getInstance().getPlugin(PluginImpl.class);
     }
 
+    public boolean isReuseSauceAuth() {
+        return reuseSauceAuth;
+    }
+
     @Extension
     public static final class DescriptorImpl extends Descriptor<PluginImpl> {
         @Override
@@ -113,9 +118,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth) {
             try {
-                new SauceTunnelFactory(new Credential(username, Secret.toString(Secret.fromString(apiKey)))).list();
+                Credential credential = reuseSauceAuth ? new Credential() : new Credential(username, Secret.toString(Secret.fromString(apiKey)));
+                new SauceTunnelFactory(credential).list();
                 return FormValidation.ok("Success");
             } catch (IOException e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
