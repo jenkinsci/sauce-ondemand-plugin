@@ -24,9 +24,9 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
-import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
+import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -37,6 +37,7 @@ import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -209,11 +210,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
 
         private List<SauceTunnelManager> tunnelManagers = new ArrayList<SauceTunnelManager>();
-        private String buildName;
         private String username;
 
-        public TunnelHolder(String buildName, String username) {
-            this.buildName = buildName;
+        public TunnelHolder(String username) {
             this.username = username;
         }
 
@@ -227,9 +226,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             for (SauceTunnelManager tunnelManager : tunnelManagers) {
-                tunnelManager.closeTunnelsForPlan(username, buildName);
+                tunnelManager.closeTunnelsForPlan(username);
             }
-
         }
     }
 
@@ -268,14 +266,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public ITunnelHolder call() throws IOException {
-            TunnelHolder tunnelHolder = new TunnelHolder(buildName, username);
-            SauceTunnelManager tunnelManager = new SauceConnectTwoManager();
-            tunnelManager.setSauceConnectJar(sauceConnectJar);
-            tunnelManager.setPrintStream(listener.getLogger());
-            Object process = tunnelManager.openConnection(username, key, port);
-            tunnelManager.addTunnelToMap(buildName, process);
-            tunnelHolder.tunnelManagers.add(tunnelManager);
-            return tunnelHolder;
+            TunnelHolder tunnelHolder = new TunnelHolder(username);
+            //SauceTunnelManager sauceManager = new SauceConnectTwoManager();
+            SauceTunnelManager sauceManager = null;
+            try {
+                sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
+                Object process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
+                sauceManager.addTunnelToMap(buildName, process);
+                tunnelHolder.tunnelManagers.add(sauceManager);
+                return tunnelHolder;
+            } catch (ComponentLookupException e) {
+                throw new IOException(e);
+            }
+
         }
     }
 
