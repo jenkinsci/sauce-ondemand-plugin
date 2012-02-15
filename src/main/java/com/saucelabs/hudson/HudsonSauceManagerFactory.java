@@ -15,7 +15,7 @@ public class HudsonSauceManagerFactory {
     private static final HudsonSauceManagerFactory INSTANCE = new HudsonSauceManagerFactory();
 
     private PlexusContainer plexus = null;
-    
+
     public static HudsonSauceManagerFactory getInstance() {
         return INSTANCE;
     }
@@ -26,6 +26,9 @@ public class HudsonSauceManagerFactory {
     }
 
     public SauceConnectTwoManager createSauceConnectManager() throws ComponentLookupException {
+        if (plexus == null) {
+            start();
+        }
         return (SauceConnectTwoManager) this.plexus.lookup(SauceTunnelManager.class.getName());
     }
 
