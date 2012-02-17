@@ -2,6 +2,7 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:block>
+        <f:section title="Sauce Connect Options">
         <f:entry field="enableSauceConnect">
             <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
         </f:entry>
@@ -24,6 +25,7 @@
                 <f:password value="${credentials.apiKey}"/>
             </f:entry>
         </f:optionalBlock>
+        </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
                 <f:entry title="${%Sauce OnDemand Host}" field="seleniumHost">

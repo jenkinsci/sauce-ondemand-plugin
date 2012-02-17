@@ -267,12 +267,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public ITunnelHolder call() throws IOException {
             TunnelHolder tunnelHolder = new TunnelHolder(username);
-            //SauceTunnelManager sauceManager = new SauceConnectTwoManager();
             SauceTunnelManager sauceManager = null;
             try {
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Object process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
-                sauceManager.addTunnelToMap(buildName, process);
+
                 tunnelHolder.tunnelManagers.add(sauceManager);
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
