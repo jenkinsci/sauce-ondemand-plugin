@@ -37,6 +37,7 @@ import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -44,8 +45,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,6 +53,8 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
+
+    private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class);
 
     private boolean enableSauceConnect;
 
@@ -208,8 +209,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
-
-        private List<SauceTunnelManager> tunnelManagers = new ArrayList<SauceTunnelManager>();
         private String username;
 
         public TunnelHolder(String username) {
@@ -225,9 +224,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public void close(TaskListener listener) {
-            for (SauceTunnelManager tunnelManager : tunnelManagers) {
-                tunnelManager.closeTunnelsForPlan(username);
+
+            try {
+                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username);
+            } catch (ComponentLookupException e) {
+                //shouldn't happen
+                logger.error("Unable to close tunnel", e);
             }
+
         }
     }
 
@@ -272,7 +276,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Object process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
 
-                tunnelHolder.tunnelManagers.add(sauceManager);
+                //tunnelHolder.tunnelManagers.add(sauceManager);
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);
