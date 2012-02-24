@@ -3,28 +3,46 @@
 
     <f:block>
         <f:section title="Sauce Connect Options">
-        <f:entry field="enableSauceConnect">
-            <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
-        </f:entry>
+            <f:entry field="enableSauceConnect">
+                <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
+            </f:entry>
+            <f:entry title="${%Operating System/Browser/Version}">
+                <select name="browser">
+                    <j:forEach var="b" items="${descriptor.browsers}">
 
-        <f:optionalBlock field="seleniumInformation" checked="${instance.seleniumInformation != null}" title="${%Will Selenium 1 tests be run?}">
-            <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
+                        <j:choose>
+                            <j:when test="${instance.browser==b.key}">
+                                <option value="${b.key}" selected="selected">${b.name}</option>
+                            </j:when>
+                            <j:otherwise>
+                                <option value="${b.key}">${b.name}</option>
+                            </j:otherwise>
+                        </j:choose>
 
-            <f:entry title="${%Starting URL}" field="startingURL">
-                <f:textbox value="${seleniumInformation.startingURL}"/>
+                    </j:forEach>
+                </select>
             </f:entry>
 
-        </f:optionalBlock>
+            <f:optionalBlock field="seleniumInformation" checked="${instance.seleniumInformation != null}"
+                             title="${%Will Selenium 1 tests be run?}">
+                <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
 
-        <f:optionalBlock field="credentials" checked="${instance.credentials != null}" title="${%Override default authentication?}">
-            <j:set var="credentials" value="${instance.credentials}"/>
-            <f:entry title="${%Username}" field="username">
-                <f:textbox value="${credentials.username}"/>
-            </f:entry>
-            <f:entry title="${%API Access Key}" field="apiKey">
-                <f:password value="${credentials.apiKey}"/>
-            </f:entry>
-        </f:optionalBlock>
+                <f:entry title="${%Starting URL}" field="startingURL">
+                    <f:textbox value="${seleniumInformation.startingURL}"/>
+                </f:entry>
+
+            </f:optionalBlock>
+
+            <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
+                             title="${%Override default authentication?}">
+                <j:set var="credentials" value="${instance.credentials}"/>
+                <f:entry title="${%Username}" field="username">
+                    <f:textbox value="${credentials.username}"/>
+                </f:entry>
+                <f:entry title="${%API Access Key}" field="apiKey">
+                    <f:password value="${credentials.apiKey}"/>
+                </f:entry>
+            </f:optionalBlock>
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>

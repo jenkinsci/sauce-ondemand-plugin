@@ -75,6 +75,11 @@ public class BrowserAxis extends Axis {
         }
     }
 
+    /**
+     * Adds the browser URI to the environment map.  Will override any values set in {@link SauceOnDemandBuildWrapper#setUp(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)}
+     * @param value
+     * @param map
+     */
     public void addBuildVariable(String value, Map<String,String> map) {
         com.saucelabs.ci.Browser b = BrowserFactory.getInstance().forKey(value);
         if (b!=null)    // should never be null, but let's be defensive in case of downgrade.

@@ -24,6 +24,8 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
+import com.saucelabs.ci.Browser;
+import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
@@ -33,18 +35,20 @@ import hudson.Launcher;
 import hudson.Util;
 import hudson.model.*;
 import hudson.remoting.Callable;
-import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,15 +69,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private int seleniumPort;
     private Credentials credentials;
     private SeleniumInformation seleniumInformation;
+    private String browser;
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
-                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect) {
+                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect, String browser) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
+        this.browser = browser;
     }
 
 
@@ -94,6 +100,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             @Override
             public void buildEnvVars(Map<String, String> env) {
+                if (browser != null) {
+                    Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
+                    env.put("SELENIUM_DRIVER", browserInstance.getUri());
+                }
                 env.put("SAUCE_ONDEMAND_HOST", getHostName());
                 env.put("SAUCE_ONDEMAND_PORT", Integer.toString(getPort()));
                 if (getStartingURL() != null) {
@@ -204,6 +214,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
     }
 
+    public String getBrowser() {
+        return browser;
+    }
+
+    public void setBrowser(String browser) {
+        this.browser = browser;
+    }
+
     private interface ITunnelHolder {
         void close(TaskListener listener);
     }
@@ -213,14 +231,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public TunnelHolder(String username) {
             this.username = username;
-        }
-
-        public Object writeReplace() {
-            if (Channel.current() == null) {
-                return this;
-            } else {
-                return Channel.current().export(ITunnelHolder.class, this);
-            }
         }
 
         public void close(TaskListener listener) {
@@ -291,5 +301,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public String getDisplayName() {
             return "Sauce OnDemand Support";
         }
+
+        public List<Browser> getBrowsers() {
+            try {
+                return BrowserFactory.getInstance().values();
+            } catch (IOException e) {
+                logger.error("Error retrieving browsers from Saucelabs", e);
+            } catch (JSONException e) {
+                logger.error("Error parsing JSON response", e);
+            }
+            return Collections.emptyList();
+        }
     }
+
+
 }
