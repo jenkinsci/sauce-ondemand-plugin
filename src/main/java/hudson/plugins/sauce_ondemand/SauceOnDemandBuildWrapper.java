@@ -37,10 +37,13 @@ import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -69,17 +72,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private int seleniumPort;
     private Credentials credentials;
     private SeleniumInformation seleniumInformation;
-    private String browser;
+    private List<String> browsers;
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
-                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect, String browser) {
+                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect, List<String> browsers) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
-        this.browser = browser;
+        this.browsers = browsers;
     }
 
 
@@ -100,9 +103,29 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             @Override
             public void buildEnvVars(Map<String, String> env) {
-                if (browser != null) {
-                    Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
-                    env.put("SELENIUM_DRIVER", browserInstance.getUri());
+
+                if (browsers != null && !browsers.isEmpty()) {
+                    if (browsers.size() == 1) {
+                        Browser browserInstance = BrowserFactory.getInstance().forKey(browsers.get(0));
+                        env.put("SELENIUM_DRIVER", browserInstance.getUri());
+                    }
+
+                    JSONArray browsersJSON = new JSONArray();
+                    for (String browser : browsers) {
+                        Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
+                        JSONObject config = new JSONObject();
+                        try {
+                            config.put("os", browserInstance.getOs());
+                            config.put("browser", browserInstance.getBrowserName());
+                            config.put("browser-version", browserInstance.getVersion());
+                        } catch (JSONException e) {
+                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        }
+                        browsersJSON.put(config);
+
+                    }
+
+                    env.put("SAUCE_ONDEMAND_BROWSERS", StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
                 env.put("SAUCE_ONDEMAND_HOST", getHostName());
                 env.put("SAUCE_ONDEMAND_PORT", Integer.toString(getPort()));
@@ -214,12 +237,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
     }
 
-    public String getBrowser() {
-        return browser;
+    public List<String> getBrowsers() {
+        return browsers;
     }
 
-    public void setBrowser(String browser) {
-        this.browser = browser;
+    public void setBrowsers(List<String> browsers) {
+        this.browsers = browsers;
     }
 
     private interface ITunnelHolder {
