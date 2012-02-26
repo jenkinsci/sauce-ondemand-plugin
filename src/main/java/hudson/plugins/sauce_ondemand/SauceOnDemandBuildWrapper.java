@@ -115,9 +115,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
                         JSONObject config = new JSONObject();
                         try {
-                            config.put("os", browserInstance.getOs());
+                            config.put("os", browserInstance.getPlatform().toString());
                             config.put("browser", browserInstance.getBrowserName());
                             config.put("browser-version", browserInstance.getVersion());
+                            config.put("url", browserInstance.getUri());
                         } catch (JSONException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                         }
