@@ -24,10 +24,12 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.tasks.junit.CaseResult;
-import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +43,8 @@ import java.util.regex.Pattern;
  */
 public class SauceOnDemandReportFactory extends Data {
 
+    private static final Logger logger = Logger.getLogger(SauceOnDemandReportFactory.class);
+
     public static final SauceOnDemandReportFactory INSTANCE = new SauceOnDemandReportFactory();
 
     /**
@@ -53,10 +57,19 @@ public class SauceOnDemandReportFactory extends Data {
 
     @Override
     public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
+
         if (testObject instanceof CaseResult) {
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
             List<String> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+            if (ids.isEmpty()) {
+                //try parse the build output
+                try {
+                    ids = SauceOnDemandReportFactory.findSessionIDs(jobName, IOUtils.readLines(testObject.getOwner().getLogReader()));
+                } catch (IOException e) {
+                    logger.error("Error reading log file", e);
+                }
+            }
             boolean matchingJobNames = true;
             if (ids.isEmpty()) {
                 // fall back to old-style log parsing (when no job-name is present in output)
@@ -92,4 +105,20 @@ public class SauceOnDemandReportFactory extends Data {
 
     private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+) job-name=(.*)");
     private static final Pattern OLD_SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");
+
+    public static List<String> findSessionIDs(String jobName, List<String> lines) {
+        List<String> sessions = new ArrayList<String>();
+        Pattern p = jobName != null ? SESSION_ID_PATTERN : OLD_SESSION_ID_PATTERN;
+        for (String text : lines) {
+            if (text==null) continue;
+            Matcher m = p.matcher(text);
+            while (m.find()) {
+                String sessionId = m.group(1);
+                if (jobName == null || jobName.equals(m.group(2))) {
+                    sessions.add(sessionId);
+                }
+            }
+        }
+        return sessions;
+    }
 }

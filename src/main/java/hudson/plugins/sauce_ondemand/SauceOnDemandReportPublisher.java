@@ -36,6 +36,7 @@ import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.util.Secret;
+import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -55,14 +56,15 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
         JobFactory factory = new JobFactory(new Credential(PluginImpl.get().getUsername(), Secret.toString(PluginImpl.get().getApiKey())));
-
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         boolean hasResult = false;
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
                 String jobName = cr.getFullName();
-
                 List<String> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+                if (sessionIDs.isEmpty()) {
+                    sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, IOUtils.readLines(build.getLogReader()));
+                }
                 for (String id : sessionIDs) {
                     hasResult = true;
                     try {

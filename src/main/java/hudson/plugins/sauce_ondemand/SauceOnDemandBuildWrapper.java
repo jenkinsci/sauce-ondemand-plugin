@@ -120,7 +120,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             config.put("browser-version", browserInstance.getVersion());
                             config.put("url", browserInstance.getUri());
                         } catch (JSONException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            logger.error("Unable to create JSON Object", e);
                         }
                         browsersJSON.put(config);
 
@@ -159,7 +159,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 if (tunnels != null) {
                     listener.getLogger().println("Shutting down Sauce OnDemand SSH tunnels");
-                    tunnels.close(listener);
+                    Computer.currentComputer().getChannel().call(new SauceConnectCloser(tunnels, listener));
                 }
                 return true;
             }
@@ -258,9 +258,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public void close(TaskListener listener) {
-
             try {
-                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username);
+                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.error("Unable to close tunnel", e);
@@ -268,7 +267,25 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         }
     }
+    
+    private final class SauceConnectCloser implements Callable<ITunnelHolder, IOException> {
 
+        private ITunnelHolder tunnelHolder;
+        private BuildListener listener;
+
+
+        public SauceConnectCloser(ITunnelHolder tunnelHolder, BuildListener listener) {
+            this.tunnelHolder = tunnelHolder;
+            this.listener = listener;
+        }
+
+        public ITunnelHolder call() throws IOException {
+            tunnelHolder.close(listener);
+            return tunnelHolder;
+        }
+    }
+    
+    
     private final class SauceConnectStarter implements Callable<ITunnelHolder, IOException> {
         private String username;
         private String key;
@@ -308,9 +325,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             SauceTunnelManager sauceManager = null;
             try {
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
-                Object process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
-
-                //tunnelHolder.tunnelManagers.add(sauceManager);
+                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);
