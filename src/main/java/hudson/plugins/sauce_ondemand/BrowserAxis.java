@@ -83,7 +83,7 @@ public class BrowserAxis extends Axis {
     public void addBuildVariable(String value, Map<String,String> map) {
         com.saucelabs.ci.Browser b = BrowserFactory.getInstance().forKey(value);
         if (b!=null) {   // should never be null, but let's be defensive in case of downgrade.
-            map.put(getName(), "\"" + b.getUri() + "\"");
+            map.put(getName(), b.getUri());
             map.put("arguments", "\"-D" + getName() + "=" + b.getUri() + "\"");
         }
     }
