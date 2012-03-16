@@ -39,7 +39,6 @@ import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,6 +52,8 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
@@ -61,7 +62,7 @@ import java.util.Map;
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class);
+    private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class.getName());
 
     private boolean enableSauceConnect;
 
@@ -120,7 +121,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             config.put("browser-version", browserInstance.getVersion());
                             config.put("url", browserInstance.getUri());
                         } catch (JSONException e) {
-                            logger.error("Unable to create JSON Object", e);
+                            logger.log(Level.SEVERE, "Unable to create JSON Object", e);
                         }
                         browsersJSON.put(config);
 
@@ -128,8 +129,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     env.put("SAUCE_ONDEMAND_BROWSERS", StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
-                env.put("SAUCE_ONDEMAND_HOST", getHostName());
-                env.put("SAUCE_ONDEMAND_PORT", Integer.toString(getPort()));
+                env.put("SELENIUM_HOST", getHostName());
+                env.put("SELENIUM_PORT", Integer.toString(getPort()));
                 if (getStartingURL() != null) {
                     env.put("SELENIUM_STARTING_URL", getStartingURL());
                 }
@@ -262,7 +263,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
-                logger.error("Unable to close tunnel", e);
+                logger.log(Level.SEVERE,"Unable to close tunnel", e);
             }
 
         }
@@ -345,9 +346,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             try {
                 return BrowserFactory.getInstance().values();
             } catch (IOException e) {
-                logger.error("Error retrieving browsers from Saucelabs", e);
+                logger.log(Level.SEVERE,"Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
-                logger.error("Error parsing JSON response", e);
+                logger.log(Level.SEVERE,"Error parsing JSON response", e);
             }
             return Collections.emptyList();
         }
