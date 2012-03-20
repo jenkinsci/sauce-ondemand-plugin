@@ -32,7 +32,6 @@ import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
@@ -48,7 +47,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,11 @@ import java.util.logging.Logger;
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
 
     private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class.getName());
+    public static final String SELENIUM_DRIVER = "SELENIUM_DRIVER";
+    public static final String SAUCE_ONDEMAND_BROWSERS = "SAUCE_ONDEMAND_BROWSERS";
+    public static final String SELENIUM_HOST = "SELENIUM_HOST";
+    public static final String SELENIUM_PORT = "SELENIUM_PORT";
+    public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
 
     private boolean enableSauceConnect;
 
@@ -74,6 +80,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private Credentials credentials;
     private SeleniumInformation seleniumInformation;
     private List<String> browsers;
+    /**
+     * TODO provide mechanism to set launchOnSlave via UI
+     */
+    private boolean launchSauceConnectOnSlave = false;
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
@@ -90,13 +100,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
-        String buildNameDigest = Util.getDigestOf(build.getFullDisplayName());
+
         if (isEnableSauceConnect()) {
-            if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
-                File sauceConnectJar = copySauceConnectToSlave(build, listener);
-                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, getPort(), sauceConnectJar));
+            if (launchSauceConnectOnSlave) {
+                if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
+                    File sauceConnectJar = copySauceConnectToSlave(build, listener);
+                    tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(listener, getPort(), sauceConnectJar));
+                } else {
+                    tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(listener, getPort()));
+                }
             } else {
-                tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(buildNameDigest, listener, getPort()));
+                //launch Sauce Connect on the master
+                SauceConnectStarter sauceConnectStarter = new SauceConnectStarter(listener, getPort());
+                tunnels = sauceConnectStarter.call();
             }
         }
 
@@ -108,7 +124,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (browsers != null && !browsers.isEmpty()) {
                     if (browsers.size() == 1) {
                         Browser browserInstance = BrowserFactory.getInstance().forKey(browsers.get(0));
-                        env.put("SELENIUM_DRIVER", browserInstance.getUri());
+                        env.put(SELENIUM_DRIVER, browserInstance.getUri());
                     }
 
                     JSONArray browsersJSON = new JSONArray();
@@ -127,12 +143,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     }
 
-                    env.put("SAUCE_ONDEMAND_BROWSERS", StringEscapeUtils.escapeJava(browsersJSON.toString()));
+                    env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
-                env.put("SELENIUM_HOST", getHostName());
-                env.put("SELENIUM_PORT", Integer.toString(getPort()));
+                env.put(SELENIUM_HOST, getHostName());
+                env.put(SELENIUM_PORT, Integer.toString(getPort()));
                 if (getStartingURL() != null) {
-                    env.put("SELENIUM_STARTING_URL", getStartingURL());
+                    env.put(SELENIUM_STARTING_URL, getStartingURL());
                 }
             }
 
@@ -141,7 +157,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     return seleniumHost;
                 } else {
                     if (isEnableSauceConnect()) {
-                        return "localhost";
+                        return getCurrentHostName();
                     } else {
                         return "ondemand.saucelabs.com";
                     }
@@ -165,6 +181,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return true;
             }
         };
+    }
+
+    private String getCurrentHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            //shouldn't happen
+            logger.log(Level.SEVERE, "Unable to retrieve host name", e);
+        }
+        return "localhost";
     }
 
     private int getPort() {
@@ -263,12 +289,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
-                logger.log(Level.SEVERE,"Unable to close tunnel", e);
+                logger.log(Level.SEVERE, "Unable to close tunnel", e);
             }
 
         }
     }
-    
+
     private final class SauceConnectCloser implements Callable<ITunnelHolder, IOException> {
 
         private ITunnelHolder tunnelHolder;
@@ -285,17 +311,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return tunnelHolder;
         }
     }
-    
-    
+
+
     private final class SauceConnectStarter implements Callable<ITunnelHolder, IOException> {
         private String username;
         private String key;
-        private String buildName;
+
         private BuildListener listener;
         private File sauceConnectJar;
         private int port;
 
-        public SauceConnectStarter(String buildName, BuildListener listener, int port) throws IOException {
+        public SauceConnectStarter(BuildListener listener, int port) throws IOException {
             if (getCredentials() != null) {
                 this.username = getCredentials().getUsername();
                 this.key = getCredentials().getApiKey();
@@ -310,13 +336,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     this.key = Secret.toString(p.getApiKey());
                 }
             }
-            this.buildName = buildName;
+
             this.listener = listener;
             this.port = port;
         }
 
-        public SauceConnectStarter(String buildName, BuildListener listener, int port, File sauceConnectJar) throws IOException {
-            this(buildName, listener, port);
+        public SauceConnectStarter(BuildListener listener, int port, File sauceConnectJar) throws IOException {
+            this(listener, port);
             this.sauceConnectJar = sauceConnectJar;
 
         }
@@ -346,9 +372,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             try {
                 return BrowserFactory.getInstance().values();
             } catch (IOException e) {
-                logger.log(Level.SEVERE,"Error retrieving browsers from Saucelabs", e);
+                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
-                logger.log(Level.SEVERE,"Error parsing JSON response", e);
+                logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
             return Collections.emptyList();
         }
