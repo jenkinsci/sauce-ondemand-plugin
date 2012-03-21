@@ -176,7 +176,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 if (tunnels != null) {
                     listener.getLogger().println("Shutting down Sauce OnDemand SSH tunnels");
-                    Computer.currentComputer().getChannel().call(new SauceConnectCloser(tunnels, listener));
+                    if (launchSauceConnectOnSlave) {
+                        Computer.currentComputer().getChannel().call(new SauceConnectCloser(tunnels, listener));
+                    } else {
+                        SauceConnectCloser tunnelCloser = new SauceConnectCloser(tunnels, listener);
+                        tunnelCloser.call();
+                    }
                 }
                 return true;
             }
