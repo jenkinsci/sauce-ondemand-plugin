@@ -9,7 +9,7 @@
     <artifactId>sauce-ondemand</artifactId>
     <version>1.13-SNAPSHOT</version>
     <packaging>hpi</packaging>
-    <name>Hudson Sauce OnDemand plugin</name>
+    <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
 
     <scm>
@@ -115,7 +115,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.11</version>
+            <version>1.12</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

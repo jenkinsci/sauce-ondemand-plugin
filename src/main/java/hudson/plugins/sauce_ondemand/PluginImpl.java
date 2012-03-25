@@ -66,6 +66,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     private Secret apiKey;
     
     private boolean reuseSauceAuth;
+    
+    private String sauceConnectDirectory;
 
     public String getUsername() {
         return username;
@@ -98,6 +100,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         reuseSauceAuth = formData.getBoolean("reuseSauceAuth");
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
+        sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         save();
     }
 
@@ -113,6 +116,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         return reuseSauceAuth;
     }
 
+    public String getSauceConnectDirectory() {
+        return sauceConnectDirectory;
+    }
+
+    public void setSauceConnectDirectory(String sauceConnectDirectory) {
+        this.sauceConnectDirectory = sauceConnectDirectory;
+    }
+
     @Extension
     public static final class DescriptorImpl extends Descriptor<PluginImpl> {
         @Override
@@ -120,7 +131,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth ) {
             try {
                 Credential credential = reuseSauceAuth ? new Credential() : new Credential(username, Secret.toString(Secret.fromString(apiKey)));
                 new SauceTunnelFactory(credential).list();

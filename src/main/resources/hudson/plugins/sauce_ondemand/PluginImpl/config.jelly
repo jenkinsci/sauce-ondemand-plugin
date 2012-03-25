@@ -25,6 +25,9 @@
             <f:entry title="${%API Access Key}" field="apiKey">
                 <f:password id="apiKeyBox"/>
             </f:entry>
+            <f:entry title="${%Sauce Connect Working Directory}" field="sauceConnectDirectory">
+                <f:textbox id="directoryBox"/>
+            </f:entry>
             <f:entry field="reuseSauceAuth">
                 <f:checkbox id="reuseSauceAuthCheckBox" onclick="debugger;enableDisable();" title="${%Use authentication details in ~/.sauce-ondemand?}"/>
             </f:entry>

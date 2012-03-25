@@ -55,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
@@ -76,7 +78,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private ITunnelHolder tunnels;
     private String seleniumHost;
-    private int seleniumPort;
+    private String seleniumPort;
     private Credentials credentials;
     private SeleniumInformation seleniumInformation;
     private List<String> browsers;
@@ -84,10 +86,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * TODO provide mechanism to set launchOnSlave via UI
      */
     private boolean launchSauceConnectOnSlave = false;
+    public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([A-Z]+)");
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
-                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, int seleniumPort, boolean enableSauceConnect, List<String> browsers) {
+                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, String seleniumPort, boolean enableSauceConnect, List<String> browsers) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -153,7 +156,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             private String getHostName() {
+
                 if (StringUtils.isNotBlank(seleniumHost)) {
+                    Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumHost);
+                    if (matcher.matches()) {
+                        String variableName = matcher.group(1);
+                        return System.getenv(variableName);
+                    }
                     return seleniumHost;
                 } else {
                     if (isEnableSauceConnect()) {
@@ -199,8 +208,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private int getPort() {
-        if (seleniumPort > 0) {
-            return seleniumPort;
+        if (StringUtils.isNotBlank(seleniumPort)) {
+            Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumPort);
+            if (matcher.matches()) {
+                String variableName = matcher.group(1);
+                String value = System.getenv(variableName);
+                if (value == null) {
+                    value = "0";
+                }
+                return Integer.parseInt(value);
+            } else {
+                return Integer.parseInt(seleniumPort);
+            }
         } else {
             if (isEnableSauceConnect()) {
                 return 4445;
@@ -238,11 +257,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.seleniumHost = seleniumHost;
     }
 
-    public int getSeleniumPort() {
+    public String getSeleniumPort() {
         return seleniumPort;
     }
 
-    public void setSeleniumPort(int seleniumPort) {
+    public void setSeleniumPort(String seleniumPort) {
         this.seleniumPort = seleniumPort;
     }
 
