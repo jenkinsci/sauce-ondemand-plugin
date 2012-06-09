@@ -72,6 +72,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_HOST = "SELENIUM_HOST";
     public static final String SELENIUM_PORT = "SELENIUM_PORT";
     public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
+    private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
+    private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
 
     private boolean enableSauceConnect;
 
@@ -88,6 +90,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private boolean launchSauceConnectOnSlave = false;
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
+
+
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
@@ -149,6 +153,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
+                env.put(SAUCE_USERNAME, getUserName());
+                env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
                 DecimalFormat myFormatter = new DecimalFormat("###");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
@@ -251,6 +257,48 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return null;
     }
 
+    public String getUserName() {
+        if (getCredentials() != null) {
+            return getCredentials().getUsername();
+        } else {
+            PluginImpl p = PluginImpl.get();
+            if (p.isReuseSauceAuth()) {
+                com.saucelabs.rest.Credential storedCredentials = null;
+                try {
+                    storedCredentials = new com.saucelabs.rest.Credential();
+                    return storedCredentials.getUsername();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Error retrieving credentials", e);
+                }
+
+            } else {
+                return p.getUsername();
+
+            }
+        }
+        return "";
+    }
+
+    public String getApiKey() {
+            if (getCredentials() != null) {
+                return getCredentials().getApiKey();
+            } else {
+                PluginImpl p = PluginImpl.get();
+                if (p.isReuseSauceAuth()) {
+                    com.saucelabs.rest.Credential storedCredentials;
+                    try {
+                        storedCredentials = new com.saucelabs.rest.Credential();
+                        return storedCredentials.getKey();
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Error retrieving credentials", e);
+                    }
+                } else {
+                    return Secret.toString(p.getApiKey());
+                }
+            }
+            return "";
+        }
+
     public String getSeleniumHost() {
         return seleniumHost;
     }
@@ -348,21 +396,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private int port;
 
         public SauceConnectStarter(BuildListener listener, int port) throws IOException {
-            if (getCredentials() != null) {
-                this.username = getCredentials().getUsername();
-                this.key = getCredentials().getApiKey();
-            } else {
-                PluginImpl p = PluginImpl.get();
-                if (p.isReuseSauceAuth()) {
-                    com.saucelabs.rest.Credential storedCredentials = new com.saucelabs.rest.Credential();
-                    this.username = storedCredentials.getUsername();
-                    this.key = storedCredentials.getKey();
-                } else {
-                    this.username = p.getUsername();
-                    this.key = Secret.toString(p.getApiKey());
-                }
-            }
-
+            this.username = getUserName();
+            this.key = getApiKey();
             this.listener = listener;
             this.port = port;
         }
