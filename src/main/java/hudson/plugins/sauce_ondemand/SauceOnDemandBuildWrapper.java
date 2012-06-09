@@ -28,7 +28,7 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.hudson.JenkinsSauceManagerFactory;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -50,6 +50,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * TODO provide mechanism to set launchOnSlave via UI
      */
     private boolean launchSauceConnectOnSlave = false;
-    public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([A-Z]+)");
+    public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
@@ -149,7 +150,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
                 env.put(SELENIUM_HOST, getHostName());
-                env.put(SELENIUM_PORT, Integer.toString(getPort()));
+                DecimalFormat myFormatter = new DecimalFormat("###");
+                env.put(SELENIUM_PORT, myFormatter.format(getPort()));
                 if (getStartingURL() != null) {
                     env.put(SELENIUM_STARTING_URL, getStartingURL());
                 }
@@ -310,7 +312,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             try {
-                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
+                JenkinsSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.log(Level.SEVERE, "Unable to close tunnel", e);
@@ -375,7 +377,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
-                sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
+                sauceManager = JenkinsSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {

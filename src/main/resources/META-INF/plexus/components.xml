@@ -20,7 +20,7 @@ under the License.
     <components>
         <component>
             <role>com.saucelabs.ci.sauceconnect.SauceTunnelManager</role>
-            <implementation>com.saucelabs.hudson.HudsonSauceConnectManager</implementation>
+            <implementation>com.saucelabs.hudson.JenkinsSauceConnectManager</implementation>
         </component>
     </components>
 </component-set>

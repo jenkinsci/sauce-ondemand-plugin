@@ -57,7 +57,6 @@ public class SauceOnDemandReport extends TestAction {
      */
     private final boolean matchingJobNames;
     private static final String HMAC_KEY = "HMACMD5";
-    ;
 
     public SauceOnDemandReport(CaseResult parent, List<String> ids, boolean matchingJobNames) {
         this.parent = parent;
@@ -93,7 +92,7 @@ public class SauceOnDemandReport extends TestAction {
         return "Sauce OnDemand report";
     }
 
-    public String getUrlName() {
+     public String getUrlName() {
         return "sauce-ondemand-report";
     }
 

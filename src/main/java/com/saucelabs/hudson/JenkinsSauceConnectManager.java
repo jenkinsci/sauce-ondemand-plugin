@@ -7,7 +7,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * @author Ross Rowe
  */
-public class HudsonSauceConnectManager extends SauceConnectTwoManager {
+public class JenkinsSauceConnectManager extends SauceConnectTwoManager {
 
     @Override
     public String getSauceConnectWorkingDirectory() {
