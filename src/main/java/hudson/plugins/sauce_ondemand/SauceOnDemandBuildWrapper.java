@@ -223,6 +223,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private void processBuildOutput(AbstractBuild build) {
         JobFactory factory = new JobFactory(new Credential(getUserName(), getApiKey()));
         //todo we only want to iterate over lines if we're not using junit test results
+
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
 
@@ -238,7 +239,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                     false,
                                     Collections.<String>emptyList(),
                                     Integer.toString(build.getNumber()),
-                                    true,//todo how can we tell if the build has passed or failed here?
+                                    build.getResult().equals(Result.SUCCESS),
                                     Collections.<String, Object>emptyMap()));
                 }
             } catch (IOException e) {
