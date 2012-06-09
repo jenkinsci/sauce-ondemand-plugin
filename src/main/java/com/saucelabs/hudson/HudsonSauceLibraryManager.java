@@ -16,7 +16,7 @@ import java.net.URISyntaxException;
 /**
  * @author Ross Rowe
  */
-public class JenkinsSauceLibraryManager extends SauceLibraryManager {
+public class HudsonSauceLibraryManager extends SauceLibraryManager {
     /**
      * 
      * @param jarFile

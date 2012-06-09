@@ -28,10 +28,14 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
-import com.saucelabs.hudson.JenkinsSauceManagerFactory;
+import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.rest.Credential;
+import com.saucelabs.rest.JobFactory;
+import com.saucelabs.rest.UpdateJob;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
@@ -46,11 +50,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +101,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     private static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     private static final String SELENIUM_VERSION = "SELENIUM_VERSION";
+    private SauceOnDemandLogParser logParser;
 
 
     @DataBoundConstructor
@@ -205,9 +214,38 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         tunnelCloser.call();
                     }
                 }
+                processBuildOutput(build);
                 return true;
             }
         };
+    }
+
+    private void processBuildOutput(AbstractBuild build) {
+        JobFactory factory = new JobFactory(new Credential(getUserName(), getApiKey()));
+        //todo we only want to iterate over lines if we're not using junit test results
+        String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
+        List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+
+        for (String[] sessionId : sessionIDs) {
+            String id = sessionId[0];
+            try {
+
+                String jobName = sessionId[1];
+                if (StringUtils.isNotBlank(jobName)) {
+                    factory.update(id,
+                            new UpdateJob(
+                                    jobName,
+                                    false,
+                                    Collections.<String>emptyList(),
+                                    Integer.toString(build.getNumber()),
+                                    true,//todo how can we tell if the build has passed or failed here?
+                                    Collections.<String, Object>emptyMap()));
+                }
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error while updating job " + id, e);
+            }
+        }
+
     }
 
     private String getCurrentHostName() {
@@ -285,24 +323,24 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     public String getApiKey() {
-            if (getCredentials() != null) {
-                return getCredentials().getApiKey();
-            } else {
-                PluginImpl p = PluginImpl.get();
-                if (p.isReuseSauceAuth()) {
-                    com.saucelabs.rest.Credential storedCredentials;
-                    try {
-                        storedCredentials = new com.saucelabs.rest.Credential();
-                        return storedCredentials.getKey();
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, "Error retrieving credentials", e);
-                    }
-                } else {
-                    return Secret.toString(p.getApiKey());
+        if (getCredentials() != null) {
+            return getCredentials().getApiKey();
+        } else {
+            PluginImpl p = PluginImpl.get();
+            if (p.isReuseSauceAuth()) {
+                com.saucelabs.rest.Credential storedCredentials;
+                try {
+                    storedCredentials = new com.saucelabs.rest.Credential();
+                    return storedCredentials.getKey();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Error retrieving credentials", e);
                 }
+            } else {
+                return Secret.toString(p.getApiKey());
             }
-            return "";
         }
+        return "";
+    }
 
     public String getSeleniumHost() {
         return seleniumHost;
@@ -356,6 +394,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         void close(TaskListener listener);
     }
 
+    @Override
+    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
+        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
+        return logParser;
+    }
+
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
         private String username;
 
@@ -365,7 +409,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             try {
-                JenkinsSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
+                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.log(Level.SEVERE, "Unable to close tunnel", e);
@@ -417,7 +461,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
-                sauceManager = JenkinsSauceManagerFactory.getInstance().createSauceConnectManager();
+                sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
@@ -447,4 +491,36 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
 
+    /**
+     * @author Ross Rowe
+     */
+    public class SauceOnDemandLogParser extends LineTransformationOutputStream {
+
+        private OutputStream outputStream;
+        private Charset charset;
+        private List<String> lines;
+
+        public SauceOnDemandLogParser(OutputStream outputStream, Charset charset) {
+            this.outputStream = outputStream;
+            this.charset = charset;
+            this.lines = new ArrayList<String>();
+        }
+
+        @Override
+        protected void eol(byte[] b, int len) throws IOException {
+
+            this.outputStream.write(b, 0, len);
+            lines.add(charset.decode(ByteBuffer.wrap(b, 0, len)).toString());
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            this.outputStream.close();
+        }
+
+        public List<String> getLines() {
+            return lines;
+        }
+    }
 }

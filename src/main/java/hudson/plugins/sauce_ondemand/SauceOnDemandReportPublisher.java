@@ -56,19 +56,22 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
         JobFactory factory = new JobFactory(new Credential(PluginImpl.get().getUsername(), Secret.toString(PluginImpl.get().getApiKey())));
+
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         boolean hasResult = false;
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
                 String jobName = cr.getFullName();
-                List<String> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+                List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
                 if (sessionIDs.isEmpty()) {
-                    sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, IOUtils.readLines(build.getLogReader()));
+                    List<String> lines = IOUtils.readLines(build.getLogReader());
+                    String[] array = lines.toArray(new String[lines.size()]);
+                    sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, array);
                 }
-                for (String id : sessionIDs) {
+                for (String[] id : sessionIDs) {
                     hasResult = true;
                     try {
-                        factory.update(id, new UpdateJob(cr.getFullName(), false, Collections.<String>emptyList(), Integer.toString(build.getNumber()), cr.isPassed(), Collections.<String, Object>emptyMap()));
+                        factory.update(id[0], new UpdateJob(cr.getFullName(), false, Collections.<String>emptyList(), Integer.toString(build.getNumber()), cr.isPassed(), Collections.<String, Object>emptyMap()));
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
                     }

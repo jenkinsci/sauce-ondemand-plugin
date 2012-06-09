@@ -49,6 +49,7 @@ public class SauceOnDemandReportFactory extends Data {
 
     /**
      * Makes this a singleton -- since it's stateless, there's no need to keep one around for every build.
+     *
      * @return
      */
     public Object readResolve() {
@@ -61,11 +62,13 @@ public class SauceOnDemandReportFactory extends Data {
         if (testObject instanceof CaseResult) {
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
-            List<String> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+            List<String[]> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
             if (ids.isEmpty()) {
                 //try parse the build output
                 try {
-                    ids = SauceOnDemandReportFactory.findSessionIDs(jobName, IOUtils.readLines(testObject.getOwner().getLogReader()));
+                    List<String> lines = IOUtils.readLines(testObject.getOwner().getLogReader());
+                    String[] lineArray = lines.toArray(new String[lines.size()]);
+                    ids = SauceOnDemandReportFactory.findSessionIDs(jobName, lineArray);
                 } catch (IOException e) {
                     logger.error("Error reading log file", e);
                 }
@@ -77,7 +80,7 @@ public class SauceOnDemandReportFactory extends Data {
                 matchingJobNames = false;
             }
             if (!ids.isEmpty()) {
-                return Collections.singletonList(new SauceOnDemandReport(cr,ids, matchingJobNames));
+                return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
             }
         }
         return Collections.emptyList();
@@ -87,17 +90,19 @@ public class SauceOnDemandReportFactory extends Data {
      * Returns all sessions matching a given jobName in the provided logs.
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
-    static List<String> findSessionIDs(String jobName, String... output) {
-        List<String> sessions = new ArrayList<String>();
+    static List<String[]> findSessionIDs(String jobName, String... output) {
+        List<String[]> sessions = new ArrayList<String[]>();
         Pattern p = jobName != null ? SESSION_ID_PATTERN : OLD_SESSION_ID_PATTERN;
         for (String text : output) {
-            if (text==null) continue;
+            if (text == null) continue;
             Matcher m = p.matcher(text);
             while (m.find()) {
                 String sessionId = m.group(1);
-                if (jobName == null || jobName.equals(m.group(2))) {
-                    sessions.add(sessionId);
+                String job = "";
+                if (m.groupCount() == 2 && (jobName == null || jobName.equals(m.group(2)))) {
+                    job = m.group(2);
                 }
+                sessions.add(new String[]{sessionId, job});
             }
         }
         return sessions;
@@ -106,19 +111,5 @@ public class SauceOnDemandReportFactory extends Data {
     private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+) job-name=(.*)");
     private static final Pattern OLD_SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");
 
-    public static List<String> findSessionIDs(String jobName, List<String> lines) {
-        List<String> sessions = new ArrayList<String>();
-        Pattern p = jobName != null ? SESSION_ID_PATTERN : OLD_SESSION_ID_PATTERN;
-        for (String text : lines) {
-            if (text==null) continue;
-            Matcher m = p.matcher(text);
-            while (m.find()) {
-                String sessionId = m.group(1);
-                if (jobName == null || jobName.equals(m.group(2))) {
-                    sessions.add(sessionId);
-                }
-            }
-        }
-        return sessions;
-    }
+
 }

@@ -13,19 +13,19 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Ross Rowe
  */
-public class JenkinsSauceManagerFactory {
+public class HudsonSauceManagerFactory {
 
-    private static final JenkinsSauceManagerFactory INSTANCE = new JenkinsSauceManagerFactory();
+    private static final HudsonSauceManagerFactory INSTANCE = new HudsonSauceManagerFactory();
 
     private PlexusContainer plexus = null;
 
     private Lock accessLock = new ReentrantLock();
 
-    public static JenkinsSauceManagerFactory getInstance() {
+    public static HudsonSauceManagerFactory getInstance() {
         return INSTANCE;
     }
 
-    private JenkinsSauceManagerFactory() {
+    private HudsonSauceManagerFactory() {
     }
 
     public SauceConnectTwoManager createSauceConnectManager() throws ComponentLookupException {

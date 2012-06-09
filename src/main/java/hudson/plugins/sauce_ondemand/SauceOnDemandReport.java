@@ -35,10 +35,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * Show videos for the tests.
@@ -50,7 +47,7 @@ public class SauceOnDemandReport extends TestAction {
     /**
      * Session IDs.
      */
-    private final List<String> ids;
+    private final List<String[]> sessionIds;
 
     /**
      * Could we match session IDs to test names ?
@@ -58,9 +55,9 @@ public class SauceOnDemandReport extends TestAction {
     private final boolean matchingJobNames;
     private static final String HMAC_KEY = "HMACMD5";
 
-    public SauceOnDemandReport(CaseResult parent, List<String> ids, boolean matchingJobNames) {
+    public SauceOnDemandReport(CaseResult parent, List<String[]> ids, boolean matchingJobNames) {
         this.parent = parent;
-        this.ids = ids;
+        this.sessionIds = ids;
         this.matchingJobNames = matchingJobNames;
     }
 
@@ -73,11 +70,15 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public List<String> getIDs() {
+        List<String> ids = new ArrayList<String>();
+        for (String[] sessionId : sessionIds) {
+            ids.add(sessionId[0]);
+        }
         return Collections.unmodifiableList(ids);
     }
 
     public String getId() {
-        return ids.get(0);
+        return getIDs().get(0);
     }
 
     public String getAuth() throws IOException {

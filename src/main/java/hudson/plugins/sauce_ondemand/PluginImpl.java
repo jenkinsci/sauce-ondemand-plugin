@@ -24,8 +24,8 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.SauceLibraryManager;
-import com.saucelabs.hudson.JenkinsSauceLibraryManager;
-import com.saucelabs.hudson.JenkinsSauceManagerFactory;
+import com.saucelabs.hudson.HudsonSauceLibraryManager;
+import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.rest.Credential;
 import com.saucelabs.rest.SauceTunnelFactory;
 import hudson.Extension;
@@ -55,7 +55,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     
     private static final Logger logger = Logger.getLogger(PluginImpl.class);
 
-    private SauceLibraryManager libraryManager = new JenkinsSauceLibraryManager();
+    private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
      * User name to access Sauce OnDemand.
      */
@@ -86,7 +86,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper", SauceOnDemandBuildWrapper.class);
 
         load();
-        JenkinsSauceManagerFactory.getInstance().start();
+        HudsonSauceManagerFactory.getInstance().start();
     }
 
     public void setCredential(String username, String apiKey) throws IOException {
