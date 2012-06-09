@@ -90,7 +90,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private boolean launchSauceConnectOnSlave = false;
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
-
+    private static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
+    private static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
+    private static final String SELENIUM_VERSION = "SELENIUM_VERSION";
 
 
     @DataBoundConstructor
@@ -132,6 +134,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (browsers != null && !browsers.isEmpty()) {
                     if (browsers.size() == 1) {
                         Browser browserInstance = BrowserFactory.getInstance().forKey(browsers.get(0));
+                        env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
+                        env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
+                        env.put(SELENIUM_VERSION, browserInstance.getVersion());
                         env.put(SELENIUM_DRIVER, browserInstance.getUri());
                     }
 
