@@ -410,11 +410,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
-//    @Override
-//    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
-//        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
-//        return logParser;
-//    }
+    @Override
+    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
+        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
+        return logParser;
+    }
 
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
         private String username;
@@ -512,8 +512,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable  {
 
-        private OutputStream outputStream;
-        private Charset charset;
+        private transient OutputStream outputStream;
+        private transient Charset charset;
         private List<String> lines;
 
         public SauceOnDemandLogParser(OutputStream outputStream, Charset charset) {
@@ -524,15 +524,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         @Override
         protected void eol(byte[] b, int len) throws IOException {
-
-            this.outputStream.write(b, 0, len);
-            lines.add(charset.decode(ByteBuffer.wrap(b, 0, len)).toString());
+            if (this.outputStream != null) {
+                this.outputStream.write(b, 0, len);
+            }
+            if (charset != null) {
+                lines.add(charset.decode(ByteBuffer.wrap(b, 0, len)).toString());
+            }
         }
 
         @Override
         public void close() throws IOException {
             super.close();
-            this.outputStream.close();
+            if (outputStream != null) {
+                this.outputStream.close();
+            }
         }
 
         public List<String> getLines() {
