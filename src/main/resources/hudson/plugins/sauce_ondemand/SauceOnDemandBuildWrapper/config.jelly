@@ -45,6 +45,9 @@
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
+                <f:entry field="launchSauceConnectOnSlave">
+                    <f:checkbox title="${%Launch Sauce Connect On Slave}"/>
+                </f:entry>
                 <f:entry title="${%Sauce OnDemand Host}" field="seleniumHost">
                     <f:textbox/>
                 </f:entry>

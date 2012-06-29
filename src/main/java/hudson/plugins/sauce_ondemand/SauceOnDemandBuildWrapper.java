@@ -94,7 +94,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private SeleniumInformation seleniumInformation;
     private List<String> browsers;
     /**
-     * TODO provide mechanism to set launchOnSlave via UI
+     *
      */
     private boolean launchSauceConnectOnSlave = false;
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
@@ -106,13 +106,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
-                                             credentials, SeleniumInformation seleniumInformation, String seleniumHost, String seleniumPort, boolean enableSauceConnect, List<String> browsers) {
+                                             credentials,
+                                     SeleniumInformation seleniumInformation,
+                                     String seleniumHost,
+                                     String seleniumPort,
+                                     boolean enableSauceConnect,
+                                     List<String> browsers,
+                                     boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
         this.browsers = browsers;
+        this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
 
@@ -170,7 +177,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
-                DecimalFormat myFormatter = new DecimalFormat("###");
+                DecimalFormat myFormatter = new DecimalFormat("####");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
                 if (getStartingURL() != null) {
                     env.put(SELENIUM_STARTING_URL, getStartingURL());
@@ -206,7 +213,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 if (tunnels != null) {
-                    listener.getLogger().println("Shutting down Sauce OnDemand SSH tunnels");
+                    listener.getLogger().println("Shutting down Sauce Connect SSH tunnels");
                     if (launchSauceConnectOnSlave) {
                         Computer.currentComputer().getChannel().call(new SauceConnectCloser(tunnels, listener));
                     } else {
@@ -214,6 +221,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         tunnelCloser.call();
                     }
                 }
+                listener.getLogger().println("Sauce Connect closed");
                 processBuildOutput(build);
                 return true;
             }
@@ -222,7 +230,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private void processBuildOutput(AbstractBuild build) {
         JobFactory factory = new JobFactory(new Credential(getUserName(), getApiKey()));
-        //todo we only want to iterate over lines if we're not using junit test results
 
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
@@ -395,11 +402,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         void close(TaskListener listener);
     }
 
-    @Override
-    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
-        return logParser;
+    public boolean isLaunchSauceConnectOnSlave() {
+        return launchSauceConnectOnSlave;
     }
+
+    public void setLaunchSauceConnectOnSlave(boolean launchSauceConnectOnSlave) {
+        this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
+    }
+
+//    @Override
+//    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
+//        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
+//        return logParser;
+//    }
 
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
         private String username;
@@ -495,7 +510,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @author Ross Rowe
      */
-    public class SauceOnDemandLogParser extends LineTransformationOutputStream {
+    public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable  {
 
         private OutputStream outputStream;
         private Charset charset;
