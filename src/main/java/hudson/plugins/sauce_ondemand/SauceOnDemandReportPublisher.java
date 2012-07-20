@@ -23,9 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.rest.Credential;
-import com.saucelabs.rest.JobFactory;
-import com.saucelabs.rest.UpdateJob;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -40,8 +38,9 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Associates Sauce OnDemand session ID to unit tests.
@@ -54,8 +53,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     @Override
-    public SauceOnDemandReportFactory getTestData(AbstractBuild<?,?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-        JobFactory factory = new JobFactory(new Credential(PluginImpl.get().getUsername(), Secret.toString(PluginImpl.get().getApiKey())));
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
+        SauceREST sauceREST = new SauceREST(PluginImpl.get().getUsername(), Secret.toString(PluginImpl.get().getApiKey()));
 
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         boolean hasResult = false;
@@ -71,7 +70,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 for (String[] id : sessionIDs) {
                     hasResult = true;
                     try {
-                        factory.update(id[0], new UpdateJob(cr.getFullName(), false, Collections.<String>emptyList(), Integer.toString(build.getNumber()), cr.isPassed(), Collections.<String, Object>emptyMap()));
+                        Map<String, Object> updates = new HashMap<String, Object>();
+                        updates.put("name", cr.getFullName());
+                        updates.put("public", false);
+                        updates.put("build", build.getNumber());
+                        updates.put("passed", cr.isPassed());
+                        sauceREST.updateJobInfo(id[0], updates);
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
                     }

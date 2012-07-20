@@ -101,9 +101,20 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+              <groupId>commons-io</groupId>
+              <artifactId>commons-io</artifactId>
+              <version>1.4</version>
+            </dependency>
+        <dependency>
+            <groupId>com.saucelabs</groupId>
+            <artifactId>saucerest</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-rest-api</artifactId>
             <version>1.5</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.sonatype.sisu</groupId>
@@ -115,7 +126,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.13</version>
+            <version>1.14</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

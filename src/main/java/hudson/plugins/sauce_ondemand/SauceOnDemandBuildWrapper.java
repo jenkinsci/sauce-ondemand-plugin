@@ -28,10 +28,9 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.rest.Credential;
-import com.saucelabs.rest.JobFactory;
-import com.saucelabs.rest.UpdateJob;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -58,10 +57,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -229,7 +225,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private void processBuildOutput(AbstractBuild build) {
-        JobFactory factory = new JobFactory(new Credential(getUserName(), getApiKey()));
+        SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
 
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
@@ -240,14 +236,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 String jobName = sessionId[1];
                 if (StringUtils.isNotBlank(jobName)) {
-                    factory.update(id,
-                            new UpdateJob(
-                                    jobName,
-                                    false,
-                                    Collections.<String>emptyList(),
-                                    Integer.toString(build.getNumber()),
-                                    build.getResult().equals(Result.SUCCESS),
-                                    Collections.<String, Object>emptyMap()));
+                    Map<String, Object> updates = new HashMap<String, Object>();
+                    updates.put("public", false);
+                    updates.put("build", build.getNumber());
+                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
+                    sauceREST.updateJobInfo(jobName, updates);
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
@@ -314,20 +307,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         } else {
             PluginImpl p = PluginImpl.get();
             if (p.isReuseSauceAuth()) {
-                com.saucelabs.rest.Credential storedCredentials = null;
-                try {
-                    storedCredentials = new com.saucelabs.rest.Credential();
-                    return storedCredentials.getUsername();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Error retrieving credentials", e);
-                }
-
+                SauceOnDemandAuthentication storedCredentials = null;
+                storedCredentials = new SauceOnDemandAuthentication();
+                return storedCredentials.getUsername();
             } else {
                 return p.getUsername();
 
             }
         }
-        return "";
     }
 
     public String getApiKey() {
@@ -336,18 +323,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         } else {
             PluginImpl p = PluginImpl.get();
             if (p.isReuseSauceAuth()) {
-                com.saucelabs.rest.Credential storedCredentials;
-                try {
-                    storedCredentials = new com.saucelabs.rest.Credential();
-                    return storedCredentials.getKey();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Error retrieving credentials", e);
-                }
+                SauceOnDemandAuthentication storedCredentials;
+                storedCredentials = new SauceOnDemandAuthentication();
+                return storedCredentials.getAccessKey();
             } else {
                 return Secret.toString(p.getApiKey());
             }
         }
-        return "";
     }
 
     public String getSeleniumHost() {
@@ -510,7 +492,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @author Ross Rowe
      */
-    public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable  {
+    public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable {
 
         private transient OutputStream outputStream;
         private transient Charset charset;

@@ -24,10 +24,10 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.SauceLibraryManager;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.rest.Credential;
-import com.saucelabs.rest.SauceTunnelFactory;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
@@ -133,8 +133,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth ) {
             try {
-                Credential credential = reuseSauceAuth ? new Credential() : new Credential(username, Secret.toString(Secret.fromString(apiKey)));
-                new SauceTunnelFactory(credential).list();
+                SauceOnDemandAuthentication credential = reuseSauceAuth ? new SauceOnDemandAuthentication() : new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
+                //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
+                new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
                 return FormValidation.ok("Success");
             } catch (IOException e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
