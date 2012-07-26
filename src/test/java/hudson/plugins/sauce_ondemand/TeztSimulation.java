@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.rest.Credential;
 import com.saucelabs.sauce_ondemand.driver.SauceOnDemandSelenium;
 import com.saucelabs.selenium.client.factory.SeleniumFactory;
+import com.thoughtworks.selenium.Selenium;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import org.junit.Assert;
@@ -47,9 +48,11 @@ public class TeztSimulation {
 
         System.setProperty("SELENIUM_DRIVER", new com.saucelabs.ci.Browser("Firefox3_0_Linux", "linux", "firefox", "3.0", "firefox").getUri());
 
-        SauceOnDemandSelenium selenium = (SauceOnDemandSelenium) SeleniumFactory.create();
+        Selenium selenium = SeleniumFactory.create();
         selenium.start();
-        String sessionId = selenium.getSessionId();
+
+        SauceOnDemandSelenium sauceOnDemandSelenium = (SauceOnDemandSelenium) selenium;
+        String sessionId = sauceOnDemandSelenium.getSessionIdValue();
 
 
         try {

@@ -35,6 +35,8 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.util.Secret;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -70,14 +72,24 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 for (String[] id : sessionIDs) {
                     hasResult = true;
                     try {
+                        String json = sauceREST.getJobInfo(id[0]);
+                        JSONObject jsonObject = new JSONObject(json);
                         Map<String, Object> updates = new HashMap<String, Object>();
-                        updates.put("name", cr.getFullName());
+                        //only store passed/name values if they haven't already been set
+                        if (jsonObject.get("passed").equals(JSONObject.NULL)) {
+                            updates.put("passed", cr.isPassed());
+                        }
+                        if (jsonObject.get("name").equals(JSONObject.NULL)) {
+                            updates.put("name", cr.getFullName());
+                        }
+
                         updates.put("public", false);
                         updates.put("build", build.getNumber());
-                        updates.put("passed", cr.isPassed());
                         sauceREST.updateJobInfo(id[0], updates);
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
+                    } catch (JSONException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
                 }
                 if (sessionIDs.isEmpty()) {

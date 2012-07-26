@@ -236,14 +236,24 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 String jobName = sessionId[1];
                 if (StringUtils.isNotBlank(jobName)) {
+                    String json = sauceREST.getJobInfo(id);
+                    JSONObject jsonObject = new JSONObject(json);
                     Map<String, Object> updates = new HashMap<String, Object>();
+                    //only store passed/name values if they haven't already been set
+                    if (jsonObject.get("passed").equals(JSONObject.NULL)) {
+                        updates.put("passed", build.getResult().equals(Result.SUCCESS));
+                    }
+                    if (jsonObject.get("name").equals(JSONObject.NULL)) {
+                        updates.put("name", jobName);
+                    }
                     updates.put("public", false);
                     updates.put("build", build.getNumber());
-                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
                     sauceREST.updateJobInfo(jobName, updates);
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
 
