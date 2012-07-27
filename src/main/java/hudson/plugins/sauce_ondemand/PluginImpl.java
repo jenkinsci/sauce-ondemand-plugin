@@ -37,13 +37,14 @@ import hudson.model.Items;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
-import org.apache.log4j.Logger;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Persists the access credential to Sauce OnDemand.
@@ -53,7 +54,7 @@ import java.io.IOException;
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     
-    private static final Logger logger = Logger.getLogger(PluginImpl.class);
+    private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
 
     private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
@@ -161,7 +162,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                     "})\">Update Sauce Connect<\\a>" : 
                     "No update required, Sauce Connect is up to date";
         } catch (Exception e) {
-            logger.error(e);
+            logger.log(Level.WARNING,  "Error checking for later version", e);
         }
         return "Failed to connect to Sauce OnDemand";
     }
@@ -176,7 +177,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             libraryManager.triggerReload();
             return "Update of the Sauce Connect library was successful";
         } catch (Exception e) {
-            logger.error(e);
+            logger.log(Level.WARNING, "Error Reloading plugin", e);
         } 
         return "Failed to apply updates, please see application logs";
     }

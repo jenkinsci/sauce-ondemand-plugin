@@ -27,12 +27,13 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +44,7 @@ import java.util.regex.Pattern;
  */
 public class SauceOnDemandReportFactory extends Data {
 
-    private static final Logger logger = Logger.getLogger(SauceOnDemandReportFactory.class);
+    private static final Logger logger = Logger.getLogger(SauceOnDemandReportFactory.class.getName());
 
     public static final SauceOnDemandReportFactory INSTANCE = new SauceOnDemandReportFactory();
 
@@ -60,28 +61,39 @@ public class SauceOnDemandReportFactory extends Data {
     public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
 
         if (testObject instanceof CaseResult) {
+            logger.log(Level.INFO, "Attempting to find Sauce SessionID for test object");
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
             List<String[]> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+            List<String> lines = new ArrayList<String>();
+            try {
+                lines = IOUtils.readLines(testObject.getOwner().getLogReader());
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error reading log file", e);
+            }
+            String[] lineArray = lines.toArray(new String[lines.size()]);
             if (ids.isEmpty()) {
                 //try parse the build output
-                try {
-                    List<String> lines = IOUtils.readLines(testObject.getOwner().getLogReader());
-                    String[] lineArray = lines.toArray(new String[lines.size()]);
-                    ids = SauceOnDemandReportFactory.findSessionIDs(jobName, lineArray);
-                } catch (IOException e) {
-                    logger.error("Error reading log file", e);
-                }
+                logger.log(Level.INFO, "Parsing build output");
+                ids = SauceOnDemandReportFactory.findSessionIDs(jobName, lineArray);
             }
             boolean matchingJobNames = true;
             if (ids.isEmpty()) {
                 // fall back to old-style log parsing (when no job-name is present in output)
+                logger.log(Level.INFO, "Parsing stdout with no job name");
                 ids = findSessionIDs(null, cr.getStdout(), cr.getStderr());
+                if (ids.isEmpty()) {
+                    ids = SauceOnDemandReportFactory.findSessionIDs(null, lineArray);
+                }
                 matchingJobNames = false;
             }
-            if (!ids.isEmpty()) {
+            if (ids.isEmpty()) {
+                logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
+            } else {
                 return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
             }
+        } else {
+            logger.log(Level.INFO, "Test Object not a CaseResult, unable to parse output");
         }
         return Collections.emptyList();
     }

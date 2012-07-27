@@ -121,9 +121,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
 
         if (isEnableSauceConnect()) {
+            listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
             if (launchSauceConnectOnSlave) {
                 if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                     File sauceConnectJar = copySauceConnectToSlave(build, listener);
@@ -216,8 +216,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         SauceConnectCloser tunnelCloser = new SauceConnectCloser(tunnels, listener);
                         tunnelCloser.call();
                     }
+                    listener.getLogger().println("Sauce Connect closed");
                 }
-                listener.getLogger().println("Sauce Connect closed");
                 processBuildOutput(build);
                 return true;
             }

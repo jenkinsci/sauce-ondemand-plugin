@@ -64,9 +64,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             for (CaseResult cr : sr.getCases()) {
                 String jobName = cr.getFullName();
                 List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+                List<String> lines = IOUtils.readLines(build.getLogReader());
+                String[] array = lines.toArray(new String[lines.size()]);
                 if (sessionIDs.isEmpty()) {
-                    List<String> lines = IOUtils.readLines(build.getLogReader());
-                    String[] array = lines.toArray(new String[lines.size()]);
                     sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, array);
                 }
                 for (String[] id : sessionIDs) {
@@ -95,6 +95,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 if (sessionIDs.isEmpty()) {
                     // check for old-style logs
                     sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, cr.getStdout(), cr.getStderr());
+                    if (sessionIDs.isEmpty()) {
+                        sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+                    }
                     if (!sessionIDs.isEmpty()) {
                         hasResult = true;
                     }
