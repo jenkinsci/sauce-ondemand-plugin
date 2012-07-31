@@ -65,28 +65,18 @@ public class SauceOnDemandReportFactory extends Data {
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
             List<String[]> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
-            List<String> lines = new ArrayList<String>();
-            try {
-                lines = IOUtils.readLines(testObject.getOwner().getLogReader());
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error reading log file", e);
-            }
-            String[] lineArray = lines.toArray(new String[lines.size()]);
-            if (ids.isEmpty()) {
-                //try parse the build output
-                logger.log(Level.INFO, "Parsing build output");
-                ids = SauceOnDemandReportFactory.findSessionIDs(jobName, lineArray);
-            }
             boolean matchingJobNames = true;
             if (ids.isEmpty()) {
                 // fall back to old-style log parsing (when no job-name is present in output)
                 logger.log(Level.INFO, "Parsing stdout with no job name");
                 ids = findSessionIDs(null, cr.getStdout(), cr.getStderr());
                 if (ids.isEmpty()) {
-                    ids = SauceOnDemandReportFactory.findSessionIDs(null, lineArray);
+                    ids = SauceOnDemandReportFactory.findSessionIDs(null, cr.getStdout(), cr.getStderr());
                 }
                 matchingJobNames = false;
             }
+
+
             if (ids.isEmpty()) {
                 logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
             } else {
