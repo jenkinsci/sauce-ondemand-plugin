@@ -70,12 +70,8 @@ public class SauceOnDemandReportFactory extends Data {
                 // fall back to old-style log parsing (when no job-name is present in output)
                 logger.log(Level.INFO, "Parsing stdout with no job name");
                 ids = findSessionIDs(null, cr.getStdout(), cr.getStderr());
-                if (ids.isEmpty()) {
-                    ids = SauceOnDemandReportFactory.findSessionIDs(null, cr.getStdout(), cr.getStderr());
-                }
                 matchingJobNames = false;
             }
-
 
             if (ids.isEmpty()) {
                 logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");

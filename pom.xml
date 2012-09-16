@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.439</version>
+        <version>1.467</version>
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
@@ -22,6 +23,10 @@
             <id>maven.jenkins-ci.org</id>
             <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
         </repository>
+        <snapshotRepository>
+            <id>cloudbees.private.release.repository</id>
+            <url>dav:https://repository-saucelabs.forge.cloudbees.com/release</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <build>
@@ -58,10 +63,18 @@
                 </executions>
             </plugin>
         </plugins>
-
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-webdav</artifactId>
+                <version>1.0-beta-2</version>
+            </extension>
+        </extensions>
     </build>
 
     <dependencies>
+
+
         <!-- List Jetty first so that the version bundled with Sauce Connect does not cause
         compile problems -->
         <dependency>
@@ -76,6 +89,14 @@
             <version>1.8.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jenkins-ci.main</groupId>
+            <artifactId>maven-plugin</artifactId>
+            <version>1.467</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant-launcher</artifactId>
@@ -101,10 +122,10 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-              <groupId>commons-io</groupId>
-              <artifactId>commons-io</artifactId>
-              <version>1.4</version>
-            </dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
@@ -126,7 +147,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.14</version>
+            <version>1.15</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
