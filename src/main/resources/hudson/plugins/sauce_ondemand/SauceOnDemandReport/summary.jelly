@@ -27,7 +27,7 @@ THE SOFTWARE.
   <j:if test="${it.matchingJobNames}">
       <l:ajax>
         <div><!-- needed because applySubtree doesn't properly apply the style to the top node -->
-            <script type="text/javascript" src="http://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
+            <script type="text/javascript" src="https://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
         </div>
       </l:ajax>
     </j:if>
