@@ -2,35 +2,52 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:block>
-        <f:section title="Sauce Connect Options">
+        <f:section title="Sauce OnDemand Options">
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
             </f:entry>
-            <f:entry title="${%Operating System/Browser/Version}">
-                <select name="browsers" multiple="multiple">
-                    <j:forEach var="b" items="${descriptor.browsers}">
-                        <j:choose>
-                            <j:when test="${instance.browsers.contains(b.key)}">
-                                <option value="${b.key}" selected="selected">${b.name}</option>
-                            </j:when>
-                            <j:otherwise>
-                                <option value="${b.key}">${b.name}</option>
-                            </j:otherwise>
-                        </j:choose>
 
-                    </j:forEach>
-                </select>
-            </f:entry>
+            <f:radioBlock name="seleniumInformation" value="webdriver" title="${%WebDriver}"
+                          checked="${instance.seleniumInformation == null}">
+                <f:nested>
+                    <select name="webDriverBrowsers" multiple="multiple">
+                        <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
+                            <j:choose>
+                                <j:when test="${instance.webDriverBrowsers.contains(b.key)}">
+                                    <option value="${b.key}" selected="selected">${b.name}</option>
+                                </j:when>
+                                <j:otherwise>
+                                    <option value="${b.key}">${b.name}</option>
+                                </j:otherwise>
+                            </j:choose>
 
-            <f:optionalBlock field="seleniumInformation" checked="${instance.seleniumInformation != null}"
-                             title="${%Will Selenium 1 tests be run?}">
-                <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
+                        </j:forEach>
+                    </select>
+                </f:nested>
+            </f:radioBlock>
+            <f:radioBlock name="seleniumInformation" value="selenium" title="${%Selenium RC}"
+                          checked="${instance.seleniumInformation != null}">
 
-                <f:entry title="${%Starting URL}" field="startingURL">
-                    <f:textbox value="${seleniumInformation.startingURL}"/>
-                </f:entry>
+                <f:nested>
+                    <select name="seleniumBrowsers" multiple="multiple">
+                        <j:forEach var="b" items="${descriptor.seleniumBrowsers}">
+                            <j:choose>
+                                <j:when test="${instance.seleniumBrowsers.contains(b.key)}">
+                                    <option value="${b.key}" selected="selected">${b.name}</option>
+                                </j:when>
+                                <j:otherwise>
+                                    <option value="${b.key}">${b.name}</option>
+                                </j:otherwise>
+                            </j:choose>
 
-            </f:optionalBlock>
+                        </j:forEach>
+                    </select>
+                    <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
+                    <f:entry title="${%Starting URL}" field="startingURL">
+                        <f:textbox value="${seleniumInformation.startingURL}"/>
+                    </f:entry>
+                </f:nested>
+            </f:radioBlock>
 
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
                              title="${%Override default authentication?}">

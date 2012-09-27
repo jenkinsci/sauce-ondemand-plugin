@@ -66,7 +66,7 @@ public class BrowserAxis extends Axis {
 
         public List<com.saucelabs.ci.Browser> getBrowsers() {
             try {
-                return BrowserFactory.getInstance().values();
+                return BrowserFactory.getInstance().getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {

@@ -88,7 +88,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private String seleniumPort;
     private Credentials credentials;
     private SeleniumInformation seleniumInformation;
-    private List<String> browsers;
+    private List<String> seleniumBrowsers;
+    private List<String> webDriverBrowsers;
     /**
      *
      */
@@ -107,14 +108,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String seleniumHost,
                                      String seleniumPort,
                                      boolean enableSauceConnect,
-                                     List<String> browsers,
+                                     List<String> seleniumBrowsers,
+                                     List<String> webDriverBrowsers,
                                      boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
-        this.browsers = browsers;
+        this.seleniumBrowsers = seleniumBrowsers;
+        this.webDriverBrowsers = webDriverBrowsers;
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
@@ -143,9 +146,22 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
 
-                if (browsers != null && !browsers.isEmpty()) {
-                    if (browsers.size() == 1) {
-                        Browser browserInstance = BrowserFactory.getInstance().forKey(browsers.get(0));
+                outputSeleniumVariables(env);
+                outputWebDriverVariables(env);
+                env.put(SAUCE_USERNAME, getUserName());
+                env.put(SAUCE_API_KEY, getApiKey());
+                env.put(SELENIUM_HOST, getHostName());
+                DecimalFormat myFormatter = new DecimalFormat("####");
+                env.put(SELENIUM_PORT, myFormatter.format(getPort()));
+                if (getStartingURL() != null) {
+                    env.put(SELENIUM_STARTING_URL, getStartingURL());
+                }
+            }
+
+            private void outputSeleniumVariables(Map<String, String> env) {
+                if (seleniumBrowsers != null && !seleniumBrowsers.isEmpty()) {
+                    if (seleniumBrowsers.size() == 1) {
+                        Browser browserInstance = BrowserFactory.getInstance().forKey(seleniumBrowsers.get(0));
                         env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
                         env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                         env.put(SELENIUM_VERSION, browserInstance.getVersion());
@@ -153,7 +169,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     }
 
                     JSONArray browsersJSON = new JSONArray();
-                    for (String browser : browsers) {
+                    for (String browser : seleniumBrowsers) {
                         Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
                         JSONObject config = new JSONObject();
                         try {
@@ -170,13 +186,35 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
-                env.put(SAUCE_USERNAME, getUserName());
-                env.put(SAUCE_API_KEY, getApiKey());
-                env.put(SELENIUM_HOST, getHostName());
-                DecimalFormat myFormatter = new DecimalFormat("####");
-                env.put(SELENIUM_PORT, myFormatter.format(getPort()));
-                if (getStartingURL() != null) {
-                    env.put(SELENIUM_STARTING_URL, getStartingURL());
+            }
+
+            private void outputWebDriverVariables(Map<String, String> env) {
+                if (webDriverBrowsers != null && !webDriverBrowsers.isEmpty()) {
+                    if (webDriverBrowsers.size() == 1) {
+                        Browser browserInstance = BrowserFactory.getInstance().forKey(webDriverBrowsers.get(0));
+                        env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
+                        env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
+                        env.put(SELENIUM_VERSION, browserInstance.getVersion());
+                        env.put(SELENIUM_DRIVER, browserInstance.getUri());
+                    }
+
+                    JSONArray browsersJSON = new JSONArray();
+                    for (String browser : webDriverBrowsers) {
+                        Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
+                        JSONObject config = new JSONObject();
+                        try {
+                            config.put("os", browserInstance.getPlatform().toString());
+                            config.put("browser", browserInstance.getBrowserName());
+                            config.put("browser-version", browserInstance.getVersion());
+                            config.put("url", browserInstance.getUri());
+                        } catch (JSONException e) {
+                            logger.log(Level.SEVERE, "Unable to create JSON Object", e);
+                        }
+                        browsersJSON.put(config);
+
+                    }
+
+                    env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
             }
 
@@ -382,12 +420,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
     }
 
-    public List<String> getBrowsers() {
-        return browsers;
+    public List<String> getSeleniumBrowsers() {
+        return seleniumBrowsers;
     }
 
-    public void setBrowsers(List<String> browsers) {
-        this.browsers = browsers;
+    public void setSeleniumBrowsers(List<String> seleniumBrowsers) {
+        this.seleniumBrowsers = seleniumBrowsers;
+    }
+
+    public List<String> getWebDriverBrowsers() {
+        return webDriverBrowsers;
+    }
+
+    public void setWebDriverBrowsers(List<String> webDriverBrowsers) {
+        this.webDriverBrowsers = webDriverBrowsers;
     }
 
     private interface ITunnelHolder {
@@ -486,9 +532,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return "Sauce OnDemand Support";
         }
 
-        public List<Browser> getBrowsers() {
+        public List<Browser> getSeleniumBrowsers() {
             try {
-                return BrowserFactory.getInstance().values();
+                return BrowserFactory.getInstance().getSeleniumBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
+            } catch (JSONException e) {
+                logger.log(Level.SEVERE, "Error parsing JSON response", e);
+            }
+            return Collections.emptyList();
+        }
+
+        public List<Browser> getWebDriverBrowsers() {
+            try {
+                return BrowserFactory.getInstance().getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
