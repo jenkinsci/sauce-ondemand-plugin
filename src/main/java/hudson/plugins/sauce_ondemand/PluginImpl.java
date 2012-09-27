@@ -37,6 +37,7 @@ import hudson.model.Items;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -53,7 +54,7 @@ import java.util.logging.Logger;
  */
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
-    
+
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
 
     private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
@@ -65,9 +66,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      * Password for Sauce OnDemand.
      */
     private Secret apiKey;
-    
+
     private boolean reuseSauceAuth;
-    
+
     private String sauceConnectDirectory;
 
     public String getUsername() {
@@ -132,12 +133,16 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth ) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth) {
             try {
                 SauceOnDemandAuthentication credential = reuseSauceAuth ? new SauceOnDemandAuthentication() : new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
-                new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
-                return FormValidation.ok("Success");
+                if (reuseSauceAuth && StringUtils.isBlank(credential.getUsername()) && StringUtils.isBlank(credential.getAccessKey())) {
+                    return FormValidation.error("Unable to find ~/.sauce-ondemand file");
+                } else {
+                    new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
+                    return FormValidation.ok("Success");
+                }
             } catch (IOException e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
             }
@@ -145,7 +150,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * 
      * @return
      */
     @JavaScriptMethod
@@ -156,19 +160,18 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                     "<a href=\"#\" onclick=\"var progress = document.getElementById('progress');" +
                     "progress.style.display = 'block';" +
                     "plugin.applyUpdates(function(t) {" +
-                    "document.getElementById('msg').innerHTML = t.responseObject();" + 
+                    "document.getElementById('msg').innerHTML = t.responseObject();" +
                     "var progress = document.getElementById('progress');" +
                     "progress.style.display = 'none';" +
-                    "})\">Update Sauce Connect<\\a>" : 
+                    "})\">Update Sauce Connect<\\a>" :
                     "No update required, Sauce Connect is up to date";
         } catch (Exception e) {
-            logger.log(Level.WARNING,  "Error checking for later version", e);
+            logger.log(Level.WARNING, "Error checking for later version", e);
         }
         return "Failed to connect to Sauce OnDemand";
     }
 
     /**
-     * 
      * @return
      */
     @JavaScriptMethod
@@ -178,7 +181,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Update of the Sauce Connect library was successful";
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error Reloading plugin", e);
-        } 
+        }
         return "Failed to apply updates, please see application logs";
     }
 }
