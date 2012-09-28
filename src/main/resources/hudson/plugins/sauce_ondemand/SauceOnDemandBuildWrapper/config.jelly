@@ -7,8 +7,8 @@
                 <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
             </f:entry>
 
-            <f:radioBlock name="seleniumInformation" value="webdriver" title="${%WebDriver}"
-                          checked="${instance.seleniumInformation == null}">
+            <f:radioBlock name="seleniumInformation" value="webDriver" title="${%WebDriver}"
+                          checked="${instance.seleniumInformation.isWebDriver()}">
                 <f:nested>
                     <select name="webDriverBrowsers" multiple="multiple">
                         <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
@@ -26,7 +26,7 @@
                 </f:nested>
             </f:radioBlock>
             <f:radioBlock name="seleniumInformation" value="selenium" title="${%Selenium RC}"
-                          checked="${instance.seleniumInformation != null}">
+                          checked="${!instance.seleniumInformation.isWebDriver()}">
 
                 <f:nested>
                     <select name="seleniumBrowsers" multiple="multiple">

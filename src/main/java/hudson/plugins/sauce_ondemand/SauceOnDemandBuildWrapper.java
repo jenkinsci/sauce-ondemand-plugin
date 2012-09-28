@@ -46,6 +46,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,16 +109,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String seleniumHost,
                                      String seleniumPort,
                                      boolean enableSauceConnect,
-                                     List<String> seleniumBrowsers,
-                                     List<String> webDriverBrowsers,
                                      boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
-        this.seleniumBrowsers = seleniumBrowsers;
-        this.webDriverBrowsers = webDriverBrowsers;
+        this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
+        this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
@@ -527,10 +526,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
+
+        @Override
+        public BuildWrapper newInstance(StaplerRequest req, net.sf.json.JSONObject formData) throws FormException {
+            return super.newInstance(req, formData);
+        }
+
         @Override
         public String getDisplayName() {
             return "Sauce OnDemand Support";
         }
+
+
 
         public List<Browser> getSeleniumBrowsers() {
             try {
