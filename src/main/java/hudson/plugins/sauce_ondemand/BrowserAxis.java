@@ -82,10 +82,10 @@ public class BrowserAxis extends Axis {
      * @param map
      */
     public void addBuildVariable(String value, Map<String,String> map) {
-        com.saucelabs.ci.Browser b = BrowserFactory.getInstance().forKey(value);
+        com.saucelabs.ci.Browser b = BrowserFactory.getInstance().webDriverBrowserForKey(value);
         if (b!=null) {   // should never be null, but let's be defensive in case of downgrade.
             map.put(getName(), b.getUri());
-            map.put("arguments", "\"-D" + getName() + "=" + b.getUri() + "\"");
+            map.put("arguments", "-D" + getName() + "=" + b.getUri());
         }
     }
 }

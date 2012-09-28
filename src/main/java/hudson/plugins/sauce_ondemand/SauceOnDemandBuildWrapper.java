@@ -160,7 +160,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             private void outputSeleniumVariables(Map<String, String> env) {
                 if (seleniumBrowsers != null && !seleniumBrowsers.isEmpty()) {
                     if (seleniumBrowsers.size() == 1) {
-                        Browser browserInstance = BrowserFactory.getInstance().forKey(seleniumBrowsers.get(0));
+                        Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(seleniumBrowsers.get(0));
                         env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
                         env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                         env.put(SELENIUM_VERSION, browserInstance.getVersion());
@@ -169,7 +169,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     JSONArray browsersJSON = new JSONArray();
                     for (String browser : seleniumBrowsers) {
-                        Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
+                        Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(browser);
                         JSONObject config = new JSONObject();
                         try {
                             config.put("os", browserInstance.getPlatform().toString());
@@ -190,7 +190,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             private void outputWebDriverVariables(Map<String, String> env) {
                 if (webDriverBrowsers != null && !webDriverBrowsers.isEmpty()) {
                     if (webDriverBrowsers.size() == 1) {
-                        Browser browserInstance = BrowserFactory.getInstance().forKey(webDriverBrowsers.get(0));
+                        Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(webDriverBrowsers.get(0));
                         env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
                         env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                         env.put(SELENIUM_VERSION, browserInstance.getVersion());
@@ -199,7 +199,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     JSONArray browsersJSON = new JSONArray();
                     for (String browser : webDriverBrowsers) {
-                        Browser browserInstance = BrowserFactory.getInstance().forKey(browser);
+                        Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browser);
                         JSONObject config = new JSONObject();
                         try {
                             config.put("os", browserInstance.getPlatform().toString());
@@ -536,7 +536,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public String getDisplayName() {
             return "Sauce OnDemand Support";
         }
-
 
 
         public List<Browser> getSeleniumBrowsers() {
