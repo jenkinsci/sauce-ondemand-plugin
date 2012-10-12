@@ -60,15 +60,16 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         boolean hasResult = false;
+        List<String> lines = IOUtils.readLines(build.getLogReader());
+        String[] array = lines.toArray(new String[lines.size()]);
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
                 String jobName = cr.getFullName();
                 List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
-                List<String> lines = IOUtils.readLines(build.getLogReader());
-                String[] array = lines.toArray(new String[lines.size()]);
                 if (sessionIDs.isEmpty()) {
                     sessionIDs = SauceOnDemandReportFactory.findSessionIDs(jobName, array);
                 }
+                //invoke the Sauce REST API for entries which have a job-name set to the test name
                 for (String[] id : sessionIDs) {
                     hasResult = true;
                     try {
@@ -89,20 +90,21 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
                     } catch (JSONException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        e.printStackTrace(buildListener.error("Error while updating job " + id));
                     }
                 }
                 if (sessionIDs.isEmpty()) {
                     // check for old-style logs
                     sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, cr.getStdout(), cr.getStderr());
-                    if (sessionIDs.isEmpty()) {
-                        sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
-                    }
                     if (!sessionIDs.isEmpty()) {
                         hasResult = true;
                     }
                 }
             }
+        }
+        if (!hasResult && array != null) {
+            List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+            hasResult = !sessionIDs.isEmpty();
         }
 
         if (!hasResult) {
