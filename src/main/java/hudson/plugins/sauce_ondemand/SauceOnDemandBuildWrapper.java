@@ -78,7 +78,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_PORT = "SELENIUM_PORT";
     public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
-    private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
+    private static final String SAUCE_API_KEY = "3";
 
     private boolean enableSauceConnect;
 
@@ -96,9 +96,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private boolean launchSauceConnectOnSlave = false;
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
-    private static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
-    private static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
-    private static final String SELENIUM_VERSION = "SELENIUM_VERSION";
+    public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
+    public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
+    public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
     private SauceOnDemandLogParser logParser;
 
 
