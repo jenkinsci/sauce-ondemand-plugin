@@ -39,13 +39,11 @@ import java.util.logging.Logger;
 
 /**
  * {@link Axis} that configures {@code SELENIUM_DRIVER}.
+ *
  * @author Kohsuke Kawaguchi
  */
-public class BrowserAxis extends Axis {
-    
-    private static final Logger logger = Logger.getLogger(BrowserAxis.class.getName());
-    
-    @DataBoundConstructor
+public abstract class BrowserAxis extends Axis {
+
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
     }
@@ -54,38 +52,27 @@ public class BrowserAxis extends Axis {
         return getValues().contains(v);
     }
 
-    // TODO: more hooks to inject variables and values
-    // TODO: matrix or a list as the UI?
-
-    @Extension
-    public static class DescriptorImpl extends AxisDescriptor {
-        @Override
-        public String getDisplayName() {
-            return "Sauce OnDemand Cross-browser tests";
-        }
-
-        public List<com.saucelabs.ci.Browser> getBrowsers() {
-            try {
-                return BrowserFactory.getInstance().getWebDriverBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
-            } catch (JSONException e) {
-                logger.log(Level.WARNING, "Error parsing JSON response", e);
-            }
-            return Collections.emptyList();
-        }
-    }
-
     /**
      * Adds the browser URI to the environment map.  Will override any values set in {@link SauceOnDemandBuildWrapper#setUp(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)}
+     *
      * @param value
      * @param map
      */
-    public void addBuildVariable(String value, Map<String,String> map) {
-        com.saucelabs.ci.Browser b = BrowserFactory.getInstance().webDriverBrowserForKey(value);
-        if (b!=null) {   // should never be null, but let's be defensive in case of downgrade.
-            map.put(getName(), b.getUri());
-            map.put("arguments", "-D" + getName() + "=" + b.getUri());
+    public void addBuildVariable(String value, Map<String, String> map) {
+        com.saucelabs.ci.Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(value);
+        if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
+            map.put(getName(), browserInstance.getUri());
+            map.put(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
+            map.put(SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName());
+            map.put(SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion());
+            StringBuilder builder = new StringBuilder();
+            builder.append("-D").append(getName()).append('=').append(browserInstance.getUri()).
+                    append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM).append('=').append(browserInstance.getPlatform().toString()).
+                    append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_BROWSER).append('=').append(browserInstance.getBrowserName()).
+                    append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_VERSION).append('=').append(browserInstance.getVersion());
+            map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri());
         }
     }
+
+
 }
