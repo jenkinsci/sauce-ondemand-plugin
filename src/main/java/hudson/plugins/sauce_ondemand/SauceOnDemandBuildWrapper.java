@@ -78,7 +78,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_PORT = "SELENIUM_PORT";
     public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
-    private static final String SAUCE_API_KEY = "3";
+    private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
 
     private boolean enableSauceConnect;
 

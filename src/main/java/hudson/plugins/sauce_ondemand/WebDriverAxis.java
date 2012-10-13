@@ -24,22 +24,27 @@ public class WebDriverAxis extends BrowserAxis {
         super(values);
     }
 
-    @Extension
-       public static class DescriptorImpl extends AxisDescriptor {
-           @Override
-           public String getDisplayName() {
-               return "Sauce OnDemand WebDriver tests";
-           }
+    @Override
+    protected Browser getBrowserForKey(String value) {
+        return BrowserFactory.getInstance().webDriverBrowserForKey(value);
+    }
 
-           public List<Browser> getBrowsers() {
-               try {
-                   return BrowserFactory.getInstance().getWebDriverBrowsers();
-               } catch (IOException e) {
-                   logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
-               } catch (JSONException e) {
-                   logger.log(Level.WARNING, "Error parsing JSON response", e);
-               }
-               return Collections.emptyList();
-           }
-       }
+    @Extension
+    public static class DescriptorImpl extends AxisDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Sauce OnDemand WebDriver tests";
+        }
+
+        public List<Browser> getBrowsers() {
+            try {
+                return BrowserFactory.getInstance().getWebDriverBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
+            } catch (JSONException e) {
+                logger.log(Level.WARNING, "Error parsing JSON response", e);
+            }
+            return Collections.emptyList();
+        }
+    }
 }

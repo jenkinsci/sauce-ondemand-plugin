@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import hudson.Extension;
 import hudson.matrix.Axis;
@@ -59,7 +60,7 @@ public abstract class BrowserAxis extends Axis {
      * @param map
      */
     public void addBuildVariable(String value, Map<String, String> map) {
-        com.saucelabs.ci.Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(value);
+        Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
             map.put(getName(), browserInstance.getUri());
             map.put(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
@@ -73,6 +74,8 @@ public abstract class BrowserAxis extends Axis {
             map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri());
         }
     }
+
+    protected abstract Browser getBrowserForKey(String value);
 
 
 }

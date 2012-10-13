@@ -25,6 +25,11 @@ public class SeleniumRCAxis extends BrowserAxis {
         super(values);
     }
 
+    @Override
+    protected Browser getBrowserForKey(String value) {
+        return BrowserFactory.getInstance().seleniumBrowserForKey(value);
+    }
+
     @Extension
     public static class DescriptorImpl extends AxisDescriptor {
         @Override
