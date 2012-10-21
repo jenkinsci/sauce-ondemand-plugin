@@ -26,6 +26,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ *
+ * Presents the links to the Sauce OnDemand jobs on the build summary page.
+ *
  * @author Ross Rowe
  */
 public class SauceOnDemandBuildAction extends AbstractAction {
@@ -98,7 +101,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 if (buildResultKey.equals(build.toString())) {
                     String jobId = jobData.getString("id");
                     JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
-                    //information.setStatus(jobData.getString(""));
+                    String status = jobData.getString("passed");
+                    if (status.equals("null")) {
+                        status = "not set";
+                    }
+                    information.setStatus(status);
                     jobInformation.add(information);
                 }
             }

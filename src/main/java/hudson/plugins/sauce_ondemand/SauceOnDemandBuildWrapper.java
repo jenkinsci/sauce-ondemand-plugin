@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -267,39 +266,33 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private void processBuildOutput(AbstractBuild build) {
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
         build.addAction(buildAction);
-
         SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
-
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
 
         for (String[] sessionId : sessionIDs) {
             String id = sessionId[0];
             try {
-
                 String jobName = sessionId[1];
-                if (StringUtils.isNotBlank(jobName)) {
-                    String json = sauceREST.getJobInfo(id);
-                    JSONObject jsonObject = new JSONObject(json);
-                    Map<String, Object> updates = new HashMap<String, Object>();
-                    //only store passed/name values if they haven't already been set
-                    if (jsonObject.get("passed").equals(JSONObject.NULL)) {
-                        updates.put("passed", build.getResult().equals(Result.SUCCESS));
-                    }
-                    if (jsonObject.get("name").equals(JSONObject.NULL)) {
-                        updates.put("name", jobName);
-                    }
-                    updates.put("public", false);
-                    updates.put("build", build.getNumber());
-                    sauceREST.updateJobInfo(jobName, updates);
+                String json = sauceREST.getJobInfo(id);
+                JSONObject jsonObject = new JSONObject(json);
+                Map<String, Object> updates = new HashMap<String, Object>();
+                //only store passed/name values if they haven't already been set
+                if (jsonObject.get("passed").equals(JSONObject.NULL) && sessionId.length == 3) {
+                    updates.put("passed", sessionId[2]);
                 }
+                if (StringUtils.isNotBlank(jobName) && jsonObject.get("name").equals(JSONObject.NULL)) {
+                    updates.put("name", jobName);
+                }
+                updates.put("public", false);
+                updates.put("build", build.toString());
+                sauceREST.updateJobInfo(id, updates);
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
             } catch (JSONException e) {
-                e.printStackTrace();
+                logger.log(Level.WARNING, "Error while updating job " + id, e);
             }
         }
-
     }
 
     private String getCurrentHostName() {

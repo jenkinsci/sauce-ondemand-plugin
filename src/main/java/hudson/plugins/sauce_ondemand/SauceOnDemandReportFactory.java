@@ -64,7 +64,7 @@ public class SauceOnDemandReportFactory extends Data {
             logger.log(Level.INFO, "Attempting to find Sauce SessionID for test object");
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
-            List<String[]> ids = findSessionIDs(jobName, cr.getStdout(), cr.getStderr());
+            List<String[]> ids = findSessionIDs(cr, jobName, cr.getStdout(), cr.getStderr());
             boolean matchingJobNames = true;
             if (ids.isEmpty()) {
                 // fall back to old-style log parsing (when no job-name is present in output)
@@ -88,26 +88,29 @@ public class SauceOnDemandReportFactory extends Data {
      * Returns all sessions matching a given jobName in the provided logs.
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
-    static List<String[]> findSessionIDs(String jobName, String... output) {
+    static List<String[]> findSessionIDs(CaseResult caseResult, String... output) {
         List<String[]> sessions = new ArrayList<String[]>();
-        Pattern p = jobName != null ? SESSION_ID_PATTERN : OLD_SESSION_ID_PATTERN;
         for (String text : output) {
             if (text == null) continue;
-            Matcher m = p.matcher(text);
+            Matcher m = SESSION_ID_PATTERN.matcher(text);
             while (m.find()) {
                 String sessionId = m.group(1);
                 String job = "";
-                if (m.groupCount() == 2 && (jobName == null || jobName.equals(m.group(2)))) {
+                if (m.groupCount() == 2) {
                     job = m.group(2);
                 }
-                sessions.add(new String[]{sessionId, job});
+                if (caseResult == null) {
+                    sessions.add(new String[]{sessionId, job});
+                } else {
+                    sessions.add(new String[]{sessionId, job, String.valueOf(caseResult.isPassed())});
+                }
+
             }
         }
         return sessions;
     }
 
-    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+) job-name=(.*)");
-    private static final Pattern OLD_SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)");
+    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
 
 
 }
