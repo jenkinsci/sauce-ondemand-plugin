@@ -1,0 +1,175 @@
+package hudson.plugins.sauce_ondemand;
+
+import com.saucelabs.ci.JobInformation;
+import com.saucelabs.ci.SauceFactory;
+import hudson.model.AbstractBuild;
+import org.apache.commons.codec.binary.Hex;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * @author Ross Rowe
+ */
+public class SauceOnDemandBuildAction extends AbstractAction {
+
+    private static final Logger logger = Logger.getLogger(SauceOnDemandBuildAction.class.getName());
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
+
+    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
+
+    private static final String HMAC_KEY = "HMACMD5";
+
+    private AbstractBuild<?, ?> build;
+    private List<JobInformation> jobInformation;
+    private String accessKey;
+    private String username;
+
+    public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, String username, String accessKey) {
+        this.build = build;
+        this.username = username;
+        this.accessKey = accessKey;
+    }
+
+    public AbstractBuild<?, ?> getBuild() {
+        return build;
+    }
+
+    public boolean hasSauceOnDemandResults() {
+        return !getJobs().isEmpty();
+    }
+
+    public List<JobInformation> getJobs() {
+        if (jobInformation == null) {
+            try {
+                jobInformation = retrieveJobIdsFromSauce(username, accessKey);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            } catch (JSONException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            } catch (InvalidKeyException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            } catch (NoSuchAlgorithmException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }
+        }
+
+        return jobInformation;
+    }
+
+    /**
+     * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
+     * and attempts to find the job that has a 'build' field matching the build key/number.
+     *
+     * @param username
+     * @param accessKey
+     * @throws Exception
+     */
+    private List<JobInformation> retrieveJobIdsFromSauce(String username, String accessKey) throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
+        //invoke Sauce Rest API to find plan results with those values
+        List<JobInformation> jobInformation = new ArrayList<JobInformation>();
+
+        SauceFactory sauceAPIFactory = new SauceFactory();
+        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username), username, accessKey);
+        JSONArray jobResults = new JSONArray(jsonResponse);
+        for (int i = 0; i < jobResults.length(); i++) {
+            //check custom data to find job that was for build
+            JSONObject jobData = jobResults.getJSONObject(i);
+            if (!jobData.isNull("build")) {
+                String buildResultKey = jobData.getString("build");
+                if (buildResultKey.equals(build.toString())) {
+                    String jobId = jobData.getString("id");
+                    JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                    //information.setStatus(jobData.getString(""));
+                    jobInformation.add(information);
+                }
+            }
+        }
+        return jobInformation;
+    }
+
+    public void doJobReport(StaplerRequest req, StaplerResponse rsp)
+            throws IOException {
+
+        ById byId = new ById(req.getParameter("jobId"));
+        try {
+            req.getView(byId,"index.jelly").forward(req,rsp);
+        } catch (ServletException e) {
+            throw new IOException(e);
+        }
+    }
+
+    public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        Calendar calendar = Calendar.getInstance();
+
+        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String key = username + ":" + accessKey + ":" + format.format(calendar.getTime());
+        byte[] keyBytes = key.getBytes();
+        SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
+        Mac mac = Mac.getInstance(sks.getAlgorithm());
+        mac.init(sks);
+        byte[] hmacBytes = mac.doFinal(jobId.getBytes());
+        byte[] hexBytes = new Hex().encode(hmacBytes);
+        return new String(hexBytes, "ISO-8859-1");
+    }
+
+    public ById getById(String id) {
+        return new ById(id);
+    }
+
+    /**
+     *
+     */
+    public class ById {
+        public final String id;
+
+        public ById(String id) {
+            this.id = id;
+        }
+
+        public String getAuth() throws IOException {
+            try {
+                Calendar calendar = Calendar.getInstance();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH");
+                format.setTimeZone(TimeZone.getTimeZone("UTC"));
+                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + format.format(calendar.getTime());
+                byte[] keyBytes = key.getBytes();
+                SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
+                Mac mac = Mac.getInstance(sks.getAlgorithm());
+                mac.init(sks);
+                byte[] hmacBytes = mac.doFinal(id.getBytes());
+                byte[] hexBytes = new Hex().encode(hmacBytes);
+                return new String(hexBytes, "ISO-8859-1");
+
+
+            } catch (NoSuchAlgorithmException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+            } catch (InvalidKeyException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+            } catch (UnsupportedEncodingException e) {
+                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+            }
+
+        }
+
+    }
+}

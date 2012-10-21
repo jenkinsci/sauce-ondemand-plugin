@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.467</version>
+        <version>1.476</version>
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
@@ -92,7 +93,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>1.467</version>
+            <version>1.476</version>
             <scope>compile</scope>
         </dependency>
 
@@ -127,6 +128,11 @@
         </dependency>
         <dependency>
             <groupId>com.saucelabs</groupId>
+            <artifactId>sebuilder-interpreter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
             <version>1.0.2</version>
         </dependency>
@@ -146,7 +152,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.17</version>
+            <version>1.18-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

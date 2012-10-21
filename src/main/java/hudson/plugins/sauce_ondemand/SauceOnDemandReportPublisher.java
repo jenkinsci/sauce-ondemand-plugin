@@ -85,7 +85,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                         }
 
                         updates.put("public", false);
-                        updates.put("build", build.getNumber());
+                        updates.put("build", build.toString());
                         sauceREST.updateJobInfo(id[0], updates);
                     } catch (IOException e) {
                         e.printStackTrace(buildListener.error("Error while updating job " + id));
@@ -107,6 +107,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             hasResult = !sessionIDs.isEmpty();
         }
 
+        buildListener.getLogger().println("Finished scanning for Sauce OnDemand test data...");
         if (!hasResult) {
             buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
             return null;

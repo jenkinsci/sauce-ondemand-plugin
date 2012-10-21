@@ -100,6 +100,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
     private SauceOnDemandLogParser logParser;
+    private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
 
 
     @DataBoundConstructor
@@ -122,7 +123,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
 
     @Override
-    public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         if (isEnableSauceConnect()) {
             listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
@@ -147,9 +148,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 outputSeleniumVariables(env);
                 outputWebDriverVariables(env);
+                env.put(JENKINS_BUILD_NUMBER, build.toString());
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
+
                 DecimalFormat myFormatter = new DecimalFormat("####");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
                 if (getStartingURL() != null) {
@@ -262,6 +265,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private void processBuildOutput(AbstractBuild build) {
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
+        build.addAction(buildAction);
+
         SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
 
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
@@ -298,8 +304,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private String getCurrentHostName() {
         try {
-            return InetAddress.getLocalHost().getHostName();
+            return Computer.currentComputer().getHostName();
         } catch (UnknownHostException e) {
+            //shouldn't happen
+            logger.log(Level.SEVERE, "Unable to retrieve host name", e);
+        } catch (InterruptedException e) {
+            //shouldn't happen
+            logger.log(Level.SEVERE, "Unable to retrieve host name", e);
+        } catch (IOException e) {
             //shouldn't happen
             logger.log(Level.SEVERE, "Unable to retrieve host name", e);
         }
