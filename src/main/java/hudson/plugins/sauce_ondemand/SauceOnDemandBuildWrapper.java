@@ -115,8 +115,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
-        this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
-        this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
+        if (seleniumInformation != null) {
+            this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
+            this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
+        }
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 

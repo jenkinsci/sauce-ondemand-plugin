@@ -196,13 +196,7 @@
             <artifactId>copy-to-slave</artifactId>
             <version>1.4</version>
         </dependency>
-        <!-- Include Guava dependency to avoid compile errors -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>r05</version>
-            <scope>provided</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
