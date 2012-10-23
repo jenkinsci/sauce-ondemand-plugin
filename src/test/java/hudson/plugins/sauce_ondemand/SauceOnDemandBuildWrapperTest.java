@@ -37,7 +37,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
      */
     public void configRoundtrip() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Credentials("username", "accessKey"), new SeleniumInformation("selenium", "http://localhost", null, null), "abc", "1", true, false);
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(new Credentials("username", "accessKey"), new SeleniumInformation("selenium", "http://localhost:8080", null, null), "abc", "1", true, false);
         p.getBuildWrappersList().add(before);
         configRoundtrip(p);
         SauceOnDemandBuildWrapper after = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
@@ -52,7 +52,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost", null, null), "localhost", "4445", false, false);
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost:8080", null, null), "localhost", "4445", true, false);
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }
@@ -64,7 +64,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, null, null, "0", false, false);
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, null, null, "0", true, false);
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }

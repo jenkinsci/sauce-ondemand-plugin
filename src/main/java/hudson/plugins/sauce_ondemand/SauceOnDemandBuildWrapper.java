@@ -184,9 +184,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             logger.log(Level.SEVERE, "Unable to create JSON Object", e);
                         }
                         browsersJSON.put(config);
-
                     }
-
                     env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
             }
@@ -214,15 +212,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             logger.log(Level.SEVERE, "Unable to create JSON Object", e);
                         }
                         browsersJSON.put(config);
-
                     }
-
                     env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
                 }
             }
 
             private String getHostName() {
-
                 if (StringUtils.isNotBlank(seleniumHost)) {
                     Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumHost);
                     if (matcher.matches()) {

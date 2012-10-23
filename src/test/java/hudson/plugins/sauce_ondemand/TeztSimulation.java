@@ -37,8 +37,11 @@ public class TeztSimulation {
     public String doTest() throws IOException, InterruptedException {
         Credential c = new Credential();
 
-        String h = build.getEnvironment(listener).get("SAUCE_ONDEMAND_HOST");
-        if (h != null) System.setProperty("SAUCE_ONDEMAND_HOST", h);
+        String h = build.getEnvironment(listener).get("SELENIUM_HOST");
+        if (h != null) System.setProperty("SELENIUM_HOST", h);
+
+        String port = build.getEnvironment(listener).get("SELENIUM_PORT");
+        if (port != null) System.setProperty("SELENIUM_PORT", port);
 
         String url = build.getEnvironment(listener).get("SELENIUM_STARTING_URL");
         if (url == null) {
