@@ -52,6 +52,14 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         this.accessKey = accessKey;
     }
 
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
     public AbstractBuild<?, ?> getBuild() {
         return build;
     }

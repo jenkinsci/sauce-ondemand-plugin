@@ -27,6 +27,7 @@ import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.tasks.junit.CaseResult;
@@ -57,7 +58,14 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-        SauceREST sauceREST = new SauceREST(PluginImpl.get().getUsername(), Secret.toString(PluginImpl.get().getApiKey()));
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null) {
+            //shouldn't happen, but if it does, log an error and return null
+            buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, please contact Sauce Labs Support");
+            return null;
+        }
+
+        SauceREST sauceREST = new SauceREST(buildAction.getUsername(), buildAction.getAccessKey());
 
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         List<String> lines = IOUtils.readLines(build.getLogReader());
