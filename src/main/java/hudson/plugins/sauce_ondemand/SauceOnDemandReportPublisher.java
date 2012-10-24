@@ -58,14 +58,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
-        if (buildAction == null) {
-            //shouldn't happen, but if it does, log an error and return null
-            buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, please contact Sauce Labs Support");
-            return null;
-        }
-
-        SauceREST sauceREST = new SauceREST(buildAction.getUsername(), buildAction.getAccessKey());
 
         buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
         List<String> lines = IOUtils.readLines(build.getLogReader());
@@ -79,27 +71,32 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         if (sessionIDs.isEmpty()) {
             sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(null, array));
         }
-        for (String[] id : sessionIDs) {
-            try {
-                String json = sauceREST.getJobInfo(id[0]);
-                JSONObject jsonObject = new JSONObject(json);
-                Map<String, Object> updates = new HashMap<String, Object>();
-                //only store passed/name values if they haven't already been set
-                if (jsonObject.get("passed").equals(JSONObject.NULL) && id.length == 3) {
-                    updates.put("passed", id[2]);
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null) {
+            buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
+        } else {
+            SauceREST sauceREST = new SauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+            for (String[] id : sessionIDs) {
+                try {
+                    String json = sauceREST.getJobInfo(id[0]);
+                    JSONObject jsonObject = new JSONObject(json);
+                    Map<String, Object> updates = new HashMap<String, Object>();
+                    //only store passed/name values if they haven't already been set
+                    if (jsonObject.get("passed").equals(JSONObject.NULL) && id.length == 3) {
+                        updates.put("passed", id[2]);
+                    }
+                    if (jsonObject.get("name").equals(JSONObject.NULL)) {
+                        updates.put("name", id[1]);
+                    }
+                    updates.put("build", build.toString());
+                    sauceREST.updateJobInfo(id[0], updates);
+                } catch (IOException e) {
+                    e.printStackTrace(buildListener.error("Error while updating job " + id));
+                } catch (JSONException e) {
+                    e.printStackTrace(buildListener.error("Error while updating job " + id));
                 }
-                if (jsonObject.get("name").equals(JSONObject.NULL)) {
-                    updates.put("name", id[1]);
-                }
-                updates.put("build", build.toString());
-                sauceREST.updateJobInfo(id[0], updates);
-            } catch (IOException e) {
-                e.printStackTrace(buildListener.error("Error while updating job " + id));
-            } catch (JSONException e) {
-                e.printStackTrace(buildListener.error("Error while updating job " + id));
             }
         }
-
         buildListener.getLogger().println("Finished scanning for Sauce OnDemand test data...");
         if (sessionIDs.isEmpty()) {
             buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
@@ -107,7 +104,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         } else {
             return SauceOnDemandReportFactory.INSTANCE;
         }
-
     }
 
     @Extension

@@ -71,7 +71,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     public List<JobInformation> getJobs() {
         if (jobInformation == null) {
             try {
-                jobInformation = retrieveJobIdsFromSauce(username, accessKey);
+                jobInformation = retrieveJobIdsFromSauce();
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
             } catch (JSONException e) {
@@ -90,11 +90,9 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
      *
-     * @param username
-     * @param accessKey
      * @throws Exception
      */
-    private List<JobInformation> retrieveJobIdsFromSauce(String username, String accessKey) throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
+    public List<JobInformation> retrieveJobIdsFromSauce() throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
@@ -114,6 +112,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                         status = "not set";
                     }
                     information.setStatus(status);
+                    information.setName(jobData.getString("name"));
                     jobInformation.add(information);
                 }
             }

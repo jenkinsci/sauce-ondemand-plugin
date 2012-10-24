@@ -23,12 +23,16 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.JobInformation;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,13 +68,37 @@ public class SauceOnDemandReportFactory extends Data {
             logger.log(Level.INFO, "Attempting to find Sauce SessionID for test object");
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
-            List<String[]> ids = findSessionIDs(cr, jobName, cr.getStdout(), cr.getStderr());
+            List<String[]> ids = new ArrayList<String[]>();
+            ids.addAll(findSessionIDs(cr, jobName, cr.getStdout(), cr.getStderr()));
             boolean matchingJobNames = true;
             if (ids.isEmpty()) {
                 // fall back to old-style log parsing (when no job-name is present in output)
                 logger.log(Level.INFO, "Parsing stdout with no job name");
-                ids = findSessionIDs(null, cr.getStdout(), cr.getStderr());
+                ids.addAll(findSessionIDs(null, cr.getStdout(), cr.getStderr()));
                 matchingJobNames = false;
+            }
+
+            //if we still can't find the ids, retrieve the Sauce jobs that match the build
+            //number via the Sauce REST API and compare the job name against the name of the test
+            SauceOnDemandBuildAction buildAction = cr.getOwner().getAction(SauceOnDemandBuildAction.class);
+            if (buildAction != null) {
+                try {
+                    List<JobInformation> jobs = buildAction.retrieveJobIdsFromSauce();
+                    for (JobInformation job : jobs) {
+                        //if job name matches test, then add id
+                        if (jobName.contains(cr.getDisplayName())) {
+                           ids.add(new String[]{job.getJobId(), job.getHmac()});
+                        }
+                    }
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                } catch (JSONException e) {
+                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                } catch (InvalidKeyException e) {
+                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                } catch (NoSuchAlgorithmException e) {
+                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                }
             }
 
             if (ids.isEmpty()) {

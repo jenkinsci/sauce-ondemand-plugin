@@ -24,11 +24,9 @@ THE SOFTWARE.
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <j:if test="${it.matchingJobNames}">
-      <l:ajax>
+    <l:ajax>
         <div><!-- needed because applySubtree doesn't properly apply the style to the top node -->
             <script type="text/javascript" src="https://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
         </div>
-      </l:ajax>
-    </j:if>
+    </l:ajax>
 </j:jelly>

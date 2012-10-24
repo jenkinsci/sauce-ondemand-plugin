@@ -24,19 +24,10 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
-import hudson.Extension;
 import hudson.matrix.Axis;
-import hudson.matrix.AxisDescriptor;
-import org.json.JSONException;
-import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * {@link Axis} that configures {@code SELENIUM_DRIVER}.
