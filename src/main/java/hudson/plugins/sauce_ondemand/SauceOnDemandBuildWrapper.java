@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -294,7 +295,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private String getCurrentHostName() {
         try {
-            return Computer.currentComputer().getHostName();
+            String hostName = Computer.currentComputer().getHostName();
+            if (hostName == null) {
+                return InetAddress.getLocalHost().getHostName();
+            } else {
+                return hostName;
+            }
         } catch (UnknownHostException e) {
             //shouldn't happen
             logger.log(Level.SEVERE, "Unable to retrieve host name", e);
