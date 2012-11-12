@@ -71,6 +71,9 @@
                 <f:entry title="${%Sauce OnDemand Port}" field="seleniumPort">
                     <f:textbox/>
                 </f:entry>
+                <f:entry title="${%HTTPS Protocols}" field="httpsProtocol">
+                    <f:textbox/>
+                </f:entry>
             </f:advanced>
         </f:section>
     </f:block>

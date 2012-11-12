@@ -26,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * Presents the links to the Sauce OnDemand jobs on the build summary page.
  *
  * @author Ross Rowe
@@ -37,7 +36,8 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
 
-    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
+    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/%2$s/jobs?full=true";
+//    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/SC-SC-7/jobs?full=true";
 
     private static final String HMAC_KEY = "HMACMD5";
 
@@ -97,25 +97,21 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
         SauceFactory sauceAPIFactory = new SauceFactory();
-        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username), username, accessKey);
-        JSONArray jobResults = new JSONArray(jsonResponse);
+        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username, SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString())), username, accessKey);
+        JSONObject job = new JSONObject(jsonResponse);
+        JSONArray jobResults = job.getJSONArray("jobs");
         for (int i = 0; i < jobResults.length(); i++) {
             //check custom data to find job that was for build
             JSONObject jobData = jobResults.getJSONObject(i);
-            if (!jobData.isNull("build")) {
-                String buildResultKey = jobData.getString("build");
-                if (buildResultKey.equals(build.toString())) {
-                    String jobId = jobData.getString("id");
-                    JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
-                    String status = jobData.getString("passed");
-                    if (status.equals("null")) {
-                        status = "not set";
-                    }
-                    information.setStatus(status);
-                    information.setName(jobData.getString("name"));
-                    jobInformation.add(information);
-                }
+            String jobId = jobData.getString("id");
+            JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
+            String status = jobData.getString("passed");
+            if (status.equals("null")) {
+                status = "not set";
             }
+            information.setStatus(status);
+            information.setName(jobData.getString("name"));
+            jobInformation.add(information);
         }
         return jobInformation;
     }
@@ -125,7 +121,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         ById byId = new ById(req.getParameter("jobId"));
         try {
-            req.getView(byId,"index.jelly").forward(req,rsp);
+            req.getView(byId, "index.jelly").forward(req, rsp);
         } catch (ServletException e) {
             throw new IOException(e);
         }

@@ -101,6 +101,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
     private SauceOnDemandLogParser logParser;
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
+    private String httpsProtocol;
 
 
     @DataBoundConstructor
@@ -109,6 +110,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      SeleniumInformation seleniumInformation,
                                      String seleniumHost,
                                      String seleniumPort,
+                                     String httpsProtocol,
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
@@ -116,6 +118,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
+        this.httpsProtocol = httpsProtocol;
         if (seleniumInformation != null) {
             this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
             this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
@@ -150,7 +153,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 outputSeleniumVariables(env);
                 outputWebDriverVariables(env);
-                env.put(JENKINS_BUILD_NUMBER, build.toString());
+                env.put(JENKINS_BUILD_NUMBER, sanitiseBuildNumber(build.toString()));
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
@@ -166,56 +169,53 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (seleniumBrowsers != null && !seleniumBrowsers.isEmpty()) {
                     if (seleniumBrowsers.size() == 1) {
                         Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(seleniumBrowsers.get(0));
-                        env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
-                        env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
-                        env.put(SELENIUM_VERSION, browserInstance.getVersion());
-                        env.put(SELENIUM_DRIVER, browserInstance.getUri());
+                        outputEnvironmentVariablesForBrowser(env, browserInstance);
                     }
 
                     JSONArray browsersJSON = new JSONArray();
                     for (String browser : seleniumBrowsers) {
                         Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(browser);
-                        JSONObject config = new JSONObject();
-                        try {
-                            config.put("os", browserInstance.getPlatform().toString());
-                            config.put("browser", browserInstance.getBrowserName());
-                            config.put("browser-version", browserInstance.getVersion());
-                            config.put("url", browserInstance.getUri());
-                        } catch (JSONException e) {
-                            logger.log(Level.SEVERE, "Unable to create JSON Object", e);
-                        }
-                        browsersJSON.put(config);
+                        browserAsJSON(browsersJSON, browserInstance);
                     }
-                    env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
+                    env.put(SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
                 }
+            }
+
+            private void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance) {
+                env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
+                env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
+                env.put(SELENIUM_VERSION, browserInstance.getVersion());
+                env.put(SELENIUM_DRIVER, browserInstance.getUri());
             }
 
             private void outputWebDriverVariables(Map<String, String> env) {
                 if (webDriverBrowsers != null && !webDriverBrowsers.isEmpty()) {
                     if (webDriverBrowsers.size() == 1) {
                         Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(webDriverBrowsers.get(0));
-                        env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
-                        env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
-                        env.put(SELENIUM_VERSION, browserInstance.getVersion());
-                        env.put(SELENIUM_DRIVER, browserInstance.getUri());
+                        outputEnvironmentVariablesForBrowser(env, browserInstance);
                     }
 
                     JSONArray browsersJSON = new JSONArray();
                     for (String browser : webDriverBrowsers) {
                         Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browser);
-                        JSONObject config = new JSONObject();
-                        try {
-                            config.put("os", browserInstance.getPlatform().toString());
-                            config.put("browser", browserInstance.getBrowserName());
-                            config.put("browser-version", browserInstance.getVersion());
-                            config.put("url", browserInstance.getUri());
-                        } catch (JSONException e) {
-                            logger.log(Level.SEVERE, "Unable to create JSON Object", e);
-                        }
-                        browsersJSON.put(config);
+                        browserAsJSON(browsersJSON, browserInstance);
                     }
-                    env.put(SAUCE_ONDEMAND_BROWSERS, StringEscapeUtils.escapeJava(browsersJSON.toString()));
+                    env.put(SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
                 }
+            }
+
+            private void browserAsJSON(JSONArray browsersJSON, Browser browserInstance) {
+                JSONObject config = new JSONObject();
+                try {
+                    config.put("os", browserInstance.getOs());
+                    config.put("platform", browserInstance.getPlatform().toString());
+                    config.put("browser", browserInstance.getBrowserName());
+                    config.put("browser-version", browserInstance.getVersion());
+                    config.put("url", browserInstance.getUri());
+                } catch (JSONException e) {
+                    logger.log(Level.SEVERE, "Unable to create JSON Object", e);
+                }
+                browsersJSON.put(config);
             }
 
             private String getHostName() {
@@ -283,7 +283,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     updates.put("name", jobName);
                 }
                 updates.put("public", false);
-                updates.put("build", build.toString());
+                updates.put("build", sanitiseBuildNumber(build.toString()));
                 sauceREST.updateJobInfo(id, updates);
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
@@ -291,6 +291,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
             }
         }
+    }
+
+    /**
+     * Replace all spaces and hashes with underscores.
+     * @param buildNumber
+     * @return
+     */
+    public static String sanitiseBuildNumber(String buildNumber) {
+        return buildNumber.replaceAll(" ", "_").replaceAll("#", "_");
     }
 
     private String getCurrentHostName() {
@@ -455,6 +464,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
+    public String getHttpsProtocol() {
+        return httpsProtocol;
+    }
+
+    public void setHttpsProtocol(String httpsProtocol) {
+        this.httpsProtocol = httpsProtocol;
+    }
+
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
         this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
@@ -523,7 +540,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             SauceTunnelManager sauceManager = null;
             try {
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
-                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, listener.getLogger());
+                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);

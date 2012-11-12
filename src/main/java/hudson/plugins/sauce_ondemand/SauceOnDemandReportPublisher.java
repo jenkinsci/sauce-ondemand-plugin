@@ -88,7 +88,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     if (jsonObject.get("name").equals(JSONObject.NULL)) {
                         updates.put("name", id[1]);
                     }
-                    updates.put("build", build.toString());
+                    updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
                     sauceREST.updateJobInfo(id[0], updates);
                 } catch (IOException e) {
                     e.printStackTrace(buildListener.error("Error while updating job " + id));
