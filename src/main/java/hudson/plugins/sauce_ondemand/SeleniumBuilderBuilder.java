@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.SeleniumBuilderManager;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -11,6 +12,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -27,17 +29,18 @@ public class SeleniumBuilderBuilder extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        EnvVars env = build.getEnvironment(listener);
         SeleniumBuilderManager seleniumBuilderManager = new SeleniumBuilderManager();
-        seleniumBuilderManager.executeSeleniumBuilder(false, getScriptFile());
+        boolean result = seleniumBuilderManager.executeSeleniumBuilder(new File(build.getWorkspace().getRemote(), getScriptFile()), env, listener.getLogger());
 
-        return true;
+        return result;
     }
 
     public String getScriptFile() {
         return scriptFile;
     }
 
-    @Extension
+    //@Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         @Override

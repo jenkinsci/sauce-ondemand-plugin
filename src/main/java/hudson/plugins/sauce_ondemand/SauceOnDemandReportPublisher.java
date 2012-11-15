@@ -26,6 +26,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.BuildListener;
@@ -71,7 +72,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         if (sessionIDs.isEmpty()) {
             sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(null, array));
         }
-        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+
+        SauceOnDemandBuildAction buildAction = getBuildAction(build);
         if (buildAction == null) {
             buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
         } else {
@@ -104,6 +106,15 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         } else {
             return SauceOnDemandReportFactory.INSTANCE;
         }
+    }
+
+    private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null && build instanceof MavenBuild) {
+            //try the parent
+            buildAction = ((MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
+        }
+        return buildAction;
     }
 
     @Extension

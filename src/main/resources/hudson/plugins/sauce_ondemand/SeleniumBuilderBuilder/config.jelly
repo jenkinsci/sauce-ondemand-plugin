@@ -3,7 +3,7 @@
 
     <f:block>
         <f:section title="Selenium Builder Options">
-            <f:entry title="${%Blah Script File}" field="scriptFile">
+            <f:entry title="${%Script File}" field="scriptFile">
                 <f:textbox id="scriptFile"/>
             </f:entry>
         </f:section>
