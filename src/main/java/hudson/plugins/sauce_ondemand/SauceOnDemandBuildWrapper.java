@@ -299,7 +299,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @return
      */
     public static String sanitiseBuildNumber(String buildNumber) {
-        return buildNumber.replaceAll(" ", "_").replaceAll("#", "_");
+        return buildNumber.replaceAll("[^A-Za-z0-9]", "_");
     }
 
     private String getCurrentHostName() {
