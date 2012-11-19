@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Associates Sauce OnDemand session ID to unit tests.
@@ -53,6 +55,9 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandReportPublisher extends TestDataPublisher {
+
+    private static final Logger logger = Logger.getLogger(SauceOnDemandReportPublisher.class.getName());
+
     @DataBoundConstructor
     public SauceOnDemandReportPublisher() {
     }
@@ -75,6 +80,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
         if (buildAction == null) {
+            logger.log(Level.WARNING, "Unable to retrieve Sauce Build Action for build: " + build.toString());
             buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
         } else {
             SauceREST sauceREST = new SauceREST(buildAction.getUsername(), buildAction.getAccessKey());

@@ -24,6 +24,8 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
+import hudson.maven.MavenBuild;
+import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
@@ -80,36 +82,50 @@ public class SauceOnDemandReportFactory extends Data {
 
             //if we still can't find the ids, retrieve the Sauce jobs that match the build
             //number via the Sauce REST API and compare the job name against the name of the test
-            SauceOnDemandBuildAction buildAction = cr.getOwner().getAction(SauceOnDemandBuildAction.class);
-            if (buildAction != null) {
-                try {
-                    List<JobInformation> jobs = buildAction.retrieveJobIdsFromSauce();
-                    for (JobInformation job : jobs) {
-                        //if job name matches test, then add id
-                        if (jobName.contains(cr.getDisplayName())) {
-                           ids.add(new String[]{job.getJobId(), job.getHmac()});
+            if (ids.isEmpty()) {
+                AbstractBuild<?, ?> build = cr.getOwner();
+                logger.log(Level.INFO, "Invoking Sauce REST API to find job results for " + build.toString());
+                SauceOnDemandBuildAction buildAction = getBuildAction(build);
+                if (buildAction != null) {
+                    try {
+                        List<JobInformation> jobs = buildAction.retrieveJobIdsFromSauce();
+                        for (JobInformation job : jobs) {
+                            //if job name matches test, then add id
+                            if (jobName.contains(cr.getDisplayName())) {
+                                ids.add(new String[]{job.getJobId(), job.getHmac()});
+                            }
                         }
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                    } catch (JSONException e) {
+                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                    } catch (InvalidKeyException e) {
+                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                    } catch (NoSuchAlgorithmException e) {
+                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
                     }
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
-                } catch (JSONException e) {
-                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
-                } catch (InvalidKeyException e) {
-                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
-                } catch (NoSuchAlgorithmException e) {
-                    logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                }
+
+                if (ids.isEmpty()) {
+                    logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
+                } else {
+                    return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
                 }
             }
 
-            if (ids.isEmpty()) {
-                logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
-            } else {
-                return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
-            }
         } else {
             logger.log(Level.INFO, "Test Object not a CaseResult, unable to parse output");
         }
         return Collections.emptyList();
+    }
+
+    private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null && build instanceof MavenBuild) {
+            //try the parent
+            buildAction = ((MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
+        }
+        return buildAction;
     }
 
     /**

@@ -97,21 +97,27 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
         SauceFactory sauceAPIFactory = new SauceFactory();
-        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username, SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString())), username, accessKey);
+        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
+        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username, buildNumber), username, accessKey);
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
-        for (int i = 0; i < jobResults.length(); i++) {
-            //check custom data to find job that was for build
-            JSONObject jobData = jobResults.getJSONObject(i);
-            String jobId = jobData.getString("id");
-            JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
-            String status = jobData.getString("passed");
-            if (status.equals("null")) {
-                status = "not set";
+        if (jobResults == null) {
+            logger.log(Level.WARNING, "Unable to find job data for " + buildNumber);
+
+        } else {
+            for (int i = 0; i < jobResults.length(); i++) {
+                //check custom data to find job that was for build
+                JSONObject jobData = jobResults.getJSONObject(i);
+                String jobId = jobData.getString("id");
+                JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                String status = jobData.getString("passed");
+                if (status.equals("null")) {
+                    status = "not set";
+                }
+                information.setStatus(status);
+                information.setName(jobData.getString("name"));
+                jobInformation.add(information);
             }
-            information.setStatus(status);
-            information.setName(jobData.getString("name"));
-            jobInformation.add(information);
         }
         return jobInformation;
     }
