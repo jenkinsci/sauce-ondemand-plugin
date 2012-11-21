@@ -57,7 +57,7 @@ public class SauceOnDemandReportPublisherTest extends BaseTezt {
         setCredential();
         FreeStyleProject p = createFreeStyleProject();
 
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost:8080", null, null), "localhost", "4445", true, false);
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost:8080", null, null), "localhost", "4445", null, true, false);
         p.getBuildWrappersList().add(before);
         JUnitResultArchiver junit = new JUnitResultArchiver(
                 "test.xml",
