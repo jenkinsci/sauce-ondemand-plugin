@@ -60,7 +60,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
     /**
      * Simulates the whole thing.
      */
-    public void testMinimalConfig() throws Exception {
+    public void minimalConfig() throws Exception {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();

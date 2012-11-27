@@ -39,7 +39,6 @@ import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.json.JSONArray;
@@ -306,7 +305,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         try {
             String hostName = Computer.currentComputer().getHostName();
             if (hostName == null) {
-                return InetAddress.getLocalHost().getHostName();
+                if (launchSauceConnectOnSlave) {
+                    return "localhost";
+                } else {
+                    return InetAddress.getLocalHost().getCanonicalHostName();
+                }
             } else {
                 return hostName;
             }
@@ -324,7 +327,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private int getPort() {
-        if (StringUtils.isNotBlank(seleniumPort)) {
+        if (StringUtils.isNotBlank(seleniumPort) && !seleniumPort.equals("0")) {
             Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumPort);
             if (matcher.matches()) {
                 String variableName = matcher.group(1);

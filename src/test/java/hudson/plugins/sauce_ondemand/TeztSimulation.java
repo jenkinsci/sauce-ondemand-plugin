@@ -3,10 +3,11 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.rest.Credential;
 import com.saucelabs.sauce_ondemand.driver.SauceOnDemandSelenium;
 import com.saucelabs.selenium.client.factory.SeleniumFactory;
-import com.thoughtworks.selenium.Selenium;
+import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import org.junit.Assert;
+import org.openqa.selenium.WebDriver;
 
 import java.io.IOException;
 
@@ -37,29 +38,29 @@ public class TeztSimulation {
     public String doTest() throws IOException, InterruptedException {
         Credential c = new Credential();
 
-        String h = build.getEnvironment(listener).get("SELENIUM_HOST");
+        EnvVars envVars = build.getEnvironment(listener);
+        String h = envVars.get("SELENIUM_HOST");
         if (h != null) System.setProperty("SELENIUM_HOST", h);
 
-        String port = build.getEnvironment(listener).get("SELENIUM_PORT");
+        String port = envVars.get("SELENIUM_PORT");
         if (port != null) System.setProperty("SELENIUM_PORT", port);
 
-        String url = build.getEnvironment(listener).get("SELENIUM_STARTING_URL");
+        String url = envVars.get("SELENIUM_STARTING_URL");
         if (url == null) {
             url = "http://localhost:8080/";
         }
         System.setProperty("SELENIUM_STARTING_URL", url);
 
-        System.setProperty("SELENIUM_DRIVER", new com.saucelabs.ci.Browser("Firefox3_0_Linux", "linux", "firefox", "3.0", "firefox").getUri());
+        System.setProperty("SELENIUM_DRIVER", new com.saucelabs.ci.Browser("Chrome", "linux", "firefox", "4.0", "firefox").getUri());
 
-        Selenium selenium = SeleniumFactory.create();
-        selenium.start();
+        WebDriver selenium = SeleniumFactory.createWebDriver();
 
         SauceOnDemandSelenium sauceOnDemandSelenium = (SauceOnDemandSelenium) selenium;
         String sessionId = sauceOnDemandSelenium.getSessionIdValue();
 
 
         try {
-            selenium.open("/");
+            selenium.get("http://localhost:8080/");
             // if the server really hit our Jetty, we should see the same title that includes the secret code.
             Assert.assertEquals("test" + secret, selenium.getTitle());
 
@@ -70,7 +71,7 @@ public class TeztSimulation {
             }
 
         } finally {
-            selenium.stop();
+            selenium.quit();
         }
 
         return sessionId;
