@@ -67,7 +67,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <hpiTest.skipJellyTest>true</hpiTest.skipJellyTest>
+                        <sauce.user>rossco_9_9</sauce.user>
+                        <access.key>44f0744c-1689-4418-af63-560303cbb37b</access.key>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
