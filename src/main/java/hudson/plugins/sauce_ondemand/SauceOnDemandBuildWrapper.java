@@ -130,8 +130,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         if (isEnableSauceConnect()) {
-            listener.getLogger().println("Starting Sauce OnDemand SSH tunnels");
             if (launchSauceConnectOnSlave) {
+                listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on slave node");
                 if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                     File sauceConnectJar = copySauceConnectToSlave(build, listener);
                     tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(listener, getPort(), sauceConnectJar));
@@ -139,6 +139,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     tunnels = Computer.currentComputer().getChannel().call(new SauceConnectStarter(listener, getPort()));
                 }
             } else {
+                listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on master node");
                 //launch Sauce Connect on the master
                 SauceConnectStarter sauceConnectStarter = new SauceConnectStarter(listener, getPort());
                 tunnels = sauceConnectStarter.call();
@@ -301,7 +302,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return buildNumber.replaceAll("[^A-Za-z0-9]", "_");
     }
 
-    private String getCurrentHostName() {
+    private String  getCurrentHostName() {
         try {
             String hostName = Computer.currentComputer().getHostName();
             if (hostName == null) {
@@ -542,6 +543,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
+                logger.log(Level.INFO, "Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
