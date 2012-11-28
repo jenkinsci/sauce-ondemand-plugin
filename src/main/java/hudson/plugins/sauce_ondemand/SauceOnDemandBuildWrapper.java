@@ -47,13 +47,8 @@ import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -295,6 +290,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * Replace all spaces and hashes with underscores.
+     *
      * @param buildNumber
      * @return
      */
@@ -302,14 +298,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return buildNumber.replaceAll("[^A-Za-z0-9]", "_");
     }
 
-    private String  getCurrentHostName() {
+    private String getCurrentHostName() {
         try {
             String hostName = Computer.currentComputer().getHostName();
             if (hostName == null) {
                 if (launchSauceConnectOnSlave) {
                     return "localhost";
                 } else {
-                    return InetAddress.getLocalHost().getCanonicalHostName();
+                    //if we're on cloudbees, run a GET on http://instance-data/latest/meta-data/public-hostname
+                    String ec2Host = getEc2Host();
+                    if (ec2Host != null) {
+                        return ec2Host;
+                    } else {
+                        return InetAddress.getLocalHost().getCanonicalHostName();
+                    }
                 }
             } else {
                 return hostName;
@@ -325,6 +327,36 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             logger.log(Level.SEVERE, "Unable to retrieve host name", e);
         }
         return "localhost";
+    }
+
+    private String getEc2Host() {
+
+        // Get the response
+        BufferedReader rd = null;
+        try {
+            URL restEndpoint = new URL("http://instance-data/latest/meta-data/public-hostname");
+            HttpURLConnection conn = (HttpURLConnection) restEndpoint.openConnection();
+            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuffer sb = new StringBuffer();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                sb.append(line);
+            }
+            rd.close();
+
+            return sb.toString();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Exception occurred when reading stream", e);
+        } finally {
+            if (rd != null) {
+                try {
+                    rd.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Exception occurred when closing stream", e);
+                }
+            }
+        }
+        return null;
     }
 
     private int getPort() {
@@ -543,7 +575,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
-                logger.log(Level.INFO, "Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
+                listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
