@@ -575,7 +575,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
+                String ec2Host = getEc2Host();
+
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
+                if (ec2Host == null) {
+                    listener.getLogger().println("Unable to obtain ec2 host");
+                } else {
+                    listener.getLogger().println("ec2 host " + ec2Host);
+                }
+
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
