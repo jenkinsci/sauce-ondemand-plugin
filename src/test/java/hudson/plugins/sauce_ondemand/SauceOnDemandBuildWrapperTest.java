@@ -52,7 +52,7 @@ public class SauceOnDemandBuildWrapperTest extends BaseTezt {
         setCredential();
 
         FreeStyleProject p = createFreeStyleProject();
-        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost:8080", null, null), "localhost", "4445", null, true, false);
+        SauceOnDemandBuildWrapper before = new SauceOnDemandBuildWrapper(null, new SeleniumInformation("selenium", "http://localhost:8080", null, null), "localhost", "4445", null, true, true);
         p.getBuildWrappersList().add(before);
         invokeSeleniumFromBuild(p, new SauceBuilder());
     }
