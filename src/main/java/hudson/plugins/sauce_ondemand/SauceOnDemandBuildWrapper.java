@@ -317,35 +317,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
-    private String getEc2Host() {
-
-        // Get the response
-        BufferedReader rd = null;
-        try {
-            URL restEndpoint = new URL("http://instance-data/latest/meta-data/public-hostname");
-            HttpURLConnection conn = (HttpURLConnection) restEndpoint.openConnection();
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            StringBuffer sb = new StringBuffer();
-            String line;
-            while ((line = rd.readLine()) != null) {
-                sb.append(line);
-            }
-            rd.close();
-
-            return sb.toString();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Exception occurred when reading stream", e);
-        } finally {
-            if (rd != null) {
-                try {
-                    rd.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Exception occurred when closing stream", e);
-                }
-            }
-        }
-        return null;
-    }
 
     private int getPort() {
         if (StringUtils.isNotBlank(seleniumPort) && !seleniumPort.equals("0")) {
@@ -563,15 +534,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             SauceTunnelManager sauceManager = null;
             try {
-                String ec2Host = getEc2Host();
-
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                if (ec2Host == null) {
-                    listener.getLogger().println("Unable to obtain ec2 host");
-                } else {
-                    listener.getLogger().println("ec2 host " + ec2Host);
-                }
-
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
                 Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
