@@ -1,7 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
-import com.saucelabs.ci.SauceFactory;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONArray;
@@ -15,6 +15,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -96,9 +97,9 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
-        SauceFactory sauceAPIFactory = new SauceFactory();
+        SauceREST sauceREST = new SauceREST(username, accessKey);
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
-        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, username, buildNumber), username, accessKey);
+        String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
         if (jobResults == null) {

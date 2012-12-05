@@ -301,19 +301,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private String getCurrentHostName() {
         try {
             String hostName = Computer.currentComputer().getHostName();
-            if (hostName == null) {
-                if (launchSauceConnectOnSlave) {
-                    return "localhost";
-                } else {
-                    //if we're on cloudbees, run a GET on http://instance-data/latest/meta-data/public-hostname
-                    String ec2Host = getEc2Host();
-                    if (ec2Host != null) {
-                        return ec2Host;
-                    } else {
-                        return InetAddress.getLocalHost().getCanonicalHostName();
-                    }
-                }
-            } else {
+            if (hostName != null) {
                 return hostName;
             }
         } catch (UnknownHostException e) {
