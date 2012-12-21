@@ -24,7 +24,9 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import hudson.matrix.Axis;
+import hudson.util.Secret;
 
 import java.util.List;
 import java.util.Map;
@@ -51,18 +53,31 @@ public abstract class BrowserAxis extends Axis {
      * @param map
      */
     public void addBuildVariable(String value, Map<String, String> map) {
+        PluginImpl p = PluginImpl.get();
+        String username;
+        String accessKey;
+        if (p.isReuseSauceAuth()) {
+            SauceOnDemandAuthentication storedCredentials = null;
+            storedCredentials = new SauceOnDemandAuthentication();
+            username = storedCredentials.getUsername();
+            accessKey = storedCredentials.getAccessKey();
+        } else {
+            username = p.getUsername();
+            accessKey = Secret.toString(p.getApiKey());
+
+        }
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
-            map.put(getName(), browserInstance.getUri());
+            map.put(getName(), browserInstance.getUri(username, accessKey));
             map.put(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
             map.put(SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName());
             map.put(SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion());
             StringBuilder builder = new StringBuilder();
-            builder.append("-D").append(getName()).append('=').append(browserInstance.getUri()).
+            builder.append("-D").append(getName()).append('=').append(browserInstance.getUri(username, accessKey)).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM).append('=').append(browserInstance.getPlatform().toString()).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_BROWSER).append('=').append(browserInstance.getBrowserName()).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_VERSION).append('=').append(browserInstance.getVersion());
-            map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri());
+            map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri(username, accessKey));
         }
     }
 
