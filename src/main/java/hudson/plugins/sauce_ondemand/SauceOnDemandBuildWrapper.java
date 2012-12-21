@@ -180,7 +180,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
                 env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                 env.put(SELENIUM_VERSION, browserInstance.getVersion());
-                env.put(SELENIUM_DRIVER, browserInstance.getUri());
+                env.put(SELENIUM_DRIVER, browserInstance.getUri(getUserName(), getApiKey()));
             }
 
             private void outputWebDriverVariables(Map<String, String> env) {
@@ -206,7 +206,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     config.put("platform", browserInstance.getPlatform().toString());
                     config.put("browser", browserInstance.getBrowserName());
                     config.put("browser-version", browserInstance.getVersion());
-                    config.put("url", browserInstance.getUri());
+                    config.put("url", browserInstance.getUri(getUserName(), getApiKey()));
                 } catch (JSONException e) {
                     logger.log(Level.SEVERE, "Unable to create JSON Object", e);
                 }
