@@ -145,9 +145,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             @Override
             public void buildEnvVars(Map<String, String> env) {
-
                 outputSeleniumVariables(env);
                 outputWebDriverVariables(env);
+                //if any variables have been defined in build variables (ie. by a multi-config project), use them
+                Map buildVariables = build.getBuildVariables();
+                if (buildVariables.containsKey(SELENIUM_BROWSER)) {
+                    env.put(SELENIUM_BROWSER, (String) buildVariables.get(SELENIUM_BROWSER));
+                }
+                if (buildVariables.containsKey(SELENIUM_VERSION)) {
+                    env.put(SELENIUM_VERSION, (String) buildVariables.get(SELENIUM_VERSION));
+                }
+                if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
+                    env.put(SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM));
+                }
                 env.put(JENKINS_BUILD_NUMBER, sanitiseBuildNumber(build.toString()));
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
@@ -177,6 +187,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             private void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance) {
+
                 env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
                 env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                 env.put(SELENIUM_VERSION, browserInstance.getVersion());
