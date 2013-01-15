@@ -188,7 +188,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             private void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance) {
 
-                env.put(SELENIUM_PLATFORM, browserInstance.getPlatform().toString());
+                env.put(SELENIUM_PLATFORM, browserInstance.getOs());
                 env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
                 env.put(SELENIUM_VERSION, browserInstance.getVersion());
                 env.put(SELENIUM_DRIVER, browserInstance.getUri(getUserName(), getApiKey()));
