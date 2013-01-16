@@ -20,13 +20,15 @@ limitations under the License.
             <table>
                 <tr>
                     <th>Sauce OnDemand Job Id</th>
-                    <th>Status</th>
+                    <th>Name</th>
+                    <th>Passed?</th>
                 </tr>
                 <j:forEach var="job" items="${it.getJobs()}" indexVar="indexA">
                     <tr>
                         <td>
                             <a href="${it.urlName}/jobReport?jobId=${job.getJobId()}">${job.getJobId()}</a>
                         </td>
+                        <td>${job.getName()}</td>
                         <td>${job.getStatus()}</td>
                     </tr>
 
