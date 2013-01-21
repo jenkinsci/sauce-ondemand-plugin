@@ -47,12 +47,18 @@ import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -93,7 +99,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
-    private SauceOnDemandLogParser logParser;
+    private Map<String, SauceOnDemandLogParser> logParserMap;
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
 
@@ -262,6 +268,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     listener.getLogger().println("Sauce Connect closed");
                 }
                 processBuildOutput(build);
+                logParserMap.remove(build.toString());
                 return true;
             }
         };
@@ -271,6 +278,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
         build.addAction(buildAction);
         SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
+        SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
 
@@ -480,8 +488,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        this.logParser = new SauceOnDemandLogParser(logger, build.getCharset());
-        return logParser;
+        SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
+        if (logParserMap == null) {
+            logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();
+        }
+        logParserMap.put(build.toString(), sauceOnDemandLogParser);
+        return sauceOnDemandLogParser;
     }
 
     private static final class TunnelHolder implements ITunnelHolder, Serializable {
