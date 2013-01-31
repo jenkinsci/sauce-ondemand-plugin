@@ -29,12 +29,12 @@ import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +53,10 @@ public class SauceOnDemandReportFactory extends Data {
     private static final Logger logger = Logger.getLogger(SauceOnDemandReportFactory.class.getName());
 
     public static final SauceOnDemandReportFactory INSTANCE = new SauceOnDemandReportFactory();
+
+    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
+
+    private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
 
     /**
      * Makes this a singleton -- since it's stateless, there's no need to keep one around for every build.
@@ -90,19 +94,26 @@ public class SauceOnDemandReportFactory extends Data {
                     try {
                         List<JobInformation> jobs = buildAction.retrieveJobIdsFromSauce();
                         for (JobInformation job : jobs) {
-                            //if job name matches test, then add id
-                            if (jobName.contains(cr.getDisplayName())) {
-                                ids.add(new String[]{job.getJobId(), job.getHmac()});
+                            //if job name matches test class/test name, then add id
+                            if (job.getName() != null) {
+                                Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                                Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                                if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                                        || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                                        || matcher.find()){ //or if the full name of the test contains the job name (matching whole words only)
+                                    //then we have a match
+                                    ids.add(new String[]{job.getJobId(), job.getHmac()});
+                                }
                             }
                         }
                     } catch (IOException e) {
-                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
                     } catch (JSONException e) {
-                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
                     } catch (InvalidKeyException e) {
-                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
                     } catch (NoSuchAlgorithmException e) {
-                        logger.log(Level.WARNING, "Error occured invoking Sauce REST API", e);
+                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
                     }
                 }
 
@@ -153,8 +164,4 @@ public class SauceOnDemandReportFactory extends Data {
         }
         return sessions;
     }
-
-    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
-
-
 }
