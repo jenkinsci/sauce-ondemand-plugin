@@ -62,10 +62,10 @@ public class PluginImplTest extends HudsonTestCase {
         DescriptorImpl d = PluginImpl.get().getDescriptor();
 
         // this should fail
-        assertEquals(Kind.ERROR, d.doValidate("bogus","bogus", false).kind);
+        assertEquals(Kind.ERROR, d.doValidate("bogus","bogus", false, false).kind);
 
         // this should work
         Credential c = new Credential();
-        assertEquals(Kind.OK, d.doValidate(c.getUsername(),c.getKey(), false).kind);
+        assertEquals(Kind.OK, d.doValidate(c.getUsername(),c.getKey(), false, false).kind);
     }
 }
