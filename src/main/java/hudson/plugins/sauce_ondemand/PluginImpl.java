@@ -71,6 +71,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String sauceConnectDirectory;
 
+    private boolean disableStatusColumn;
+
     public String getUsername() {
         return username;
     }
@@ -100,6 +102,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     @Override
     public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
         reuseSauceAuth = formData.getBoolean("reuseSauceAuth");
+        disableStatusColumn = formData.getBoolean("disableStatusColumn");
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
@@ -133,7 +136,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth, boolean disableStatusColumn) {
             try {
                 SauceOnDemandAuthentication credential = reuseSauceAuth ? new SauceOnDemandAuthentication() : new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
@@ -183,5 +186,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             logger.log(Level.WARNING, "Error Reloading plugin", e);
         }
         return "Failed to apply updates, please see application logs";
+    }
+
+    public boolean isDisableStatusColumn() {
+        return disableStatusColumn;
+    }
+
+    public void setDisableStatusColumn(boolean disableStatusColumn) {
+        this.disableStatusColumn = disableStatusColumn;
     }
 }
