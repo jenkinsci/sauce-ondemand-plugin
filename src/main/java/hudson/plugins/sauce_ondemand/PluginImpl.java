@@ -136,7 +136,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean reuseSauceAuth, boolean disableStatusColumn) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean disableStatusColumn, @QueryParameter boolean reuseSauceAuth) {
             try {
                 SauceOnDemandAuthentication credential = reuseSauceAuth ? new SauceOnDemandAuthentication() : new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection

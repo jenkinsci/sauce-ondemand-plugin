@@ -49,7 +49,7 @@
                 </script>
             </f:entry>
             <f:block>
-                <f:validateButton title="${%Test Connection}" with="username,apiKey,reuseSauceAuth" method="validate"/>
+                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn,reuseSauceAuth" method="validate"/>
             </f:block>
         </j:scope>
     </f:section>
