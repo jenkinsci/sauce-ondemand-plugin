@@ -219,6 +219,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             private void browserAsJSON(JSONArray browsersJSON, Browser browserInstance) {
+                if (browserInstance == null) {
+                    return;
+                }
                 JSONObject config = new JSONObject();
                 try {
                     config.put("os", browserInstance.getOs());
