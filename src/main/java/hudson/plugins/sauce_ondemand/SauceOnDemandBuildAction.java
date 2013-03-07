@@ -4,6 +4,7 @@ import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +99,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
         SauceREST sauceREST = new SauceREST(username, accessKey);
-        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
+        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(getBuildName());
         String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
@@ -121,6 +122,18 @@ public class SauceOnDemandBuildAction extends AbstractAction {
             }
         }
         return jobInformation;
+    }
+
+    private String getBuildName() {
+        String displayName =  build.getFullDisplayName();
+        String buildName = build.getDisplayName();
+        StringBuilder builder = new StringBuilder(displayName);
+        //for multi-config projects, the full display name contains the build name twice
+        //detect this and replace the second occurance with the build number
+        if (StringUtils.countMatches(displayName, buildName) > 1) {
+            builder.replace(displayName.lastIndexOf(buildName), displayName.length(), "#" + build.getNumber());
+        }
+        return builder.toString();
     }
 
     public void doJobReport(StaplerRequest req, StaplerResponse rsp)

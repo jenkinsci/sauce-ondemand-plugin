@@ -94,7 +94,6 @@ public class SauceOnDemandMavenTestPublisher extends Recorder {
         }
     }
 
-
     public DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> getTestDataPublishers() {
         return testDataPublishers;
     }

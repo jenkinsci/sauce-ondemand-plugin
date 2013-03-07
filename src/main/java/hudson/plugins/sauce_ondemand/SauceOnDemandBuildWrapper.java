@@ -102,6 +102,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private Map<String, SauceOnDemandLogParser> logParserMap;
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
+    private String options;
 
 
     @DataBoundConstructor
@@ -111,6 +112,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String seleniumHost,
                                      String seleniumPort,
                                      String httpsProtocol,
+                                     String options,
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
@@ -119,6 +121,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
         this.httpsProtocol = httpsProtocol;
+        this.options = options;
         if (seleniumInformation != null) {
             this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
             this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
@@ -493,6 +496,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.httpsProtocol = httpsProtocol;
     }
 
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(String options) {
+        this.options = options;
+    }
+
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
         SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
@@ -566,7 +577,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
                 sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
-                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, httpsProtocol, listener.getLogger());
+                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);

@@ -65,13 +65,16 @@
                 <f:entry field="launchSauceConnectOnSlave">
                     <f:checkbox title="${%Launch Sauce Connect On Slave}"/>
                 </f:entry>
-                <f:entry title="${%Sauce OnDemand Host}" field="seleniumHost">
+                <f:entry title="${%Sauce Host}" field="seleniumHost">
                     <f:textbox/>
                 </f:entry>
-                <f:entry title="${%Sauce OnDemand Port}" field="seleniumPort">
+                <f:entry title="${%Sauce Port}" field="seleniumPort">
                     <f:textbox/>
                 </f:entry>
                 <f:entry title="${%HTTPS Protocols}" field="httpsProtocol">
+                    <f:textbox/>
+                </f:entry>
+                <f:entry title="${%Sauce Connect Options}" field="options">
                     <f:textbox/>
                 </f:entry>
             </f:advanced>

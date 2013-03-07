@@ -126,6 +126,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         return buildAction;
     }
 
+
+
     @Extension
     public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
         @Override
