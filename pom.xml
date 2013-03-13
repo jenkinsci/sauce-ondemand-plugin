@@ -189,7 +189,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>
-            <version>3.0.24</version>
+            <version>3.0.26</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
