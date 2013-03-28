@@ -99,7 +99,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
-    private Map<String, SauceOnDemandLogParser> logParserMap;
+    private final Map<String, SauceOnDemandLogParser> logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();;
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
     private String options;
@@ -287,6 +287,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         build.addAction(buildAction);
         SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
         SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
+        if (logParser == null) {
+            logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
+            return;
+        }
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
 
@@ -507,9 +511,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
         SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
-        if (logParserMap == null) {
-            logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();
-        }
         logParserMap.put(build.toString(), sauceOnDemandLogParser);
         return sauceOnDemandLogParser;
     }
