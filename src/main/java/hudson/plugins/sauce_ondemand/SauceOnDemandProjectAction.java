@@ -19,7 +19,6 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
     public SauceOnDemandProjectAction(AbstractProject<?, ?> project) {
         this.project = project;
-
     }
 
     /**
@@ -53,16 +52,22 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                 List<SauceOnDemandBuildAction> buildActions = new ArrayList<SauceOnDemandBuildAction>();
                 MatrixBuild matrixBuild = (MatrixBuild) build;
                 for (MatrixRun matrixRun : matrixBuild.getRuns()) {
-                   SauceOnDemandBuildAction buildAction = matrixRun.getAction(SauceOnDemandBuildAction.class);
+                    SauceOnDemandBuildAction buildAction = matrixRun.getAction(SauceOnDemandBuildAction.class);
                     if (buildAction != null) {
                         buildActions.add(buildAction);
                     }
                 }
                 return buildActions;
+            } else {
+                SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+                if (buildAction != null) {
+                    return Collections.singletonList(buildAction);
+                } else {
+                    return Collections.emptyList();
+                }
             }
-            return Collections.singletonList(build.getAction(SauceOnDemandBuildAction.class));
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public List<JobInformation> getJobs() {
