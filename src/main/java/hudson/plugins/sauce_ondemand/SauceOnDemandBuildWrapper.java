@@ -99,7 +99,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
-    private final Map<String, SauceOnDemandLogParser> logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();;
+    private Map<String, SauceOnDemandLogParser> logParserMap;
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
     private String options;
@@ -511,6 +511,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
         SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
+        if (logParserMap == null) {
+            logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();
+        }
         logParserMap.put(build.toString(), sauceOnDemandLogParser);
         return sauceOnDemandLogParser;
     }
