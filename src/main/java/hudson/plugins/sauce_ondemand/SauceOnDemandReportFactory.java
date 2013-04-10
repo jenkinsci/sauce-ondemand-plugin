@@ -100,7 +100,7 @@ public class SauceOnDemandReportFactory extends Data {
                                 Matcher matcher = jobNamePattern.matcher(cr.getFullName());
                                 if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
                                         || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                                        || matcher.find()){ //or if the full name of the test contains the job name (matching whole words only)
+                                        || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
                                     //then we have a match
                                     ids.add(new String[]{job.getJobId(), job.getHmac()});
                                 }
@@ -154,6 +154,45 @@ public class SauceOnDemandReportFactory extends Data {
                 if (m.groupCount() == 2) {
                     job = m.group(2);
                 }
+
+                if (caseResult == null) {
+                    sessions.add(new String[]{sessionId, job});
+                } else {
+                    sessions.add(new String[]{sessionId, job, String.valueOf(caseResult.isPassed())});
+                }
+
+            }
+        }
+        return sessions;
+    }
+
+    /**
+     * Returns all sessions matching a given jobName in the provided logs.
+     * If no session is found for the jobName, return all session that do not provide job-name (old format)
+     */
+    static List<String[]> findSessionIDsForCaseResults(List<CaseResult> caseResults, String... output) {
+        List<String[]> sessions = new ArrayList<String[]>();
+        for (String text : output) {
+            if (text == null) continue;
+            Matcher m = SESSION_ID_PATTERN.matcher(text);
+            while (m.find()) {
+                String sessionId = m.group(1);
+                String job = "";
+                if (m.groupCount() == 2) {
+                    job = m.group(2);
+                }
+                //do we have a case result whose name matches the job name?
+                CaseResult caseResult = null;
+                if (job != null && !(job.equals("")) && !caseResults.isEmpty()) {
+                    for (CaseResult cr : caseResults) {
+                        if (job.equals(cr.getFullName()) //if job name equals full name of test
+                                || job.contains(cr.getDisplayName())) { //or if job name contains the test name
+                            caseResult = cr;
+                            break;
+                        }
+                    }
+                }
+
                 if (caseResult == null) {
                     sessions.add(new String[]{sessionId, job});
                 } else {
