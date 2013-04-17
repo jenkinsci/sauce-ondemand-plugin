@@ -90,7 +90,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     JSONObject jsonObject = new JSONObject(json);
                     Map<String, Object> updates = new HashMap<String, Object>();
                     //only store passed/name values if they haven't already been set
-                    if (jsonObject.get("passed").equals(JSONObject.NULL) && id.length == 3) {
+                    if (id.length == 3) {
                         updates.put("passed", id[2]);
                     }
                     if (jsonObject.get("name").equals(JSONObject.NULL)) {
