@@ -302,8 +302,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 JSONObject jsonObject = new JSONObject(json);
                 Map<String, Object> updates = new HashMap<String, Object>();
                 //only store passed/name values if they haven't already been set
+                boolean buildResult = build.getResult() == null || build.getResult().equals(Result.SUCCESS);
                 if (jsonObject.get("passed").equals(JSONObject.NULL)) {
-                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
+                    updates.put("passed", buildResult);
                 }
                 if (StringUtils.isNotBlank(jobName) && jsonObject.get("name").equals(JSONObject.NULL)) {
                     updates.put("name", jobName);
