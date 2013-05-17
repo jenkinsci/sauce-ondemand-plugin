@@ -20,10 +20,7 @@ import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,7 +108,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
-                JobInformation information = new JobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                JobInformation information = new JenkinsJobInformation(jobId, calcHMAC(username, accessKey, jobId));
                 String status = jobData.getString("passed");
                 if (status.equals("null")) {
                     status = "not set";
@@ -120,7 +117,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 information.setName(jobData.getString("name"));
                 jobInformation.add(information);
             }
+            //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
+            Collections.reverse(jobInformation);
         }
+
         return jobInformation;
     }
 
