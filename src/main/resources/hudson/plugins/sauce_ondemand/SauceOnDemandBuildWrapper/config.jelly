@@ -2,7 +2,7 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:block>
-        <f:section title="Sauce OnDemand Options">
+        <f:section title="Sauce Labs Options">
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
             </f:entry>

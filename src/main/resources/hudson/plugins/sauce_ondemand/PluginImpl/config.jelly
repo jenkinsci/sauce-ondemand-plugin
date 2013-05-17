@@ -15,7 +15,7 @@
         }
         }
     </script>
-    <f:section title="Sauce OnDemand">
+    <f:section title="Sauce Support">
         <j:scope>
             <j:set var="instance" value="${it}"/>
             <j:set var="descriptor" value="${instance.descriptor}"/>
