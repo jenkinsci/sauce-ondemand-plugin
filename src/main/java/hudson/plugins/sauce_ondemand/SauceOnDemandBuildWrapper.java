@@ -79,6 +79,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
+    private final String startingURL;
 
     private boolean enableSauceConnect;
 
@@ -113,6 +114,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String seleniumPort,
                                      String httpsProtocol,
                                      String options,
+                                     String startingURL,
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave) {
         this.credentials = credentials;
@@ -122,6 +124,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.seleniumPort = seleniumPort;
         this.httpsProtocol = httpsProtocol;
         this.options = options;
+        this.startingURL = startingURL;
         if (seleniumInformation != null) {
             this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
             this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
@@ -216,8 +219,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     for (String browser : webDriverBrowsers) {
                         Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browser);
                         browserAsJSON(browsersJSON, browserInstance);
+                        //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
+                        env.put(SELENIUM_DRIVER, browserInstance.getUri(getUserName(), getApiKey()));
                     }
                     env.put(SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
+
                 }
             }
 
@@ -257,10 +263,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
 
             private String getStartingURL() {
-                if (getSeleniumInformation() != null) {
-                    return getSeleniumInformation().getStartingURL();
-                }
-                return null;
+                return startingURL;
             }
 
             @Override
@@ -507,6 +510,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setOptions(String options) {
         this.options = options;
+    }
+
+    public String getStartingURL() {
+        return startingURL;
     }
 
     @Override

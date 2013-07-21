@@ -42,12 +42,10 @@
 
                         </j:forEach>
                     </select>
-                    <j:set var="seleniumInformation" value="${instance.seleniumInformation}"/>
-                    <f:entry title="${%Starting URL}" field="startingURL">
-                        <f:textbox value="${seleniumInformation.startingURL}"/>
-                    </f:entry>
+
                 </f:nested>
             </f:radioBlock>
+
 
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
                              title="${%Override default authentication?}">
@@ -62,9 +60,13 @@
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
+                <f:entry title="${%Starting URL}" field="startingURL">
+                    <f:textbox/>
+                </f:entry>
                 <f:entry field="launchSauceConnectOnSlave">
                     <f:checkbox title="${%Launch Sauce Connect On Slave}"/>
                 </f:entry>
+
                 <f:entry title="${%Sauce Host}" field="seleniumHost">
                     <f:textbox/>
                 </f:entry>
