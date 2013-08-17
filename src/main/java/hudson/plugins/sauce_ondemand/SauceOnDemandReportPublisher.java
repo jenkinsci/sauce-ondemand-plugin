@@ -96,17 +96,21 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     if (jsonObject.get("name").equals(JSONObject.NULL)) {
                         updates.put("name", id[1]);
                     }
-                    String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
-                    if (build instanceof MavenBuild) {
-                        //try the parent
-                        buildNumber =  SauceOnDemandBuildWrapper.sanitiseBuildNumber(((MavenBuild) build).getParentBuild().toString());
+                    if (jsonObject.get("build").equals(JSONObject.NULL)) {
+                        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
+                        if (build instanceof MavenBuild) {
+                            //try the parent
+                            buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(((MavenBuild) build).getParentBuild().toString());
+                        }
+                        updates.put("build", buildNumber);
                     }
-                    updates.put("build", buildNumber);
-                    sauceREST.updateJobInfo(id[0], updates);
+                    if (!updates.isEmpty()) {
+                        sauceREST.updateJobInfo(id[0], updates);
+                    }
                 } catch (IOException e) {
-                    e.printStackTrace(buildListener.error("Error while updating job " + id));
+                    buildListener.error("Error while updating job " + id[0] + " message: " + e.getMessage());
                 } catch (JSONException e) {
-                    e.printStackTrace(buildListener.error("Error while updating job " + id));
+                    buildListener.error("Error while updating job " + id[0] + " message: " + e.getMessage());
                 }
             }
         }
@@ -127,7 +131,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
         return buildAction;
     }
-
 
 
     @Extension

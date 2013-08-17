@@ -315,8 +315,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (!PluginImpl.get().isDisableStatusColumn()) {
                     updates.put("public", true);
                 }
-                updates.put("build", sanitiseBuildNumber(build.toString()));
-                sauceREST.updateJobInfo(id, updates);
+                if (jsonObject.get("build").equals(JSONObject.NULL)) {
+                    updates.put("build", sanitiseBuildNumber(build.toString()));
+                }
+                if (!updates.isEmpty()) {
+                    sauceREST.updateJobInfo(id, updates);
+                }
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
             } catch (JSONException e) {
