@@ -83,7 +83,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             logger.log(Level.WARNING, "Unable to retrieve Sauce Build Action for build: " + build.toString());
             buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
         } else {
-            SauceREST sauceREST = new SauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+            SauceREST sauceREST = new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
             for (String[] id : sessionIDs) {
                 try {
                     String json = sauceREST.getJobInfo(id[0]);
@@ -107,8 +107,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     if (!updates.isEmpty()) {
                         sauceREST.updateJobInfo(id[0], updates);
                     }
-                } catch (IOException e) {
-                    buildListener.error("Error while updating job " + id[0] + " message: " + e.getMessage());
                 } catch (JSONException e) {
                     buildListener.error("Error while updating job " + id[0] + " message: " + e.getMessage());
                 }

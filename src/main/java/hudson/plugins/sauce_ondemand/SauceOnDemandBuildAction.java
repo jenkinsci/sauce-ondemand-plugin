@@ -95,7 +95,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
-        SauceREST sauceREST = new SauceREST(username, accessKey);
+        SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(getBuildName());
         String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);

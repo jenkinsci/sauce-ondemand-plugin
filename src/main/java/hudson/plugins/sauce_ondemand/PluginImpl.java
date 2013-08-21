@@ -143,10 +143,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                 if (reuseSauceAuth && StringUtils.isBlank(credential.getUsername()) && StringUtils.isBlank(credential.getAccessKey())) {
                     return FormValidation.error("Unable to find ~/.sauce-ondemand file");
                 } else {
-                    new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
-                    return FormValidation.ok("Success");
+                    String response = new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
+                    if (response != null && !response.equals("")) {
+                        return FormValidation.ok("Success");
+                    } else {
+                        return FormValidation.error("Failed to connect to Sauce OnDemand");
+                    }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
             }
         }

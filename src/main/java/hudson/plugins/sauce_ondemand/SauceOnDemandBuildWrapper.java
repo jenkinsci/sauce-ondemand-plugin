@@ -288,7 +288,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private void processBuildOutput(AbstractBuild build) {
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
         build.addAction(buildAction);
-        SauceREST sauceREST = new SauceREST(getUserName(), getApiKey());
+        SauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
         SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
         if (logParser == null) {
             logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
@@ -321,8 +321,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (!updates.isEmpty()) {
                     sauceREST.updateJobInfo(id, updates);
                 }
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Error while updating job " + id, e);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Error while updating job " + id, e);
             }
