@@ -125,7 +125,7 @@ public class SauceOnDemandReportFactory extends Data {
             }
 
         } else {
-            logger.log(Level.INFO, "Test Object not a CaseResult, unable to parse output");
+            logger.log(Level.INFO, "Test Object not a CaseResult, unable to parse output: " + testObject.toString());
         }
         return Collections.emptyList();
     }

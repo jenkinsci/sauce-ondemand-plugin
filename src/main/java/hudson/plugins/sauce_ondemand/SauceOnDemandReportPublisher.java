@@ -80,14 +80,20 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
         if (buildAction == null) {
-            logger.log(Level.WARNING, "Unable to retrieve Sauce Build Action for build: " + build.toString());
+            logger.log(Level.WARNING, "Unable to retrieve Sauce Build Action for build: " + build.toString() + " " + build.getClass().toString());
             buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
         } else {
             SauceREST sauceREST = new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
             for (String[] id : sessionIDs) {
+                JSONObject jsonObject;
+                String json = sauceREST.getJobInfo(id[0]);
                 try {
-                    String json = sauceREST.getJobInfo(id[0]);
-                    JSONObject jsonObject = new JSONObject(json);
+                    jsonObject = new JSONObject(json);
+                } catch (JSONException e) {
+                    buildListener.error("Error while parsing JSON " + json + " message: " + e.getMessage());
+                    continue;
+                }
+                try {
                     Map<String, Object> updates = new HashMap<String, Object>();
                     //only store passed/name values if they haven't already been set
                     if (jsonObject.get("passed").equals(JSONObject.NULL) && id.length == 3) {

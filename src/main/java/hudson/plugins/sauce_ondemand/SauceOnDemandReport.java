@@ -36,6 +36,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Show videos for the tests.
@@ -43,6 +44,9 @@ import java.util.*;
  * @author Kohsuke Kawaguchi
  */
 public class SauceOnDemandReport extends TestAction {
+
+    private static final Logger logger = Logger.getLogger(SauceOnDemandReport.class.getName());
+
     public final CaseResult parent;
     /**
      * Session IDs.
@@ -70,6 +74,7 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public List<String> getIDs() {
+        logger.info("Retrieving Sauce job ids");
         List<String> ids = new ArrayList<String>();
         for (String[] sessionId : sessionIds) {
             ids.add(sessionId[0]);

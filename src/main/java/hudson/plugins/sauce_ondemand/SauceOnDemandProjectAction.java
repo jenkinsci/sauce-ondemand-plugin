@@ -9,11 +9,14 @@ import hudson.model.AbstractProject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * @author Ross Rowe
  */
 public class SauceOnDemandProjectAction extends AbstractAction {
+
+    private static final Logger logger = Logger.getLogger(SauceOnDemandProjectAction.class.getName());
 
     private AbstractProject<?, ?> project;
 
@@ -31,17 +34,20 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
+        logger.info("Checking to see if project has Sauce results");
         List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
         if (sauceOnDemandBuildActions != null) {
             boolean result = false;
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
                 if (action.hasSauceOnDemandResults()) {
+                    logger.info("Found Sauce results");
                     result = true;
                     break;
                 }
             }
             return result;
         }
+        logger.info("Did not find Sauce results");
         return false;
     }
 
@@ -63,10 +69,12 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                 if (buildAction != null) {
                     return Collections.singletonList(buildAction);
                 } else {
+                    logger.info("No Sauce Build Action found for " + build.toString());
                     return Collections.emptyList();
                 }
             }
         }
+        logger.info("No Sauce Build Action found for " + build.toString());
         return Collections.emptyList();
     }
 
@@ -79,6 +87,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             }
             return allJobs;
         }
+        logger.info("No Sauce jobs found");
         return Collections.emptyList();
     }
 }
