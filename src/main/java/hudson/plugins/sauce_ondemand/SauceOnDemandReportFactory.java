@@ -119,9 +119,11 @@ public class SauceOnDemandReportFactory extends Data {
 
                 if (ids.isEmpty()) {
                     logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
-                } else {
-                    return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
                 }
+            }
+
+            if (!ids.isEmpty()) {
+                return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
             }
 
         } else {
