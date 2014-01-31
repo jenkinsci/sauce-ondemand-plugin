@@ -5,6 +5,10 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildableItemWithBuildWrappers;
+import hudson.model.Descriptor;
+import hudson.tasks.BuildWrapper;
+import hudson.util.DescribableList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,21 +38,39 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
-        logger.info("Checking to see if project has Sauce results");
-        List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
-        if (sauceOnDemandBuildActions != null) {
-            boolean result = false;
-            for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
-                if (action.hasSauceOnDemandResults()) {
-                    logger.info("Found Sauce results");
-                    result = true;
-                    break;
+        if (isSauceEnabled()) {
+            logger.info("Checking to see if project has Sauce results");
+            List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
+            if (sauceOnDemandBuildActions != null) {
+                boolean result = false;
+                for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
+                    if (action.hasSauceOnDemandResults()) {
+                        logger.info("Found Sauce results");
+                        result = true;
+                        break;
+                    }
                 }
+                return result;
             }
-            return result;
         }
         logger.info("Did not find Sauce results");
         return false;
+    }
+
+    public SauceOnDemandBuildWrapper getBuildWrapper() {
+        if (project instanceof BuildableItemWithBuildWrappers) {
+            DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappers = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList();
+            for (BuildWrapper describable : buildWrappers) {
+                if (describable instanceof SauceOnDemandBuildWrapper) {
+                    return (SauceOnDemandBuildWrapper) describable;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isSauceEnabled() {
+        return getBuildWrapper() != null;
     }
 
     private List<SauceOnDemandBuildAction> getSauceBuildActions() {
@@ -66,12 +88,13 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                 return buildActions;
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
-                if (buildAction != null) {
-                    return Collections.singletonList(buildAction);
-                } else {
+                if (buildAction == null) {
                     logger.info("No Sauce Build Action found for " + build.toString());
-                    return Collections.emptyList();
+                    buildAction = new SauceOnDemandBuildAction(build,
+                            getBuildWrapper().getUserName(), getBuildWrapper().getApiKey());
+                    build.addAction(buildAction);
                 }
+                return Collections.singletonList(buildAction);
             }
         }
         logger.info("No Sauce Build Action found for " + build.toString());
