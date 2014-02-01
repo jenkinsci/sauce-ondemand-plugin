@@ -135,7 +135,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Override
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-
+        logger.info("Setting up Sauce Build Wrapper");
         if (isEnableSauceConnect()) {
             if (launchSauceConnectOnSlave) {
                 listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on slave node");
@@ -157,6 +157,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             @Override
             public void buildEnvVars(Map<String, String> env) {
+                logger.info("Creating Sauce environment variables");
                 outputSeleniumVariables(env);
                 outputWebDriverVariables(env);
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
@@ -286,6 +287,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private void processBuildOutput(AbstractBuild build) {
+        logger.info("Adding build action to " + build.toString());
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
         build.addAction(buildAction);
         SauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());

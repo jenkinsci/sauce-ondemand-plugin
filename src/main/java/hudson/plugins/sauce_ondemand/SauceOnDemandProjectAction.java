@@ -58,15 +58,22 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public SauceOnDemandBuildWrapper getBuildWrapper() {
+        SauceOnDemandBuildWrapper buildWrapper = null;
         if (project instanceof BuildableItemWithBuildWrappers) {
             DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappers = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList();
             for (BuildWrapper describable : buildWrappers) {
                 if (describable instanceof SauceOnDemandBuildWrapper) {
-                    return (SauceOnDemandBuildWrapper) describable;
+                    buildWrapper = (SauceOnDemandBuildWrapper) describable;
+                    break;
                 }
             }
+        } else {
+            logger.info("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
         }
-        return null;
+        if (buildWrapper == null) {
+            logger.info("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
+        }
+        return buildWrapper;
     }
 
     private boolean isSauceEnabled() {
@@ -89,7 +96,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    logger.info("No Sauce Build Action found for " + build.toString());
+                    logger.info("No Sauce Build Action found for " + build.toString() + " adding a new one");
                     buildAction = new SauceOnDemandBuildAction(build,
                             getBuildWrapper().getUserName(), getBuildWrapper().getApiKey());
                     build.addAction(buildAction);
