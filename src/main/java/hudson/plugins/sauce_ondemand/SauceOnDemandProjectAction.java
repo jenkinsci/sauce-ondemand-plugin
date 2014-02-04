@@ -38,6 +38,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
+        logger.info("Inside hasSauceOnDemandResults v1.64");
         if (isSauceEnabled()) {
             logger.info("Checking to see if project has Sauce results");
             List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();

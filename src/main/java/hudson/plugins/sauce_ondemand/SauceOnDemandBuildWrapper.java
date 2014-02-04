@@ -135,7 +135,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Override
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        logger.info("Setting up Sauce Build Wrapper");
+        logger.info("Setting up Sauce Build Wrapper v1.64");
         if (isEnableSauceConnect()) {
             if (launchSauceConnectOnSlave) {
                 listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on slave node");
