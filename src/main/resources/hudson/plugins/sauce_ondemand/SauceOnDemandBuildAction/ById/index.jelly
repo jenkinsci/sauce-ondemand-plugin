@@ -30,8 +30,13 @@ THE SOFTWARE.
     <l:main-panel>
       <h1>Sauce OnDemand Report for ${it.id}</h1>
         <l:ajax>
-            <div><!-- needed because applySubtree doesn't properly apply the style to the top node -->
+            <div id="sauce_results"><!-- needed because applySubtree doesn't properly apply the style to the top node -->
                 <script type="text/javascript" src="https://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
+                <script type="text/javascript">
+                    var iframe = document.getElementById('sauce_results').children[0];
+                    iframe.style.width = "1024px";
+                    iframe.style.height = "1000px";
+                </script>
             </div>
           </l:ajax>
     </l:main-panel>
