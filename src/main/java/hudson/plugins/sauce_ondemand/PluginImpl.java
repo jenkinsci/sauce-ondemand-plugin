@@ -27,7 +27,6 @@ import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
@@ -143,7 +142,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                 if (reuseSauceAuth && StringUtils.isBlank(credential.getUsername()) && StringUtils.isBlank(credential.getAccessKey())) {
                     return FormValidation.error("Unable to find ~/.sauce-ondemand file");
                 } else {
-                    String response = new SauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
+                    String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
                     if (response != null && !response.equals("")) {
                         return FormValidation.ok("Success");
                     } else {
