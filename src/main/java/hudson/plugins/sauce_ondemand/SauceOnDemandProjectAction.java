@@ -59,22 +59,9 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public SauceOnDemandBuildWrapper getBuildWrapper() {
-        SauceOnDemandBuildWrapper buildWrapper = null;
-        if (project instanceof BuildableItemWithBuildWrappers) {
-            DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappers = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList();
-            for (BuildWrapper describable : buildWrappers) {
-                if (describable instanceof SauceOnDemandBuildWrapper) {
-                    buildWrapper = (SauceOnDemandBuildWrapper) describable;
-                    break;
-                }
-            }
-        } else {
-            logger.info("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
-        }
-        if (buildWrapper == null) {
-            logger.info("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
-        }
-        return buildWrapper;
+
+        return SauceEnvironmentUtil.getBuildWrapper(project);
+
     }
 
     private boolean isSauceEnabled() {

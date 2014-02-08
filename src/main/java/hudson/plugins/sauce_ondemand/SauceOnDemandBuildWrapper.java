@@ -41,7 +41,6 @@ import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -155,11 +154,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         return new Environment() {
 
+            /**
+             *
+             * @param env
+             */
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 logger.info("Creating Sauce environment variables");
-                outputSeleniumVariables(env);
-                outputWebDriverVariables(env);
+                SauceEnvironmentUtil.outputWebDriverVariables(env, seleniumBrowsers, getUserName(), getApiKey());
+                SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
@@ -183,68 +186,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 }
             }
 
-            private void outputSeleniumVariables(Map<String, String> env) {
-                if (seleniumBrowsers != null && !seleniumBrowsers.isEmpty()) {
-                    if (seleniumBrowsers.size() == 1) {
-                        Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(seleniumBrowsers.get(0));
-                        outputEnvironmentVariablesForBrowser(env, browserInstance);
-                    }
-
-                    JSONArray browsersJSON = new JSONArray();
-                    for (String browser : seleniumBrowsers) {
-                        Browser browserInstance = BrowserFactory.getInstance().seleniumBrowserForKey(browser);
-                        browserAsJSON(browsersJSON, browserInstance);
-                    }
-                    env.put(SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
-                }
-            }
-
-            private void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance) {
-
-                if (browserInstance != null) {
-                    env.put(SELENIUM_PLATFORM, browserInstance.getOs());
-                    env.put(SELENIUM_BROWSER, browserInstance.getBrowserName());
-                    env.put(SELENIUM_VERSION, browserInstance.getVersion());
-                    env.put(SELENIUM_DRIVER, browserInstance.getUri(getUserName(), getApiKey()));
-                }
-            }
-
-            private void outputWebDriverVariables(Map<String, String> env) {
-                if (webDriverBrowsers != null && !webDriverBrowsers.isEmpty()) {
-                    if (webDriverBrowsers.size() == 1) {
-                        Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(webDriverBrowsers.get(0));
-                        outputEnvironmentVariablesForBrowser(env, browserInstance);
-                    }
-
-                    JSONArray browsersJSON = new JSONArray();
-                    for (String browser : webDriverBrowsers) {
-                        Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browser);
-                        browserAsJSON(browsersJSON, browserInstance);
-                        //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                        env.put(SELENIUM_DRIVER, browserInstance.getUri(getUserName(), getApiKey()));
-                    }
-                    env.put(SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
-
-                }
-            }
-
-            private void browserAsJSON(JSONArray browsersJSON, Browser browserInstance) {
-                if (browserInstance == null) {
-                    return;
-                }
-                JSONObject config = new JSONObject();
-                try {
-                    config.put("os", browserInstance.getOs());
-                    config.put("platform", browserInstance.getPlatform().toString());
-                    config.put("browser", browserInstance.getBrowserName());
-                    config.put("browser-version", browserInstance.getVersion());
-                    config.put("url", browserInstance.getUri(getUserName(), getApiKey()));
-                } catch (JSONException e) {
-                    logger.log(Level.SEVERE, "Unable to create JSON Object", e);
-                }
-                browsersJSON.put(config);
-            }
-
+            /**
+             *
+             * @return
+             */
             private String getHostName() {
                 if (StringUtils.isNotBlank(seleniumHost)) {
                     Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumHost);
@@ -267,6 +212,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return startingURL;
             }
 
+            /**
+             *
+             * @param build
+             * @param listener
+             * @return
+             * @throws IOException
+             * @throws InterruptedException
+             */
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 if (tunnels != null) {
