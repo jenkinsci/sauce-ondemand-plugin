@@ -66,18 +66,26 @@ public class SauceEnvironmentUtil {
     }
 
     public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey) {
+        outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, false);
+    }
+
+    public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey, boolean overwrite) {
 
         if (browserInstance != null) {
 
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getOs());
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName());
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion());
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getOs(), overwrite);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName(), overwrite);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion(), overwrite);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), overwrite);
         }
     }
 
     public static void outputEnvironmentVariable(Map<String, String> env, String key, String value) {
-        if (env.get(key) == null) {
+        outputEnvironmentVariable(env, key, value, false);
+    }
+
+    public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean overwrite) {
+        if (env.get(key) == null || overwrite) {
             env.put(key, value);
         }
     }

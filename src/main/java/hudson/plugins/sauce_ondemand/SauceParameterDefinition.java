@@ -27,7 +27,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
 
     @DataBoundConstructor
     public SauceParameterDefinition() {
-        super("Sauce Labs Browser", "Sauce Labs Browser description");
+        super("Sauce Labs Browsers", "Select the browser(s) that should be used when tests are run with Sauce Labs");
 
     }
 
@@ -60,18 +60,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
 
         @Override
         public String getDisplayName() {
-            return "Sauce";
-        }
-
-        public List<Browser> getWebDriverBrowsers() {
-            try {
-                return BrowserFactory.getInstance().getWebDriverBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
-            } catch (JSONException e) {
-                logger.log(Level.SEVERE, "Error parsing JSON response", e);
-            }
-            return Collections.emptyList();
+            return "Sauce Labs Browsers";
         }
 
     }
