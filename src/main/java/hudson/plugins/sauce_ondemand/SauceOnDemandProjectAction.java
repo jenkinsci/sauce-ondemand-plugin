@@ -5,10 +5,6 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildableItemWithBuildWrappers;
-import hudson.model.Descriptor;
-import hudson.tasks.BuildWrapper;
-import hudson.util.DescribableList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,10 +80,8 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    logger.info("No Sauce Build Action found for " + build.toString() + " adding a new one");
-                    buildAction = new SauceOnDemandBuildAction(build,
-                            getBuildWrapper().getUserName(), getBuildWrapper().getApiKey());
-                    build.addAction(buildAction);
+                    logger.info("No Sauce Build Action found for " + build.toString());
+                    return Collections.emptyList();
                 }
                 return Collections.singletonList(buildAction);
             }

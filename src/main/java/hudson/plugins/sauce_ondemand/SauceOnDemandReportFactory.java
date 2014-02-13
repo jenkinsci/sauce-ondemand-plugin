@@ -29,11 +29,7 @@ import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
-import org.json.JSONException;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,30 +87,22 @@ public class SauceOnDemandReportFactory extends Data {
                 logger.log(Level.INFO, "Invoking Sauce REST API to find job results for " + build.toString());
                 SauceOnDemandBuildAction buildAction = getBuildAction(build);
                 if (buildAction != null) {
-                    try {
-                        List<JobInformation> jobs = buildAction.retrieveJobIdsFromSauce();
-                        for (JobInformation job : jobs) {
-                            //if job name matches test class/test name, then add id
-                            if (job.getName() != null) {
-                                Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
-                                Matcher matcher = jobNamePattern.matcher(cr.getFullName());
-                                if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
-                                        || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                                        || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
-                                    //then we have a match
-                                    ids.add(new String[]{job.getJobId(), job.getHmac()});
-                                }
+
+                    List<JobInformation> jobs = buildAction.getJobs();
+                    for (JobInformation job : jobs) {
+                        //if job name matches test class/test name, then add id
+                        if (job.getName() != null) {
+                            Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                            Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                            if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                                    || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                                    || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                                //then we have a match
+                                ids.add(new String[]{job.getJobId(), job.getHmac()});
                             }
                         }
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
-                    } catch (JSONException e) {
-                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
-                    } catch (InvalidKeyException e) {
-                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
-                    } catch (NoSuchAlgorithmException e) {
-                        logger.log(Level.WARNING, "Error occurred invoking Sauce REST API", e);
                     }
+
                 }
 
                 if (ids.isEmpty()) {

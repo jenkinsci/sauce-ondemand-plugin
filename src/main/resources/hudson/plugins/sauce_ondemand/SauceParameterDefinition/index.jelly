@@ -4,7 +4,7 @@
     <f:entry title="${it.name}" description="${it.description}">
         <div name="parameter" description="${it.description}">
             <input type="hidden" name="name" value="${it.name}"/>
-            <select name="webDriverBrowsers" multiple="multiple">
+            <select name="webDriverBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
                 <j:forEach var="b" items="${it.webDriverBrowsers}">
                     <option value="${b.key}">${b.name}</option>
                 </j:forEach>

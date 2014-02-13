@@ -26,6 +26,7 @@ package hudson.plugins.sauce_ondemand;
 import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.ci.JobInformation;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
@@ -42,7 +43,6 @@ import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -239,6 +239,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
+    /**
+     *
+     * @param build
+     */
     private void processBuildOutput(AbstractBuild build) {
         logger.info("Adding build action to " + build.toString());
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
@@ -249,36 +253,41 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
             return;
         }
+        //have any Sauce jobs already been marked with the build number?
+        List<JobInformation> jobs = buildAction.getJobs();
+        if (!jobs.isEmpty()) {
+            //if so, skip parsing the output
+            logger.info("Build already has jobs recorded");
+        }
+
+        //do we parse the build output here or leave it for the report factory?
+
+        //we still need to parse the build output
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+        buildAction.storeSessionIDs(sessionIDs);
 
-        for (String[] sessionId : sessionIDs) {
-            String id = sessionId[0];
-            try {
-                String jobName = sessionId[1];
-                String json = sauceREST.getJobInfo(id);
-                JSONObject jsonObject = new JSONObject(json);
+
+        for (JobInformation jobInformation : jobs) {
                 Map<String, Object> updates = new HashMap<String, Object>();
                 //only store passed/name values if they haven't already been set
                 boolean buildResult = build.getResult() == null || build.getResult().equals(Result.SUCCESS);
-                if (jsonObject.get("passed").equals(JSONObject.NULL)) {
+                if (jobInformation.getStatus() == null) {
                     updates.put("passed", buildResult);
                 }
-                if (StringUtils.isNotBlank(jobName) && jsonObject.get("name").equals(JSONObject.NULL)) {
-                    updates.put("name", jobName);
+                if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
+                    updates.put("name", jobInformation.getName());
                 }
-                if (!PluginImpl.get().isDisableStatusColumn()) {
-                    updates.put("public", true);
-                }
-                if (jsonObject.get("build").equals(JSONObject.NULL)) {
+//                if (!PluginImpl.get().isDisableStatusColumn()) {
+//                    updates.put("public", true);
+//                }
+                if (!jobInformation.isHasBuildNumber()) {
                     updates.put("build", sanitiseBuildNumber(build.toString()));
                 }
                 if (!updates.isEmpty()) {
-                    sauceREST.updateJobInfo(id, updates);
+                    logger.info("Performing Sauce REST update for " + jobInformation.getJobId());
+                    sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
                 }
-            } catch (JSONException e) {
-                logger.log(Level.WARNING, "Error while updating job " + id, e);
-            }
         }
     }
 

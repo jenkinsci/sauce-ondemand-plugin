@@ -64,10 +64,15 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
+        if (jobInformation == null) {
+            //hasn't been initialized by build action yet, return false
+            return false;
+        }
         return !getJobs().isEmpty();
     }
 
     public List<JobInformation> getJobs() {
+
         if (jobInformation == null) {
             try {
                 jobInformation = retrieveJobIdsFromSauce();
@@ -82,8 +87,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
             }
         }
 
+
         return jobInformation;
     }
+
 
     /**
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
@@ -97,6 +104,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(getBuildName());
+        logger.info("Performing Sauce REST retrieve results for " + buildNumber);
         String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
@@ -114,7 +122,12 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     status = "not set";
                 }
                 information.setStatus(status);
-                information.setName(jobData.getString("name"));
+                String jobName = jobData.getString("name");
+                if (jobName != null) {
+                    information.setHasJobName(true);
+                    information.setName(jobName);
+                }
+
                 jobInformation.add(information);
             }
             //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
@@ -125,7 +138,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     }
 
     private String getBuildName() {
-        String displayName =  build.getFullDisplayName();
+        String displayName = build.getFullDisplayName();
         String buildName = build.getDisplayName();
         StringBuilder builder = new StringBuilder(displayName);
         //for multi-config projects, the full display name contains the build name twice
@@ -164,6 +177,39 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
     public ById getById(String id) {
         return new ById(id);
+    }
+
+    public void storeSessionIDs(List<String[]> sessionIDs) {
+        try {
+            for (String[] sessionId : sessionIDs) {
+                JobInformation jobInfo = jobInformationForBuild(sessionId[0]);
+                if (jobInfo == null) {
+                    jobInfo = new JenkinsJobInformation(sessionId[0], calcHMAC(username, accessKey, sessionId[0]));
+                    jobInfo.setHasBuildNumber(false);
+                    jobInformation.add(jobInfo);
+                }
+
+                if (sessionId[1] != null) {
+                    jobInfo.setName(sessionId[1]);
+                }
+
+            }
+        } catch (NoSuchAlgorithmException e) {
+            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+        } catch (InvalidKeyException e) {
+            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+        } catch (UnsupportedEncodingException e) {
+            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+        }
+    }
+
+    private JobInformation jobInformationForBuild(String jobId) {
+        for (JobInformation jobInfo : jobInformation) {
+            if (jobId.equals(jobInfo.getJobId())) {
+                return jobInfo;
+            }
+        }
+        return null;
     }
 
     /**

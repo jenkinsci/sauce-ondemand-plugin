@@ -10,7 +10,7 @@
             <f:radioBlock name="seleniumInformation" value="webDriver" title="${%WebDriver}"
                           checked="${instance.seleniumInformation.isWebDriver()}">
                 <f:nested>
-                    <select name="webDriverBrowsers" multiple="multiple">
+                    <select name="webDriverBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
                         <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
                             <j:choose>
                                 <j:when test="${instance.webDriverBrowsers.contains(b.key)}">
@@ -29,7 +29,7 @@
                           checked="${!instance.seleniumInformation.isWebDriver()}">
 
                 <f:nested>
-                    <select name="seleniumBrowsers" multiple="multiple">
+                    <select name="seleniumBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
                         <j:forEach var="b" items="${descriptor.seleniumBrowsers}">
                             <j:choose>
                                 <j:when test="${instance.seleniumBrowsers.contains(b.key)}">

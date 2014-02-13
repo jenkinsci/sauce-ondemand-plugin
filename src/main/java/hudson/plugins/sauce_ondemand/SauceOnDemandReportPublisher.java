@@ -23,29 +23,17 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.tasks.junit.CaseResult;
-import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
-import hudson.util.Secret;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -64,75 +52,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
 
-        buildListener.getLogger().println("Scanning for Sauce OnDemand test data...");
-        List<String> lines = IOUtils.readLines(build.getLogReader());
-        String[] array = lines.toArray(new String[lines.size()]);
-        List<String[]> sessionIDs = new ArrayList<String[]>();
-        List<CaseResult> caseResults = new ArrayList<CaseResult>();
-        for (SuiteResult sr : testResult.getSuites()) {
-            for (CaseResult cr : sr.getCases()) {
-                caseResults.add(cr);
-                sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
-            }
-        }
-        if (sessionIDs.isEmpty()) {
-            sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDsForCaseResults(caseResults, array));
-        }
-
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
-
-        String userName;
-        String accessKey;
-        if (buildAction == null) {
-            logger.log(Level.WARNING, "Unable to retrieve Sauce Build Action for build: " + build.toString() + " " + build.getClass().toString());
-            buildListener.getLogger().println("Unable to retrieve the Sauce Build Action, attempting to continue");
-            userName = PluginImpl.get().getUsername();
-            accessKey = Secret.toString(PluginImpl.get().getApiKey());
-        } else {
-            userName = buildAction.getUsername();
-            accessKey = buildAction.getAccessKey();
-        }
-        SauceREST sauceREST = new JenkinsSauceREST(userName, accessKey);
-        for (String[] id : sessionIDs) {
-            JSONObject jsonObject;
-            String json = sauceREST.getJobInfo(id[0]);
-            try {
-                jsonObject = new JSONObject(json);
-            } catch (JSONException e) {
-                buildListener.error("Error while parsing JSON " + json + " message: " + e.getMessage());
-                continue;
-            }
-            try {
-                Map<String, Object> updates = new HashMap<String, Object>();
-                //only store passed/name values if they haven't already been set
-                if (jsonObject.get("passed").equals(JSONObject.NULL) && id.length == 3) {
-                    updates.put("passed", id[2]);
-                }
-                if (jsonObject.get("name").equals(JSONObject.NULL)) {
-                    updates.put("name", id[1]);
-                }
-                if (jsonObject.get("build").equals(JSONObject.NULL)) {
-                    String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString());
-                    if (build instanceof MavenBuild) {
-                        //try the parent
-                        buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(((MavenBuild) build).getParentBuild().toString());
-                    }
-                    updates.put("build", buildNumber);
-                }
-                if (!updates.isEmpty()) {
-                    sauceREST.updateJobInfo(id[0], updates);
-                }
-            } catch (JSONException e) {
-                buildListener.error("Error while updating job " + id[0] + " message: " + e.getMessage());
-            }
-        }
-
-        buildListener.getLogger().println("Finished scanning for Sauce OnDemand test data...");
-        if (sessionIDs.isEmpty()) {
-            buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
-            return null;
-        } else {
+        if (buildAction.hasSauceOnDemandResults()) {
             return SauceOnDemandReportFactory.INSTANCE;
+        } else {
+            buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
+                        return null;
         }
     }
 
