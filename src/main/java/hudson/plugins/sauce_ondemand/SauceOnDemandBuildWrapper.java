@@ -278,9 +278,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
                     updates.put("name", jobInformation.getName());
                 }
-//                if (!PluginImpl.get().isDisableStatusColumn()) {
-//                    updates.put("public", true);
-//                }
+                //TODO should we make the setting of the public status configurable?
+                if (!PluginImpl.get().isDisableStatusColumn()) {
+                    updates.put("public", true);
+                }
                 if (!jobInformation.isHasBuildNumber()) {
                     updates.put("build", sanitiseBuildNumber(build.toString()));
                 }
