@@ -110,7 +110,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
             if (jobInformation.getStatus() == null) {
                 Boolean buildResult = hasTestPassed(testResult, jobInformation);
-                if (buildResult != null) {
+                if (buildResult == null) {
+                    //TODO restore this logic?
+                    //set the status to passed if the build was successful
+//                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
+                } else {
+                    //set the status to passed if the test was successful
                     updates.put("passed", buildResult);
                 }
             }
