@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Descriptor;
@@ -10,6 +11,7 @@ import hudson.util.DescribableList;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -108,5 +110,17 @@ public class SauceEnvironmentUtil {
             logger.info("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
         }
         return buildWrapper;
+    }
+
+    public static String getBuildName(AbstractBuild<?, ?> build) {
+        String displayName = build.getFullDisplayName();
+        String buildName = build.getDisplayName();
+        StringBuilder builder = new StringBuilder(displayName);
+        //for multi-config projects, the full display name contains the build name twice
+        //detect this and replace the second occurance with the build number
+        if (StringUtils.countMatches(displayName, buildName) > 1) {
+            builder.replace(displayName.lastIndexOf(buildName), displayName.length(), "#" + build.getNumber());
+        }
+        return builder.toString();
     }
 }

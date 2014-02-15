@@ -26,12 +26,10 @@ package hudson.plugins.sauce_ondemand;
 import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
-import com.saucelabs.ci.JobInformation;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -56,7 +54,10 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -240,56 +241,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     /**
+     * Adds a new {@link SauceOnDemandBuildAction} instance to the <code>build</code> instance. The
+     * processing of the build output will be performed by the {@link SauceOnDemandReportPublisher} instance (which
+     * is created if the 'Embed Sauce OnDemand Reports' option is selected.
      *
      * @param build
      */
     private void processBuildOutput(AbstractBuild build) {
         logger.info("Adding build action to " + build.toString());
-        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, getUserName(), getApiKey());
-        build.addAction(buildAction);
-        SauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
         SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
-        if (logParser == null) {
-            logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
-            return;
-        }
-        //have any Sauce jobs already been marked with the build number?
-        List<JobInformation> jobs = buildAction.getJobs();
-        if (!jobs.isEmpty()) {
-            //if so, skip parsing the output
-            logger.info("Build already has jobs recorded");
-        }
-
-        //do we parse the build output here or leave it for the report factory?
-
-        //we still need to parse the build output
-        String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
-        List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
-        buildAction.storeSessionIDs(sessionIDs);
-
-
-        for (JobInformation jobInformation : jobs) {
-                Map<String, Object> updates = new HashMap<String, Object>();
-                //only store passed/name values if they haven't already been set
-                boolean buildResult = build.getResult() == null || build.getResult().equals(Result.SUCCESS);
-                if (jobInformation.getStatus() == null) {
-                    updates.put("passed", buildResult);
-                }
-                if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
-                    updates.put("name", jobInformation.getName());
-                }
-                //TODO should we make the setting of the public status configurable?
-                if (!PluginImpl.get().isDisableStatusColumn()) {
-                    updates.put("public", true);
-                }
-                if (!jobInformation.isHasBuildNumber()) {
-                    updates.put("build", sanitiseBuildNumber(build.toString()));
-                }
-                if (!updates.isEmpty()) {
-                    logger.info("Performing Sauce REST update for " + jobInformation.getJobId());
-                    sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
-                }
-        }
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, logParser, getUserName(), getApiKey());
+        build.addAction(buildAction);
     }
 
     /**

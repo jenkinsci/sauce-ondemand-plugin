@@ -23,18 +23,29 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.JobInformation;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Associates Sauce OnDemand session ID to unit tests.
@@ -45,6 +56,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     private static final Logger logger = Logger.getLogger(SauceOnDemandReportPublisher.class.getName());
 
+    private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
+
     @DataBoundConstructor
     public SauceOnDemandReportPublisher() {
     }
@@ -53,12 +66,98 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
 
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
+        processBuildOutput(build, buildAction, testResult);
         if (buildAction.hasSauceOnDemandResults()) {
             return SauceOnDemandReportFactory.INSTANCE;
         } else {
             buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
-                        return null;
+            return null;
         }
+    }
+
+    /**
+     * Processes the build output to associate the Jenkins build with the Sauce job.
+     *
+     * @param build
+     * @param buildAction
+     * @param testResult
+     */
+    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
+        logger.info("Adding build action to " + build.toString());
+
+        SauceREST sauceREST = new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+        SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser = buildAction.getLogParser();
+        if (logParser == null) {
+            logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
+            return;
+        }
+        //have any Sauce jobs already been marked with the build number?
+        List<JobInformation> jobs = buildAction.getJobs();
+        if (!jobs.isEmpty()) {
+            logger.info("Build already has jobs recorded");
+        }
+
+        //do we parse the build output here or leave it for the report factory?
+
+        //we still need to parse the build output
+        String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
+        List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+        buildAction.storeSessionIDs(sessionIDs);
+
+        for (JobInformation jobInformation : jobs) {
+            Map<String, Object> updates = new HashMap<String, Object>();
+            //only store passed/name values if they haven't already been set
+
+            if (jobInformation.getStatus() == null) {
+                Boolean buildResult = hasTestPassed(testResult, jobInformation);
+                if (buildResult != null) {
+                    updates.put("passed", buildResult);
+                }
+            }
+            if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
+                updates.put("name", jobInformation.getName());
+            }
+            //TODO should we make the setting of the public status configurable?
+            if (!PluginImpl.get().isDisableStatusColumn()) {
+                updates.put("public", true);
+            }
+            if (!jobInformation.isHasBuildNumber()) {
+                updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
+            }
+            if (!updates.isEmpty()) {
+                logger.info("Performing Sauce REST update for " + jobInformation.getJobId());
+                sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param testResult
+     * @param job
+     * @return Boolean indicating whether the test was successful.
+     */
+    private Boolean hasTestPassed(TestResult testResult, JobInformation job) {
+
+        for (SuiteResult sr : testResult.getSuites()) {
+            for (CaseResult cr : sr.getCases()) {
+                //if job name matches test class/test name, and pass/fail status is null, then populate the Sauce job with the test result status
+                if (job.getName() != null && job.getStatus() == null) {
+                    Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                    Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                    if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                            || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                            || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                        //then we have a match
+                        //check the pass/fail status of the
+                        return cr.getStatus().equals(CaseResult.Status.PASSED) ||
+                                cr.getStatus().equals(CaseResult.Status.FIXED);
+                    }
+
+                }
+            }
+        }
+        return null;
     }
 
     private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {

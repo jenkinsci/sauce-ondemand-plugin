@@ -4,7 +4,6 @@ import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,17 +35,18 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
 
     public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/%2$s/jobs?full=true";
-//    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/SC-SC-7/jobs?full=true";
 
     private static final String HMAC_KEY = "HMACMD5";
+    private transient final SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser;
 
     private AbstractBuild<?, ?> build;
     private List<JobInformation> jobInformation;
     private String accessKey;
     private String username;
 
-    public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, String username, String accessKey) {
+    public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser, String username, String accessKey) {
         this.build = build;
+        this.logParser = logParser;
         this.username = username;
         this.accessKey = accessKey;
     }
@@ -103,7 +103,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
         SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
-        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(getBuildName());
+        String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build));
         logger.info("Performing Sauce REST retrieve results for " + buildNumber);
         String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);
@@ -118,9 +118,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 String jobId = jobData.getString("id");
                 JobInformation information = new JenkinsJobInformation(jobId, calcHMAC(username, accessKey, jobId));
                 String status = jobData.getString("passed");
-                if (status.equals("null")) {
-                    status = "not set";
-                }
                 information.setStatus(status);
                 String jobName = jobData.getString("name");
                 if (jobName != null) {
@@ -137,17 +134,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-    private String getBuildName() {
-        String displayName = build.getFullDisplayName();
-        String buildName = build.getDisplayName();
-        StringBuilder builder = new StringBuilder(displayName);
-        //for multi-config projects, the full display name contains the build name twice
-        //detect this and replace the second occurance with the build number
-        if (StringUtils.countMatches(displayName, buildName) > 1) {
-            builder.replace(displayName.lastIndexOf(buildName), displayName.length(), "#" + build.getNumber());
-        }
-        return builder.toString();
-    }
+
 
     public void doJobReport(StaplerRequest req, StaplerResponse rsp)
             throws IOException {
@@ -211,6 +198,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         }
         return null;
     }
+
+    public SauceOnDemandBuildWrapper.SauceOnDemandLogParser getLogParser() {
+        return logParser;
+    }
+
 
     /**
      *
