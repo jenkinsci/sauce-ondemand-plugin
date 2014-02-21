@@ -15,7 +15,7 @@
                             <a href="${from.urlName}/jobReport?jobId=${job.getJobId()}">${job.getJobId()}</a>
                         </td>
                         <td>${job.getName()}</td>
-                        <td>${job.getResult()}</td>
+                        <td>${job.getStatus()}</td>
                     </tr>
                 </j:forEach>
             </table>
