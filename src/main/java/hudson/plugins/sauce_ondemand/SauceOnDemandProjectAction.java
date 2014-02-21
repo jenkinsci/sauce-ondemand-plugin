@@ -80,7 +80,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    logger.info("No Sauce Build Action found for " + build.toString());
+                    logger.info("No Sauce Build Action found for " + build.toString() + " adding a new one");
                     return Collections.emptyList();
                 }
                 return Collections.singletonList(buildAction);

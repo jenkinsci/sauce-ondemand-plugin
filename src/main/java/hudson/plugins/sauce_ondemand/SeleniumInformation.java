@@ -14,14 +14,19 @@ public class SeleniumInformation implements Serializable {
 
     private List<String> seleniumBrowsers;
     private List<String> webDriverBrowsers;
+    private List<String> appiumBrowsers;
     private boolean isWebDriver;
+    private boolean isAppium;
+
 
     @DataBoundConstructor
-    public SeleniumInformation(String value, String startingURL, List<String> seleniumBrowsers, List<String> webDriverBrowsers) {
+    public SeleniumInformation(String value, String startingURL, List<String> seleniumBrowsers, List<String> webDriverBrowsers, List<String> appiumBrowsers) {
         this.isWebDriver = value != null && value.equals("webDriver");
+        this.isAppium = value != null && value.equals("appium");
         this.startingURL = startingURL;
         this.seleniumBrowsers = seleniumBrowsers;
         this.webDriverBrowsers = webDriverBrowsers;
+        this.appiumBrowsers = appiumBrowsers;
     }
 
     public String getStartingURL() {
@@ -79,5 +84,13 @@ public class SeleniumInformation implements Serializable {
 
     public void setWebDriver(boolean webDriver) {
         isWebDriver = webDriver;
+    }
+
+    public List<String> getAppiumBrowsers() {
+        return appiumBrowsers;
+    }
+
+    public boolean isAppium() {
+        return isAppium;
     }
 }

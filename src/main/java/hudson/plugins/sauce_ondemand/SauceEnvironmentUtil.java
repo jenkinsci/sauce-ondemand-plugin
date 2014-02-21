@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 public class SauceEnvironmentUtil {
 
     private static final Logger logger = Logger.getLogger(SauceEnvironmentUtil.class.getName());
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     private SauceEnvironmentUtil() {
     }
@@ -33,13 +34,13 @@ public class SauceEnvironmentUtil {
 
         if (browsers != null && !browsers.isEmpty()) {
             if (browsers.size() == 1) {
-                Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browsers.get(0));
+                Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browsers.get(0));
                 outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
             }
 
             JSONArray browsersJSON = new JSONArray();
             for (String browser : browsers) {
-                Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(browser);
+                Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browser);
                 browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
                 //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
                 outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
@@ -79,6 +80,10 @@ public class SauceEnvironmentUtil {
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName(), overwrite);
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion(), overwrite);
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), overwrite);
+
+            if (browserInstance.getDevice() != null) {
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE, browserInstance.getVersion(), overwrite);
+            }
         }
     }
 

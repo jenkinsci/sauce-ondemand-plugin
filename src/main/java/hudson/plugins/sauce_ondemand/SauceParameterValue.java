@@ -15,6 +15,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class SauceParameterValue extends ParameterValue {
 
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
     private final JSONArray selectedBrowsers;
 
     @DataBoundConstructor
@@ -33,7 +35,7 @@ public class SauceParameterValue extends ParameterValue {
 
         if (selectedBrowsers != null && !selectedBrowsers.isEmpty()) {
             if (selectedBrowsers.size() == 1) {
-                Browser browserInstance = BrowserFactory.getInstance().webDriverBrowserForKey(selectedBrowsers.getString(0));
+                Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(selectedBrowsers.getString(0));
                 SauceEnvironmentUtil.outputEnvironmentVariablesForBrowser(env, browserInstance, getUserName(build), getApiKey(build), true);
             } else {
                 JSONArray browsersJSON = new JSONArray();

@@ -24,6 +24,8 @@ public class SauceParameterDefinition extends ParameterDefinition {
 
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
 
     @DataBoundConstructor
     public SauceParameterDefinition() {
@@ -46,7 +48,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
 
     public List<Browser> getWebDriverBrowsers() {
         try {
-            return BrowserFactory.getInstance().getWebDriverBrowsers();
+            return BROWSER_FACTORY.getWebDriverBrowsers();
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
         } catch (JSONException e) {

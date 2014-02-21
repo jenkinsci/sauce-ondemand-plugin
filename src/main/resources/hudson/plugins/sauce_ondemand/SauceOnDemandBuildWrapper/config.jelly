@@ -45,6 +45,24 @@
 
                 </f:nested>
             </f:radioBlock>
+            <!--<f:radioBlock name="seleniumInformation" value="appium" title="${%Appium}"-->
+                          <!--checked="${instance.seleniumInformation.isAppium()}">-->
+                <!--<f:nested>-->
+                    <!--<select name="appiumBrowsers" multiple="multiple" style="height: 160px; width: 600px;">-->
+                        <!--<j:forEach var="b" items="${descriptor.appiumBrowsers}">-->
+                            <!--<j:choose>-->
+                                <!--<j:when test="${instance.appiumBrowsers.contains(b.key)}">-->
+                                    <!--<option value="${b.key}" selected="selected">${b.name}</option>-->
+                                <!--</j:when>-->
+                                <!--<j:otherwise>-->
+                                    <!--<option value="${b.key}">${b.name}</option>-->
+                                <!--</j:otherwise>-->
+                            <!--</j:choose>-->
+
+                        <!--</j:forEach>-->
+                    <!--</select>-->
+                <!--</f:nested>-->
+            <!--</f:radioBlock>-->
 
 
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
@@ -82,6 +100,5 @@
             </f:advanced>
         </f:section>
     </f:block>
-
 
 </j:jelly>

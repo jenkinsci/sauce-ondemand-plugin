@@ -18,6 +18,8 @@ import java.util.logging.Logger;
  */
 public class SeleniumRCAxis extends BrowserAxis {
 
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
     private static final Logger logger = Logger.getLogger(SeleniumRCAxis.class.getName());
 
     @DataBoundConstructor
@@ -27,7 +29,7 @@ public class SeleniumRCAxis extends BrowserAxis {
 
     @Override
     protected Browser getBrowserForKey(String value) {
-        return BrowserFactory.getInstance().seleniumBrowserForKey(value);
+        return BROWSER_FACTORY.seleniumBrowserForKey(value);
     }
 
     @Extension
@@ -39,7 +41,7 @@ public class SeleniumRCAxis extends BrowserAxis {
 
         public List<Browser> getBrowsers() {
             try {
-                return BrowserFactory.getInstance().getSeleniumBrowsers();
+                return BROWSER_FACTORY.getSeleniumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {

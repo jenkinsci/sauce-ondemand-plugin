@@ -79,6 +79,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_STARTING_URL = "SELENIUM_STARTING_URL";
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
+    public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
     private final String startingURL;
 
     private boolean enableSauceConnect;
@@ -92,6 +93,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private SeleniumInformation seleniumInformation;
     private List<String> seleniumBrowsers;
     private List<String> webDriverBrowsers;
+    private List<String> appiumBrowsers;
     /**
      *
      */
@@ -128,6 +130,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         if (seleniumInformation != null) {
             this.seleniumBrowsers = seleniumInformation.getSeleniumBrowsers();
             this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
+            this.appiumBrowsers = seleniumInformation.getAppiumBrowsers();
         }
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
@@ -164,6 +167,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 logger.info("Creating Sauce environment variables");
                 SauceEnvironmentUtil.outputWebDriverVariables(env, seleniumBrowsers, getUserName(), getApiKey());
                 SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey());
+                SauceEnvironmentUtil.outputWebDriverVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
@@ -530,6 +534,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 
+        public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
         @Override
         public BuildWrapper newInstance(StaplerRequest req, net.sf.json.JSONObject formData) throws FormException {
             return super.newInstance(req, formData);
@@ -541,9 +547,26 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
 
+        /**
+         * The list of supported Appium devices isn't available via the Sauce REST API, so we hard-code
+         * the combinations.
+         *
+         * @return
+         */
+        public List<Browser> getAppiumBrowsers() {
+            try {
+                return BROWSER_FACTORY.getAppiumBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
+            } catch (JSONException e) {
+                logger.log(Level.SEVERE, "Error parsing JSON response", e);
+            }
+            return Collections.emptyList();
+        }
+
         public List<Browser> getSeleniumBrowsers() {
             try {
-                return BrowserFactory.getInstance().getSeleniumBrowsers();
+                return BROWSER_FACTORY.getSeleniumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -554,7 +577,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public List<Browser> getWebDriverBrowsers() {
             try {
-                return BrowserFactory.getInstance().getWebDriverBrowsers();
+                return BROWSER_FACTORY.getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {

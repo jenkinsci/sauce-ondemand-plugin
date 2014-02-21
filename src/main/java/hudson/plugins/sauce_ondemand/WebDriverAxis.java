@@ -17,6 +17,9 @@ import java.util.logging.Logger;
  * @author Ross Rowe
  */
 public class WebDriverAxis extends BrowserAxis {
+
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
     private static final Logger logger = Logger.getLogger(WebDriverAxis.class.getName());
 
     @DataBoundConstructor
@@ -26,7 +29,7 @@ public class WebDriverAxis extends BrowserAxis {
 
     @Override
     protected Browser getBrowserForKey(String value) {
-        return BrowserFactory.getInstance().webDriverBrowserForKey(value);
+        return BROWSER_FACTORY.webDriverBrowserForKey(value);
     }
 
     @Extension
@@ -38,7 +41,7 @@ public class WebDriverAxis extends BrowserAxis {
 
         public List<Browser> getBrowsers() {
             try {
-                return BrowserFactory.getInstance().getWebDriverBrowsers();
+                return BROWSER_FACTORY.getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
