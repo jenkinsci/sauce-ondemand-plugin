@@ -116,7 +116,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 //                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
                 } else {
                     //set the status to passed if the test was successful
-                    jobInformation.setStatus(buildResult.toString());
+                    jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
                     updates.put("passed", buildResult);
                 }
             }
