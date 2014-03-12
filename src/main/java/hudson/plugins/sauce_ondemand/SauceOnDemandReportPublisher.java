@@ -104,7 +104,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             //try the stdout for the tests
             for (SuiteResult sr : testResult.getSuites()) {
                 for (CaseResult cr : sr.getCases()) {
-                    sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDsForCaseResults(null, cr.getStdout(), cr.getStderr()));
+                    sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
                 }
             }
         }
