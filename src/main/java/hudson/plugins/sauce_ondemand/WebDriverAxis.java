@@ -1,7 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
 import hudson.Extension;
 import hudson.matrix.AxisDescriptor;
 import org.json.JSONException;
@@ -17,8 +16,6 @@ import java.util.logging.Logger;
  * @author Ross Rowe
  */
 public class WebDriverAxis extends BrowserAxis {
-
-    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     private static final Logger logger = Logger.getLogger(WebDriverAxis.class.getName());
 

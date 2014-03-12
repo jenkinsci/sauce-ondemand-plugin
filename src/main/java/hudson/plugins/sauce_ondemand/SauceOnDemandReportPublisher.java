@@ -91,18 +91,25 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
             return;
         }
+
         //have any Sauce jobs already been marked with the build number?
         List<JobInformation> jobs = buildAction.getJobs();
-        if (!jobs.isEmpty()) {
+        if (jobs != null && !jobs.isEmpty()) {
             logger.info("Build already has jobs recorded");
         }
 
-        //do we parse the build output here or leave it for the report factory?
-
-        //we still need to parse the build output
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
+        if (sessionIDs.isEmpty()) {
+            //try the stdout for the tests
+            for (SuiteResult sr : testResult.getSuites()) {
+                for (CaseResult cr : sr.getCases()) {
+                    sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDsForCaseResults(null, cr.getStdout(), cr.getStderr()));
+                }
+            }
+        }
         buildAction.storeSessionIDs(sessionIDs);
+
 
         for (JobInformation jobInformation : jobs) {
             Map<String, Object> updates = new HashMap<String, Object>();
@@ -138,7 +145,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     /**
-     *
      * @param testResult
      * @param job
      * @return Boolean indicating whether the test was successful.

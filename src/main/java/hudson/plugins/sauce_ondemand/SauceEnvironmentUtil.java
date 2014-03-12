@@ -62,6 +62,12 @@ public class SauceEnvironmentUtil {
             config.put("browser", browserInstance.getBrowserName());
             config.put("browser-version", browserInstance.getVersion());
             config.put("url", browserInstance.getUri(userName, apiKey));
+            if (browserInstance.getDevice() != null) {
+                config.put("device", browserInstance.getDevice());
+            }
+            if (browserInstance.getDeviceType() != null) {
+                config.put("device-type", browserInstance.getDeviceType());
+            }
         } catch (JSONException e) {
             logger.log(Level.SEVERE, "Unable to create JSON Object", e);
         }
@@ -82,7 +88,10 @@ public class SauceEnvironmentUtil {
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), overwrite);
 
             if (browserInstance.getDevice() != null) {
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE, browserInstance.getVersion(), overwrite);
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE, browserInstance.getDevice(), overwrite);
+            }
+            if (browserInstance.getDeviceType() != null) {
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE, browserInstance.getDeviceType(), overwrite);
             }
         }
     }

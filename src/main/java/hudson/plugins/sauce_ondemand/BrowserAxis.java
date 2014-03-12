@@ -24,6 +24,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
+import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import hudson.matrix.Axis;
 import hudson.util.Secret;
@@ -37,6 +38,8 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  */
 public abstract class BrowserAxis extends Axis {
+
+    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);

@@ -65,7 +65,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel.
+ * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel and populates environment variables which
+ * represent the selected browser(s).
  *
  * @author Kohsuke Kawaguchi
  */
@@ -80,6 +81,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
+    public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
     private final String startingURL;
 
     private boolean enableSauceConnect;
@@ -415,6 +417,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setWebDriverBrowsers(List<String> webDriverBrowsers) {
         this.webDriverBrowsers = webDriverBrowsers;
+    }
+
+    public List<String> getAppiumBrowsers() {
+        return appiumBrowsers;
+    }
+
+    public void setAppiumBrowsers(List<String> appiumBrowsers) {
+        this.appiumBrowsers = appiumBrowsers;
     }
 
     private interface ITunnelHolder {

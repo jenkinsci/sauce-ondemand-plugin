@@ -15,30 +15,30 @@ import java.util.logging.Logger;
 /**
  * @author Ross Rowe
  */
-public class SeleniumRCAxis extends BrowserAxis {
+public class AppiumAxis extends BrowserAxis {
 
-    private static final Logger logger = Logger.getLogger(SeleniumRCAxis.class.getName());
+    private static final Logger logger = Logger.getLogger(WebDriverAxis.class.getName());
 
     @DataBoundConstructor
-    public SeleniumRCAxis(List<String> values) {
+    public AppiumAxis(List<String> values) {
         super(values);
     }
 
     @Override
     protected Browser getBrowserForKey(String value) {
-        return BROWSER_FACTORY.seleniumBrowserForKey(value);
+        return BROWSER_FACTORY.appiumBrowserForKey(value);
     }
 
     @Extension
     public static class DescriptorImpl extends AxisDescriptor {
         @Override
         public String getDisplayName() {
-            return "Sauce OnDemand SeleniumRC tests";
+            return "Sauce OnDemand Appium tests";
         }
 
         public List<Browser> getBrowsers() {
             try {
-                return BROWSER_FACTORY.getSeleniumBrowsers();
+                return BROWSER_FACTORY.getAppiumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
