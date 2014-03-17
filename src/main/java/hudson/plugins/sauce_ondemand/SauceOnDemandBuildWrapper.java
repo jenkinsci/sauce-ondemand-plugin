@@ -167,9 +167,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 logger.info("Creating Sauce environment variables");
-                SauceEnvironmentUtil.outputWebDriverVariables(env, seleniumBrowsers, getUserName(), getApiKey());
+                SauceEnvironmentUtil.outputSeleniumRCVariables(env, seleniumBrowsers, getUserName(), getApiKey());
                 SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey());
-                SauceEnvironmentUtil.outputWebDriverVariables(env, appiumBrowsers, getUserName(), getApiKey());
+                SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
