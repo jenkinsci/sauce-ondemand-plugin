@@ -84,6 +84,9 @@
                 <f:entry field="launchSauceConnectOnSlave">
                     <f:checkbox title="${%Launch Sauce Connect On Slave}"/>
                 </f:entry>
+                <f:entry field="useOldSauceConnect">
+                    <f:checkbox title="${%Run Sauce Connect v3?}"/>
+                </f:entry>
 
                 <f:entry title="${%Sauce Host}" field="seleniumHost">
                     <f:textbox/>

@@ -22,5 +22,9 @@ under the License.
             <role>com.saucelabs.ci.sauceconnect.SauceTunnelManager</role>
             <implementation>com.saucelabs.hudson.HudsonSauceConnectManager</implementation>
         </component>
+        <component>
+            <role>com.saucelabs.ci.sauceconnect.SauceConnectFourManager</role>
+            <implementation>com.saucelabs.hudson.HudsonSauceConnectFourManager</implementation>
+        </component>
     </components>
 </component-set>

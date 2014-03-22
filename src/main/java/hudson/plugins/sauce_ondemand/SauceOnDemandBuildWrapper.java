@@ -26,8 +26,8 @@ package hudson.plugins.sauce_ondemand;
 import com.michelin.cio.hudson.plugins.copytoslave.MyFilePath;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
-import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
@@ -83,6 +83,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
     public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
     private final String startingURL;
+    private final boolean useOldSauceConnect;
 
     private boolean enableSauceConnect;
 
@@ -120,7 +121,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String options,
                                      String startingURL,
                                      boolean enableSauceConnect,
-                                     boolean launchSauceConnectOnSlave) {
+                                     boolean launchSauceConnectOnSlave,
+                                     boolean useOldSauceConnect) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -135,6 +137,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             this.appiumBrowsers = seleniumInformation.getAppiumBrowsers();
         }
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
+        this.useOldSauceConnect = useOldSauceConnect;
     }
 
 
@@ -469,7 +472,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return sauceOnDemandLogParser;
     }
 
-    private static final class TunnelHolder implements ITunnelHolder, Serializable {
+    private final class TunnelHolder implements ITunnelHolder, Serializable {
         private String username;
 
         public TunnelHolder(String username) {
@@ -478,7 +481,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             try {
-                HudsonSauceManagerFactory.getInstance().createSauceConnectManager().closeTunnelsForPlan(username, listener.getLogger());
+                getSauceTunnelManager().closeTunnelsForPlan(username, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.log(Level.SEVERE, "Unable to close tunnel", e);
@@ -487,6 +490,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
+    /**
+     *
+     */
     private final class SauceConnectCloser implements Callable<ITunnelHolder, IOException> {
 
         private ITunnelHolder tunnelHolder;
@@ -505,6 +511,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
 
+    /**
+     *
+     */
     private final class SauceConnectStarter implements Callable<ITunnelHolder, IOException> {
         private String username;
         private String key;
@@ -528,11 +537,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public ITunnelHolder call() throws IOException {
             TunnelHolder tunnelHolder = new TunnelHolder(username);
-            SauceTunnelManager sauceManager = null;
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                sauceManager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
-                Process process = sauceManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger());
+                Process process = getSauceTunnelManager().openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger());
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);
@@ -541,6 +548,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
+    private AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
+        return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
+                HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+    }
+
+    /**
+     *
+     */
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 
