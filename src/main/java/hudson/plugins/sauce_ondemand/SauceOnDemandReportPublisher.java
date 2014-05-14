@@ -35,6 +35,8 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -128,7 +130,19 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 }
             }
             if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
-                updates.put("name", jobInformation.getName());
+                //double check to see if name is stored on job
+                String jsonResponse = sauceREST.getJobInfo(jobInformation.getJobId());
+                try {
+                    JSONObject job = new JSONObject(jsonResponse);
+                    Object name = job.get("name");
+                    if (name == null || name.equals(""))
+                    {
+                        updates.put("name", jobInformation.getName());
+                    }
+                } catch (JSONException e) {
+                    logger.warning("Error retrieving job information for " + jobInformation.getJobId());
+                }
+
             }
             //TODO should we make the setting of the public status configurable?
             if (!PluginImpl.get().isDisableStatusColumn()) {
