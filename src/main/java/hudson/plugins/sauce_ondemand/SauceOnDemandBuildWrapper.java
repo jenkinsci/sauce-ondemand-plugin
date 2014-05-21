@@ -98,9 +98,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private List<String> webDriverBrowsers;
     private List<String> appiumBrowsers;
     /**
-     *
+     * Default behaviour is to launch Sauce Connect on the slave node.
      */
-    private boolean launchSauceConnectOnSlave = false;
+    private boolean launchSauceConnectOnSlave = true;
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
@@ -143,7 +143,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     @Override
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        logger.info("Setting up Sauce Build Wrapper v1.64");
+        logger.info("Setting up Sauce Build Wrapper");
         if (isEnableSauceConnect()) {
             if (launchSauceConnectOnSlave) {
                 listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on slave node");
