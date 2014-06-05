@@ -83,7 +83,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
     public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
     private final String startingURL;
-    private final boolean useOldSauceConnect;
+    private boolean useOldSauceConnect;
 
     private boolean enableSauceConnect;
 
@@ -442,6 +442,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
+    public boolean isUseOldSauceConnect() {
+        return useOldSauceConnect;
+    }
+
+    public void setUseOldSauceConnect(boolean useOldSauceConnect) {
+        this.useOldSauceConnect = useOldSauceConnect;
+    }
+
+
+
     public String getHttpsProtocol() {
         return httpsProtocol;
     }
@@ -481,7 +491,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             try {
-                getSauceTunnelManager().closeTunnelsForPlan(username, listener.getLogger());
+                getSauceTunnelManager().closeTunnelsForPlan(username, options, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.log(Level.SEVERE, "Unable to close tunnel", e);
