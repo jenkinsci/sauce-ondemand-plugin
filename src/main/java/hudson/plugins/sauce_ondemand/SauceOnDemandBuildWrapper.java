@@ -109,6 +109,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
     private String options;
+    private boolean verboseLogging;
 
 
     @DataBoundConstructor
@@ -122,7 +123,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      String startingURL,
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave,
-                                     boolean useOldSauceConnect) {
+                                     boolean useOldSauceConnect,
+                                     boolean verboseLogging) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -138,6 +140,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
         this.useOldSauceConnect = useOldSauceConnect;
+        this.verboseLogging = verboseLogging;
     }
 
 
@@ -450,7 +453,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useOldSauceConnect = useOldSauceConnect;
     }
 
+    public boolean isVerboseLogging() {
+        return verboseLogging;
+    }
 
+    public void setVerboseLogging(boolean verboseLogging) {
+        this.verboseLogging = verboseLogging;
+    }
 
     public String getHttpsProtocol() {
         return httpsProtocol;
@@ -549,7 +558,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                Process process = getSauceTunnelManager().openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger());
+                Process process = getSauceTunnelManager().openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
                 throw new IOException(e);
@@ -564,7 +573,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     /**
-     *
+     * Plugin descriptor, which adds the plugin details to the Jenkins job configuration page.
      */
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {

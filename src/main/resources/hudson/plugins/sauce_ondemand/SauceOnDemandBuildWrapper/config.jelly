@@ -78,6 +78,9 @@
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
+                <f:entry field="verboseLogging">
+                    <f:checkbox title="${%Verbose Logging?}"/>
+                </f:entry>
                 <f:entry title="${%Starting URL}" field="startingURL">
                     <f:textbox/>
                 </f:entry>

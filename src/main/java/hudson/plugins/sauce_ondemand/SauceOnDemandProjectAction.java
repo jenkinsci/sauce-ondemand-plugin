@@ -34,7 +34,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
-        logger.info("Inside hasSauceOnDemandResults v1.64");
+        logger.info("checking if project has sauce results");
         if (isSauceEnabled()) {
             logger.info("Checking to see if project has Sauce results");
             List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
@@ -47,6 +47,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                         break;
                     }
                 }
+                logger.info("hasSauceOnDemandResults: " + result);
                 return result;
             }
         }
