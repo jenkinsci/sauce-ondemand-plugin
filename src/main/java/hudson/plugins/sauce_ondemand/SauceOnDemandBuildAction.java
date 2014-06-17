@@ -124,6 +124,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     information.setHasJobName(true);
                     information.setName(jobName);
                 }
+                String build = jobData.getString("build");
+                if (build != null) {
+                    information.setHasBuildNumber(true);
+                }
 
                 jobInformation.add(information);
             }
@@ -133,7 +137,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         return jobInformation;
     }
-
 
 
     public void doJobReport(StaplerRequest req, StaplerResponse rsp)
@@ -166,29 +169,48 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return new ById(id);
     }
 
+    /**
+     * Adds a {@link JobInformation} instance into the {@ink #jobInformation} collection
+     * for each session id. The details of each job are retrieved from the Sauce REST API,
+     * and the hasJobName/hasBuildNumber attribute is set based on whether the details are already stored.
+     *
+     * @param sessionIDs List of session ids retrieved from the build results
+     */
     public void storeSessionIDs(List<String[]> sessionIDs) {
         try {
             for (String[] sessionId : sessionIDs) {
-                JobInformation jobInfo = jobInformationForBuild(sessionId[0]);
+                String jobId = sessionId[0];
+                JobInformation jobInfo = jobInformationForBuild(jobId);
                 if (jobInfo == null) {
-                    jobInfo = new JenkinsJobInformation(sessionId[0], calcHMAC(username, accessKey, sessionId[0]));
-                    jobInfo.setHasBuildNumber(false);
-                    jobInformation.add(jobInfo);
+                    jobInfo = new JenkinsJobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                    //retrieve data from session id to see if build number and/or job name has been stored
+                    SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+                    String jsonResponse = sauceREST.getJobInfo(jobId);
+                    try {
+                        JSONObject job = new JSONObject(jsonResponse);
+                        Object name = job.get("name");
+                        Object buildNumber = job.get("build");
+                        jobInfo.setHasJobName(name != null && !(name.equals("")));
+                        jobInfo.setHasBuildNumber(buildNumber != null && !(buildNumber.equals("")));
+
+                        jobInformation.add(jobInfo);
+                    } catch (JSONException e) {
+                        logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+                    }
                 }
 
                 if (sessionId[1] != null) {
                     jobInfo.setName(sessionId[1]);
                 }
-
             }
-        } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-        } catch (InvalidKeyException e) {
-            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-        } catch (UnsupportedEncodingException e) {
-            logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }catch(NoSuchAlgorithmException e){
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }catch(InvalidKeyException e){
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }catch(UnsupportedEncodingException e){
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }
         }
-    }
 
     private JobInformation jobInformationForBuild(String jobId) {
         for (JobInformation jobInfo : jobInformation) {

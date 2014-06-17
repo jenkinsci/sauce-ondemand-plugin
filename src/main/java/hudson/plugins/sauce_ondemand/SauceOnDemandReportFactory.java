@@ -40,7 +40,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Contribute s{@link SauceOnDemandReport} to {@link CaseResult}.
+ * Contributes {@link SauceOnDemandReport} to {@link CaseResult}.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -134,6 +134,11 @@ public class SauceOnDemandReportFactory extends Data {
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
     static List<String[]> findSessionIDs(CaseResult caseResult, String... output) {
+        if (caseResult == null) {
+            logger.log(Level.INFO, "Parsing Sauce Session ids in stdout");
+        } else {
+            logger.log(Level.INFO, "Parsing Sauce Session ids in test results");
+        }
         List<String[]> sessions = new ArrayList<String[]>();
         for (String text : output) {
             if (text == null) continue;

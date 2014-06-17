@@ -102,14 +102,14 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
-        if (sessionIDs.isEmpty()) {
-            //try the stdout for the tests
-            for (SuiteResult sr : testResult.getSuites()) {
-                for (CaseResult cr : sr.getCases()) {
-                    sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
-                }
+
+        //try the stdout for the tests
+        for (SuiteResult sr : testResult.getSuites()) {
+            for (CaseResult cr : sr.getCases()) {
+                sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
             }
         }
+
         buildAction.storeSessionIDs(sessionIDs);
 
 
