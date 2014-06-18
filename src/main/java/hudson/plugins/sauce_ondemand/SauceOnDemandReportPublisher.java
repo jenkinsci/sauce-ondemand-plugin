@@ -31,10 +31,7 @@ import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.tasks.junit.CaseResult;
-import hudson.tasks.junit.SuiteResult;
-import hudson.tasks.junit.TestDataPublisher;
-import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -103,15 +100,16 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
         List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
 
+
+
         //try the stdout for the tests
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
-                sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
+                sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr()));
             }
         }
 
         buildAction.storeSessionIDs(sessionIDs);
-
 
         for (JobInformation jobInformation : jobs) {
             Map<String, Object> updates = new HashMap<String, Object>();
