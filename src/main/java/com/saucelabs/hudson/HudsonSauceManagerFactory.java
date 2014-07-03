@@ -65,4 +65,8 @@ public class HudsonSauceManagerFactory {
             } catch (Throwable e) { /* Don't do anything here ... initialize/start methods should be called prior to v1.395 ! */ }
         }
     }
+
+    public PlexusContainer getContainer() {
+        return plexus;
+    }
 }

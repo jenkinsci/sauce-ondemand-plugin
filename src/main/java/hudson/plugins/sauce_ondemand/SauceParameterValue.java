@@ -20,7 +20,7 @@ public class SauceParameterValue extends ParameterValue {
     private final JSONArray selectedBrowsers;
 
     @DataBoundConstructor
-    protected SauceParameterValue(String name, JSONArray selectedBrowsers) {
+    public SauceParameterValue(String name, JSONArray selectedBrowsers) {
         super(name);
         this.selectedBrowsers = selectedBrowsers;
     }

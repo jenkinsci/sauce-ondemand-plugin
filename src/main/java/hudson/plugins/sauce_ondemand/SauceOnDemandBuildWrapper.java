@@ -69,6 +69,7 @@ import java.util.regex.Pattern;
  * represent the selected browser(s).
  *
  * @author Kohsuke Kawaguchi
+ * @author Ross Rowe
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
 
@@ -109,8 +110,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     private String httpsProtocol;
     private String options;
-    private boolean verboseLogging;
-
+    /** Default verbose logging to true. */
+    private boolean verboseLogging = true;
 
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(Credentials
@@ -533,7 +534,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      *
      */
-    private final class SauceConnectStarter implements Callable<ITunnelHolder, IOException> {
+    private final class SauceConnectStarter implements Callable<ITunnelHolder, AbstractSauceTunnelManager.SauceConnectException> {
         private String username;
         private String key;
 
@@ -554,20 +555,21 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         }
 
-        public ITunnelHolder call() throws IOException {
+        public ITunnelHolder call() throws AbstractSauceTunnelManager.SauceConnectException {
             TunnelHolder tunnelHolder = new TunnelHolder(username);
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
                 Process process = getSauceTunnelManager().openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
                 return tunnelHolder;
             } catch (ComponentLookupException e) {
-                throw new IOException(e);
+                throw new AbstractSauceTunnelManager.SauceConnectException(e);
+            } catch (UnknownHostException e) {
+                throw new AbstractSauceTunnelManager.SauceConnectException(e);
             }
-
         }
     }
 
-    private AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
+    public AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
         return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
                 HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
     }
