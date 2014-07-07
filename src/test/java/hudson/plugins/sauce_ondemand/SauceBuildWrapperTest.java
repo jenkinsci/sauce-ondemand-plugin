@@ -10,7 +10,6 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.util.OneShotEvent;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -21,8 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ross Rowe
@@ -66,8 +67,37 @@ public class SauceBuildWrapperTest {
 
     }
 
-    @Test(expected=IOException.class)
-    @Ignore
+    @Test()
+    public void resolveVariables() throws Exception {
+        sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+                assertTrue("Variable not resolved", options.equals("-i 1"));
+                return null;
+            }
+        };
+        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        Credentials sauceCredentials = new Credentials("username", "access key");
+        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
+        SauceOnDemandBuildWrapper sauceBuildWrapper =
+                new SauceOnDemandBuildWrapper(
+                        sauceCredentials,
+                        seleniumInformation,
+                        null,
+                        null,
+                        null,
+                        "-i ${BUILD_NUMBER}",
+                        null,
+                        true,
+                        true,
+                        false,
+                        true);
+
+        runFreestyleBuild(sauceBuildWrapper);
+
+    }
+
+    @Test()
     public void sauceConnectTimeOut() throws Exception {
         sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
@@ -167,8 +197,9 @@ public class SauceBuildWrapperTest {
             public boolean perform(AbstractBuild<?, ?> abstractBuild, Launcher launcher, BuildListener buildListener) throws InterruptedException, IOException {
                 //assert that mock SC started
 
-                assertEquals("Environment variable not found", sauceCredentials.getUsername(), abstractBuild.getEnvVars().get("SAUCE_USER_NAME"));
-                assertEquals("Environment variable not found", sauceCredentials.getApiKey(), abstractBuild.getEnvVars().get("SAUCE_API_KEY"));
+                Map<String,String> envVars = abstractBuild.getEnvVars();
+                assertEquals("Environment variable not found", sauceCredentials.getUsername(), envVars.get("SAUCE_USER_NAME"));
+                assertEquals("Environment variable not found", sauceCredentials.getApiKey(), envVars.get("SAUCE_API_KEY"));
                 buildStarted.signal();
                 return true;
             }

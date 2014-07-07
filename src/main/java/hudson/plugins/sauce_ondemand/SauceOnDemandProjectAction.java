@@ -34,24 +34,24 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public boolean hasSauceOnDemandResults() {
-        logger.info("checking if project has sauce results");
+        logger.fine("checking if project has sauce results");
         if (isSauceEnabled()) {
-            logger.info("Checking to see if project has Sauce results");
+            logger.fine("Checking to see if project has Sauce results");
             List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
             if (sauceOnDemandBuildActions != null) {
                 boolean result = false;
                 for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
                     if (action.hasSauceOnDemandResults()) {
-                        logger.info("Found Sauce results");
+                        logger.fine("Found Sauce results");
                         result = true;
                         break;
                     }
                 }
-                logger.info("hasSauceOnDemandResults: " + result);
+                logger.fine("hasSauceOnDemandResults: " + result);
                 return result;
             }
         }
-        logger.info("Did not find Sauce results");
+        logger.fine("Did not find Sauce results");
         return false;
     }
 

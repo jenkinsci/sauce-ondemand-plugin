@@ -104,7 +104,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build));
-        logger.info("Performing Sauce REST retrieve results for " + buildNumber);
+        logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
         String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");

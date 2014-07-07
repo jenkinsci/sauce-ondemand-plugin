@@ -67,7 +67,7 @@ public class SauceOnDemandReportFactory extends Data {
     public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
 
         if (testObject instanceof CaseResult) {
-            logger.log(Level.INFO, "Attempting to find Sauce SessionID for test object");
+            logger.log(Level.FINE, "Attempting to find Sauce SessionID for test object");
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
             List<String[]> ids = new ArrayList<String[]>();

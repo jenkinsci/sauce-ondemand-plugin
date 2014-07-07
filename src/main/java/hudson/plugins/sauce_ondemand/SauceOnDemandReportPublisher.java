@@ -82,7 +82,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param testResult
      */
     private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
-        logger.info("Adding build action to " + build.toString());
+        logger.fine("Adding build action to " + build.toString());
 
         SauceREST sauceREST = new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
         SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser = buildAction.getLogParser();
@@ -94,7 +94,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         //have any Sauce jobs already been marked with the build number?
         List<JobInformation> jobs = buildAction.getJobs();
         if (jobs != null && !jobs.isEmpty()) {
-            logger.info("Build already has jobs recorded");
+            logger.fine("Build already has jobs recorded");
         }
 
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
@@ -150,7 +150,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
             if (!updates.isEmpty()) {
-                logger.info("Performing Sauce REST update for " + jobInformation.getJobId());
+                logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
             }
         }
