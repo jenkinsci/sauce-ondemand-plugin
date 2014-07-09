@@ -35,6 +35,7 @@ import hudson.model.Hudson;
 import hudson.model.Items;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
@@ -113,7 +114,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     public static PluginImpl get() {
-        return Hudson.getInstance().getPlugin(PluginImpl.class);
+        return Jenkins.getInstance().getPlugin(PluginImpl.class);
     }
 
     public boolean isReuseSauceAuth() {

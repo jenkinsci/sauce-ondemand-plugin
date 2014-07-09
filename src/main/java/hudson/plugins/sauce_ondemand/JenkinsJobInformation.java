@@ -14,4 +14,6 @@ public class JenkinsJobInformation extends JobInformation {
        return getStatus() == "true" ? "OK" : "FAILURE";
 
     }
+
+
 }

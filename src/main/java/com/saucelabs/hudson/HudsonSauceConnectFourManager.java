@@ -1,7 +1,6 @@
 package com.saucelabs.hudson;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import hudson.plugins.sauce_ondemand.PluginImpl;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -9,14 +8,19 @@ import org.apache.commons.lang.StringUtils;
  */
 public class HudsonSauceConnectFourManager extends SauceConnectFourManager {
 
+    private String workingDirectory;
+
     @Override
     public String getSauceConnectWorkingDirectory() {
-        String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
         if (StringUtils.isBlank(workingDirectory)) {
             return super.getSauceConnectWorkingDirectory();
         } else {
             return workingDirectory;
         }
 
+    }
+
+    public void setWorkingDirectory(String workingDirectory) {
+        this.workingDirectory = workingDirectory;
     }
 }

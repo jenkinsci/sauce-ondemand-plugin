@@ -53,25 +53,17 @@ public class SauceOnDemandReport extends TestAction {
      */
     private final List<String[]> sessionIds;
 
-    /**
-     * Could we match session IDs to test names ?
-     */
-    private final boolean matchingJobNames;
     private static final String HMAC_KEY = "HMACMD5";
 
-    public SauceOnDemandReport(CaseResult parent, List<String[]> ids, boolean matchingJobNames) {
+    public SauceOnDemandReport(CaseResult parent, List<String[]> ids) {
         this.parent = parent;
         this.sessionIds = ids;
-        this.matchingJobNames = matchingJobNames;
     }
 
     public AbstractBuild<?, ?> getBuild() {
         return parent.getOwner();
     }
 
-    public boolean isMatchingJobNames() {
-        return matchingJobNames;
-    }
 
     public List<String> getIDs() {
         logger.fine("Retrieving Sauce job ids");
@@ -91,7 +83,7 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public String getIconFileName() {
-        return matchingJobNames ? null : "/plugin/sauce-ondemand/images/24x24/video.gif";
+        return "/plugin/sauce-ondemand/images/24x24/video.gif";
     }
 
     public String getDisplayName() {

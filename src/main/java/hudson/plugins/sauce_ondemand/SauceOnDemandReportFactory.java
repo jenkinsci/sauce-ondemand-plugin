@@ -50,8 +50,6 @@ public class SauceOnDemandReportFactory extends Data {
 
     public static final SauceOnDemandReportFactory INSTANCE = new SauceOnDemandReportFactory();
 
-    private static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
-
     private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
 
     /**
@@ -71,51 +69,40 @@ public class SauceOnDemandReportFactory extends Data {
             CaseResult cr = (CaseResult) testObject;
             String jobName = cr.getFullName();
             List<String[]> ids = new ArrayList<String[]>();
-            ids.addAll(findSessionIDs(cr, jobName, cr.getStdout(), cr.getStderr()));
-            boolean matchingJobNames = true;
-            if (ids.isEmpty()) {
-                // fall back to old-style log parsing (when no job-name is present in output)
-                logger.log(Level.INFO, "Parsing stdout with no job name");
-                ids.addAll(findSessionIDs(null, cr.getStdout(), cr.getStderr()));
-                matchingJobNames = false;
-            }
 
-            //if we still can't find the ids, retrieve the Sauce jobs that match the build
-            //number via the Sauce REST API and compare the job name against the name of the test
-            if (ids.isEmpty()) {
-                AbstractBuild<?, ?> build = cr.getOwner();
-                logger.log(Level.INFO, "Invoking Sauce REST API to find job results for " + build.toString());
-                SauceOnDemandBuildAction buildAction = getBuildAction(build);
-                if (buildAction != null) {
-
-                    List<JobInformation> jobs = buildAction.getJobs();
-                    for (JobInformation job : jobs) {
-                        //if job name matches test class/test name, then add id
-                        if (job.getName() != null) {
-                            Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
-                            Matcher matcher = jobNamePattern.matcher(cr.getFullName());
-                            if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
-                                    || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                                    || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
-                                //then we have a match
-                                ids.add(new String[]{job.getJobId(), job.getHmac()});
-                            }
+            AbstractBuild<?, ?> build = cr.getOwner();
+            SauceOnDemandBuildAction buildAction = getBuildAction(build);
+            if (buildAction != null) {
+                List<JobInformation> jobs = buildAction.getJobs();
+                for (JobInformation job : jobs) {
+                    //if job name matches test class/test name, then add id
+                    if (job.getName() != null) {
+                        Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                        Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                        if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                                || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                                || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                            //then we have a match
+                            ids.add(new String[]{job.getJobId(), job.getHmac()});
                         }
                     }
-
                 }
+            }
 
-                if (ids.isEmpty()) {
-                    logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
-                }
+            if (ids.isEmpty()) {
+                ids.addAll(findSessionIDs(cr, jobName, cr.getStdout(), cr.getStderr()));
+            }
+
+            if (ids.isEmpty()) {
+                logger.log(Level.WARNING, "Unable to find Sauce SessionID for test object");
             }
 
             if (!ids.isEmpty()) {
-                return Collections.singletonList(new SauceOnDemandReport(cr, ids, matchingJobNames));
+                return Collections.singletonList(new SauceOnDemandReport(cr, ids));
             }
 
         } else {
-            logger.log(Level.INFO, "Test Object not a CaseResult, unable to parse output: " + testObject.toString());
+            logger.log(Level.FINE, "Test Object not a CaseResult, unable to parse output: " + testObject.toString());
         }
         return Collections.emptyList();
     }
@@ -134,66 +121,23 @@ public class SauceOnDemandReportFactory extends Data {
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
     static List<String[]> findSessionIDs(CaseResult caseResult, String... output) {
-        if (caseResult == null) {
-            logger.log(Level.INFO, "Parsing Sauce Session ids in stdout");
-        } else {
-            logger.log(Level.INFO, "Parsing Sauce Session ids in test results");
-        }
+
+        logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
         List<String[]> sessions = new ArrayList<String[]>();
         for (String text : output) {
             if (text == null) continue;
-            Matcher m = SESSION_ID_PATTERN.matcher(text);
+            Matcher m = SauceOnDemandBuildAction.SESSION_ID_PATTERN.matcher(text);
             while (m.find()) {
                 String sessionId = m.group(1);
                 String job = "";
                 if (m.groupCount() == 2) {
                     job = m.group(2);
                 }
-
                 if (caseResult == null) {
                     sessions.add(new String[]{sessionId, job});
                 } else {
                     sessions.add(new String[]{sessionId, job, String.valueOf(caseResult.isPassed())});
                 }
-
-            }
-        }
-        return sessions;
-    }
-
-    /**
-     * Returns all sessions matching a given jobName in the provided logs.
-     * If no session is found for the jobName, return all session that do not provide job-name (old format)
-     */
-    static List<String[]> findSessionIDsForCaseResults(List<CaseResult> caseResults, String... output) {
-        List<String[]> sessions = new ArrayList<String[]>();
-        for (String text : output) {
-            if (text == null) continue;
-            Matcher m = SESSION_ID_PATTERN.matcher(text);
-            while (m.find()) {
-                String sessionId = m.group(1);
-                String job = "";
-                if (m.groupCount() == 2) {
-                    job = m.group(2);
-                }
-                //do we have a case result whose name matches the job name?
-                CaseResult caseResult = null;
-                if (job != null && !(job.equals("")) && !caseResults.isEmpty()) {
-                    for (CaseResult cr : caseResults) {
-                        if (job.equals(cr.getFullName()) //if job name equals full name of test
-                                || job.contains(cr.getDisplayName())) { //or if job name contains the test name
-                            caseResult = cr;
-                            break;
-                        }
-                    }
-                }
-
-                if (caseResult == null) {
-                    sessions.add(new String[]{sessionId, job});
-                } else {
-                    sessions.add(new String[]{sessionId, job, String.valueOf(caseResult.isPassed())});
-                }
-
             }
         }
         return sessions;

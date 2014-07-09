@@ -31,15 +31,15 @@ import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.tasks.junit.*;
-import org.json.JSONException;
-import org.json.JSONObject;
+import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.SuiteResult;
+import hudson.tasks.junit.TestDataPublisher;
+import hudson.tasks.junit.TestResult;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,17 +50,38 @@ import java.util.regex.Pattern;
  * Associates Sauce OnDemand session ID to unit tests.
  *
  * @author Kohsuke Kawaguchi
+ * @author Ross Rowe
  */
 public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
+    /**
+     * Logger instance.
+     */
     private static final Logger logger = Logger.getLogger(SauceOnDemandReportPublisher.class.getName());
 
+    /**
+     * Regex which identifies the first word of the job name.
+     */
     private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
 
+    /**
+     * Constructs a new instance.
+     */
     @DataBoundConstructor
     public SauceOnDemandReportPublisher() {
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param build         The build in progress
+     * @param launcher      This launcher can be used to launch processes for this build.
+     * @param buildListener Can be used to send any message.
+     * @param testResult    Contains the test results for the build.
+     * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
 
@@ -77,75 +98,47 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     /**
      * Processes the build output to associate the Jenkins build with the Sauce job.
      *
-     * @param build
-     * @param buildAction
-     * @param testResult
+     * @param build       The build in progress
+     * @param buildAction the Sauce Build Action instance for the build
+     * @param testResult  Contains the test results for the build.
      */
     private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
-        logger.fine("Adding build action to " + build.toString());
-
-        SauceREST sauceREST = new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+        SauceREST sauceREST = getSauceREST(buildAction);
         SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser = buildAction.getLogParser();
         if (logParser == null) {
             logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
             return;
         }
 
-        //have any Sauce jobs already been marked with the build number?
-        List<JobInformation> jobs = buildAction.getJobs();
-        if (jobs != null && !jobs.isEmpty()) {
-            logger.fine("Build already has jobs recorded");
-        }
-
+        //process the stdout for the build
         String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
-        List<String[]> sessionIDs = SauceOnDemandReportFactory.findSessionIDs(null, array);
-
-
+        buildAction.processSessionIds(null, array);
 
         //try the stdout for the tests
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
-                sessionIDs.addAll(SauceOnDemandReportFactory.findSessionIDs(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr()));
+                buildAction.processSessionIds(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr());
             }
         }
 
-        buildAction.storeSessionIDs(sessionIDs);
-
-        for (JobInformation jobInformation : jobs) {
+        for (JobInformation jobInformation : buildAction.getJobs()) {
             Map<String, Object> updates = new HashMap<String, Object>();
             //only store passed/name values if they haven't already been set
-
             if (jobInformation.getStatus() == null) {
                 Boolean buildResult = hasTestPassed(testResult, jobInformation);
-                if (buildResult == null) {
-                    //TODO restore this logic?
-                    //set the status to passed if the build was successful
-//                    updates.put("passed", build.getResult().equals(Result.SUCCESS));
-                } else {
+                if (buildResult != null) {
                     //set the status to passed if the test was successful
                     jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
                     updates.put("passed", buildResult);
                 }
             }
             if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
-                //double check to see if name is stored on job
-                String jsonResponse = sauceREST.getJobInfo(jobInformation.getJobId());
-                try {
-                    JSONObject job = new JSONObject(jsonResponse);
-                    Object name = job.get("name");
-                    if (name == null || name.equals(""))
-                    {
-                        updates.put("name", jobInformation.getName());
-                    }
-                } catch (JSONException e) {
-                    logger.warning("Error retrieving job information for " + jobInformation.getJobId());
-                }
-
+                updates.put("name", jobInformation.getName());
             }
             //TODO should we make the setting of the public status configurable?
-            if (!PluginImpl.get().isDisableStatusColumn()) {
-                updates.put("public", true);
-            }
+//            if (!PluginImpl.get().isDisableStatusColumn()) {
+            updates.put("public", true);
+//            }
             if (!jobInformation.isHasBuildNumber()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
@@ -156,9 +149,13 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
     }
 
+    protected SauceREST getSauceREST(SauceOnDemandBuildAction buildAction) {
+        return new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+    }
+
     /**
-     * @param testResult
-     * @param job
+     * @param testResult Contains the test results for the build.
+     * @param job        details of a Sauce job which was run during the build.
      * @return Boolean indicating whether the test was successful.
      */
     private Boolean hasTestPassed(TestResult testResult, JobInformation job) {
@@ -184,6 +181,11 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         return null;
     }
 
+    /**
+     * @param build The build in progress
+     * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build via the {@link SauceOnDemandBuildWrapper#processBuildOutput(hudson.model.AbstractBuild)} method.
+     *         Can be null
+     */
     private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {
         SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
         if (buildAction == null && build instanceof MavenBuild) {
@@ -193,7 +195,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         return buildAction;
     }
 
-
+    /**
+     * Descriptor for the custom publisher.
+     */
     @Extension
     public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
         @Override
