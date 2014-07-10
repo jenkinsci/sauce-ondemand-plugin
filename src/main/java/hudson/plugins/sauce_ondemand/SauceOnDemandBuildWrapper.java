@@ -175,32 +175,33 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         logger.fine("Setting up Sauce Build Wrapper");
         if (isEnableSauceConnect()) {
-            String workingDirctory = PluginImpl.get().getSauceConnectDirectory();
+            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+            String resolvedOptions = getResolvedOptions(build, listener);
             if (launchSauceConnectOnSlave) {
-                listener.getLogger().println("Starting Sauce Connect on slave node");
+                listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
 
-                if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
+                if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
+                    //only copy sauce connect jar if we are using Sauce Connect v3
                     File sauceConnectJar = copySauceConnectToSlave(build, listener);
-
                     sauceConnectHandler = Computer.currentComputer().getChannel().call(
                             new SauceConnectHandler(
                                     listener,
                                     getPort(),
-                                    workingDirctory,
+                                    workingDirectory,
                                     sauceConnectJar,
-                                    getResolvedOptions(build, listener)));
+                                    resolvedOptions));
                 } else {
                     sauceConnectHandler = Computer.currentComputer().getChannel().call
                             (new SauceConnectHandler(
                                     listener,
                                     getPort(),
-                                    workingDirctory,
-                                    getResolvedOptions(build, listener)));
+                                    workingDirectory,
+                                    resolvedOptions));
                 }
             } else {
-                listener.getLogger().println("Starting Sauce Connect on master node");
+                listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
                 //launch Sauce Connect on the master
-                SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(listener, getPort(), workingDirctory, getResolvedOptions(build, listener));
+                SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(listener, getPort(), workingDirectory, resolvedOptions);
                 sauceConnectHandler = sauceConnectStarter.call();
             }
         }
@@ -273,12 +274,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (sauceConnectHandler != null) {
                     listener.getLogger().println("Shutting down Sauce Connect");
                     if (launchSauceConnectOnSlave) {
-                        Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener));
+                        Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName()));
                     } else {
-                        SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener);
+                        SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName());
                         tunnelCloser.call();
                     }
-                    listener.getLogger().println("Sauce Connect closed");
                 }
 
                 processBuildOutput(build);
@@ -585,15 +585,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private final class SauceConnectCloser implements Callable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
 
-        private BuildListener listener;
+        private final BuildListener listener;
 
-        public SauceConnectCloser(BuildListener listener) {
+        private final String username;
+
+        public SauceConnectCloser(final BuildListener listener, final String username) {
             this.listener = listener;
+            this.username = username;
         }
 
         public SauceConnectCloser call() throws AbstractSauceTunnelManager.SauceConnectException {
             try {
-                getSauceTunnelManager().closeTunnelsForPlan(getUserName(), options, listener.getLogger());
+                getSauceTunnelManager().closeTunnelsForPlan(username, options, listener.getLogger());
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             }
