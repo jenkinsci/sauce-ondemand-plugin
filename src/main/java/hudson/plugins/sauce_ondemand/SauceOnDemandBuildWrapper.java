@@ -116,7 +116,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Default verbose logging to true.
      */
     private boolean verboseLogging = true;
-    private SauceConnectHandler sauceConnectHandler;
+    private transient SauceConnectHandler sauceConnectHandler;
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
@@ -220,6 +220,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
+                String buildName = build.getProject().getName();
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
                     env.put(SELENIUM_BROWSER, (String) buildVariables.get(SELENIUM_BROWSER));
                 }
