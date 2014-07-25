@@ -116,7 +116,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Default verbose logging to true.
      */
     private boolean verboseLogging = true;
-    private SauceConnectHandler sauceConnectHandler;
+
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
@@ -183,7 +183,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                     //only copy sauce connect jar if we are using Sauce Connect v3
                     File sauceConnectJar = copySauceConnectToSlave(build, listener);
-                    sauceConnectHandler = Computer.currentComputer().getChannel().call(
+                    Computer.currentComputer().getChannel().call(
                             new SauceConnectHandler(
                                     listener,
                                     getPort(),
@@ -191,7 +191,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                     sauceConnectJar,
                                     resolvedOptions));
                 } else {
-                    sauceConnectHandler = Computer.currentComputer().getChannel().call
+                    Computer.currentComputer().getChannel().call
                             (new SauceConnectHandler(
                                     listener,
                                     getPort(),
@@ -202,7 +202,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
                 //launch Sauce Connect on the master
                 SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(listener, getPort(), workingDirectory, resolvedOptions);
-                sauceConnectHandler = sauceConnectStarter.call();
+                 sauceConnectStarter.call();
             }
         }
 
@@ -271,7 +271,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
 
-                if (sauceConnectHandler != null) {
+                if (isEnableSauceConnect()) {
                     listener.getLogger().println("Shutting down Sauce Connect");
                     if (launchSauceConnectOnSlave) {
                         Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName()));
