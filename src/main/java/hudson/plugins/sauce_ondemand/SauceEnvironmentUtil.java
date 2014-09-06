@@ -133,6 +133,9 @@ public class SauceEnvironmentUtil {
             if (browserInstance.getDeviceType() != null) {
                 outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE, browserInstance.getDeviceType(), overwrite);
             }
+            if (browserInstance.getDeviceType() != null) {
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_ORIENTATION, browserInstance.getDeviceOrientation(), overwrite);
+            }
         }
     }
 

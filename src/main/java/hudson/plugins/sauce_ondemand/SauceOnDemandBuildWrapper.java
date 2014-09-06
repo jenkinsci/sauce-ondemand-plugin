@@ -87,6 +87,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
     public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
+    public static final String SELENIUM_DEVICE_ORIENTATION = "SELENIUM_DEVICE_ORIENTATION";
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";

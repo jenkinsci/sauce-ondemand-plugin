@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.97</version>
+    <version>1.98-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -157,17 +157,7 @@
             <artifactId>selenium-remote-driver</artifactId>
             <version>2.42.2</version>
         </dependency>
-        <dependency>
-            <groupId>com.saucelabs</groupId>
-            <artifactId>saucerest</artifactId>
-            <version>1.0.11</version>
-        </dependency>
-        <dependency>
-            <groupId>com.saucelabs</groupId>
-            <artifactId>sauce-rest-api</artifactId>
-            <version>1.5</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-inject-plexus</artifactId>
@@ -178,7 +168,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.73</version>
+            <version>1.76</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
