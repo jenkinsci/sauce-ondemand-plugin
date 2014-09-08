@@ -108,6 +108,9 @@ public class SauceEnvironmentUtil {
             if (browserInstance.getDeviceType() != null) {
                 config.put("device-type", browserInstance.getDeviceType());
             }
+            if (browserInstance.getDeviceOrientation() != null) {
+                config.put("device-orientation", browserInstance.getDeviceOrientation());
+            }
         } catch (JSONException e) {
             logger.log(Level.SEVERE, "Unable to create JSON Object", e);
         }
@@ -133,7 +136,7 @@ public class SauceEnvironmentUtil {
             if (browserInstance.getDeviceType() != null) {
                 outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE, browserInstance.getDeviceType(), overwrite);
             }
-            if (browserInstance.getDeviceType() != null) {
+            if (browserInstance.getDeviceOrientation() != null) {
                 outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_ORIENTATION, browserInstance.getDeviceOrientation(), overwrite);
             }
         }
