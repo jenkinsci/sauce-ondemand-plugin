@@ -51,7 +51,7 @@ public class TeztSimulation {
         }
         System.setProperty("SELENIUM_STARTING_URL", url);
 
-        System.setProperty("SELENIUM_DRIVER", new com.saucelabs.ci.Browser("Chrome", "linux", "firefox", "4.0", "firefox").getUri());
+        System.setProperty("SELENIUM_DRIVER", new com.saucelabs.ci.Browser("Chrome", "linux", "firefox", "4.0", "4.0", "firefox").getUri());
 
         WebDriver selenium = SeleniumFactory.createWebDriver();
 

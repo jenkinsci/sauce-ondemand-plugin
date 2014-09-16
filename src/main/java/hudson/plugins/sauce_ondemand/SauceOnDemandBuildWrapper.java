@@ -106,6 +106,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private List<String> seleniumBrowsers;
     private List<String> webDriverBrowsers;
     private List<String> appiumBrowsers;
+    /** Boolean which indicates whether the latest available version of the browser should be used. */
+    private boolean useLatestVersion;
     /**
      * Default behaviour is to launch Sauce Connect on the slave node.
      */
@@ -145,7 +147,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave,
                                      boolean useOldSauceConnect,
-                                     boolean verboseLogging) {
+                                     boolean verboseLogging,
+                                     boolean useLatestVersion) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -162,6 +165,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
         this.useOldSauceConnect = useOldSauceConnect;
         this.verboseLogging = verboseLogging;
+        this.useLatestVersion = useLatestVersion;
     }
 
 
@@ -216,8 +220,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 logger.fine("Creating Sauce environment variables");
-                SauceEnvironmentUtil.outputSeleniumRCVariables(env, seleniumBrowsers, getUserName(), getApiKey());
-                SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey());
+                SauceEnvironmentUtil.outputSeleniumRCVariables(env, seleniumBrowsers, getUserName(), getApiKey(), isUseLatestVersion());
+                SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey(), isUseLatestVersion());
                 SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
@@ -445,6 +449,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return Secret.toString(p.getApiKey());
             }
         }
+    }
+
+    public boolean isUseLatestVersion() {
+        return useLatestVersion;
     }
 
     public String getSeleniumHost() {

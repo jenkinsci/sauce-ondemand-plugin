@@ -2,7 +2,6 @@ package com.saucelabs.hudson;
 
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.sauceconnect.SauceConnect;
-import de.schlichtherle.truezip.file.TFile;
 import hudson.Plugin;
 import hudson.PluginWrapper;
 import hudson.model.Hudson;
@@ -34,9 +33,9 @@ public class HudsonSauceLibraryManager extends SauceLibraryManager {
         File backupFile = pluginWrapper.getBackupFile();
         String backupFileName = backupFile.getName();
         File hpiFile = new File(backupFile.getParentFile(), backupFileName.substring(0, backupFileName.lastIndexOf('.')) + ".hpi");
-        if (hpiFile.exists()) {
-           addFileToJar(hpiFile, new TFile(jarFile));
-        }
+//        if (hpiFile.exists()) {
+//           addFileToJar(hpiFile, new TFile(jarFile));
+//        }
 
     }
 }

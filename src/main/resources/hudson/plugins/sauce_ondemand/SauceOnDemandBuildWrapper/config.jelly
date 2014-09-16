@@ -63,6 +63,9 @@
                     </select>
                 </f:nested>
             </f:radioBlock>
+            <f:entry field="useLatestVersion">
+                <f:checkbox title="${%Use latest version of selected browsers?}" default="checked"/>
+            </f:entry>
 
 
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
