@@ -108,6 +108,7 @@ public class SauceEnvironmentUtil {
             config.put("os", browserInstance.getOs());
             config.put("browser", browserInstance.getBrowserName());
             config.put("browser-version", browserInstance.getVersion());
+            config.put("long-name", browserInstance.getLongName());
             config.put("long-version", browserInstance.getLongVersion());
             config.put("url", browserInstance.getUri(userName, apiKey));
             if (browserInstance.getDevice() != null) {
