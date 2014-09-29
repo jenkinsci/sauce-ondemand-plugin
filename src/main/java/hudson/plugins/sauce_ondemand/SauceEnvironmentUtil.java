@@ -31,7 +31,6 @@ public class SauceEnvironmentUtil {
 
 
     /**
-     *
      * @param env
      * @param browsers
      * @param userName
@@ -43,15 +42,19 @@ public class SauceEnvironmentUtil {
         if (browsers != null && !browsers.isEmpty()) {
             if (browsers.size() == 1) {
                 Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browsers.get(0), useLatestVersion);
-                outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
+                if (browserInstance != null) {
+                    outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
+                }
             }
 
             JSONArray browsersJSON = new JSONArray();
             for (String browser : browsers) {
                 Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browser, useLatestVersion);
-                browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
-                //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+                if (browserInstance != null) {
+                    browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
+                    //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
+                    outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+                }
             }
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
 
@@ -63,15 +66,20 @@ public class SauceEnvironmentUtil {
         if (browsers != null && !browsers.isEmpty()) {
             if (browsers.size() == 1) {
                 Browser browserInstance = BROWSER_FACTORY.seleniumBrowserForKey(browsers.get(0));
-                outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, useLatestVersion);
+                if (browserInstance != null) {
+                    outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, useLatestVersion);
+                }
+
             }
 
             JSONArray browsersJSON = new JSONArray();
             for (String browser : browsers) {
                 Browser browserInstance = BROWSER_FACTORY.seleniumBrowserForKey(browser, useLatestVersion);
-                browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
-                //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+                if (browserInstance != null) {
+                    browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
+                    //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
+                    outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+                }
             }
             outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
 
