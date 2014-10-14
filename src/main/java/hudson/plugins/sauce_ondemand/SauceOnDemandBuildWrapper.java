@@ -41,14 +41,12 @@ import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -96,6 +94,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private static final long serialVersionUID = 1L;
     private final String startingURL;
+
     private boolean useOldSauceConnect;
     private boolean enableSauceConnect;
     private Map<String, SauceOnDemandLogParser> logParserMap;
@@ -106,7 +105,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private List<String> seleniumBrowsers;
     private List<String> webDriverBrowsers;
     private List<String> appiumBrowsers;
-    /** Boolean which indicates whether the latest available version of the browser should be used. */
+    /**
+     * Boolean which indicates whether the latest available version of the browser should be used.
+     */
     private boolean useLatestVersion;
     /**
      * Default behaviour is to launch Sauce Connect on the slave node.
@@ -119,6 +120,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Default verbose logging to true.
      */
     private boolean verboseLogging = true;
+
+    /**
+     * RunCondition which allows users to define rules which enable Sauce Connect.
+     */
+    private RunCondition condition;
 
 
     /**
@@ -137,18 +143,22 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param verboseLogging
      */
     @DataBoundConstructor
-    public SauceOnDemandBuildWrapper(Credentials credentials,
-                                     SeleniumInformation seleniumInformation,
-                                     String seleniumHost,
-                                     String seleniumPort,
-                                     String httpsProtocol,
-                                     String options,
-                                     String startingURL,
-                                     boolean enableSauceConnect,
-                                     boolean launchSauceConnectOnSlave,
-                                     boolean useOldSauceConnect,
-                                     boolean verboseLogging,
-                                     boolean useLatestVersion) {
+    public SauceOnDemandBuildWrapper(
+            boolean enableSauceConnect,
+            RunCondition condition,
+            Credentials credentials,
+            SeleniumInformation seleniumInformation,
+            String seleniumHost,
+            String seleniumPort,
+            String httpsProtocol,
+            String options,
+            String startingURL,
+
+            boolean launchSauceConnectOnSlave,
+            boolean useOldSauceConnect,
+            boolean verboseLogging,
+            boolean useLatestVersion
+    ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -166,6 +176,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useOldSauceConnect = useOldSauceConnect;
         this.verboseLogging = verboseLogging;
         this.useLatestVersion = useLatestVersion;
+        this.condition = condition;
     }
 
 
@@ -180,34 +191,52 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         logger.fine("Setting up Sauce Build Wrapper");
         if (isEnableSauceConnect()) {
-            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
-            String resolvedOptions = getResolvedOptions(build, listener);
-            if (launchSauceConnectOnSlave) {
-                listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
 
-                if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
-                    //only copy sauce connect jar if we are using Sauce Connect v3
-                    File sauceConnectJar = copySauceConnectToSlave(build, listener);
-                    Computer.currentComputer().getChannel().call(
-                            new SauceConnectHandler(
-                                    listener,
-                                    getPort(),
-                                    workingDirectory,
-                                    sauceConnectJar,
-                                    resolvedOptions));
+            boolean canRun = true;
+            try {
+                if (condition != null) {
+                    canRun = condition.runPerform(build, listener);
+                }
+            } catch (Exception e) {
+                listener.getLogger().println("Error checking Sauce Connect run condition");
+                throw new IOException(e);
+            }
+            if (canRun) {
+                String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+                String resolvedOptions = getResolvedOptions(build, listener);
+                if (launchSauceConnectOnSlave) {
+                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+
+                    if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
+                        //only copy sauce connect jar if we are using Sauce Connect v3
+                        File sauceConnectJar = copySauceConnectToSlave(build, listener);
+                        Computer.currentComputer().getChannel().call(
+                                new SauceConnectHandler(
+                                        this,
+                                        listener,
+
+                                        workingDirectory,
+                                        resolvedOptions,
+
+                                        sauceConnectJar));
+                    } else {
+                        Computer.currentComputer().getChannel().call
+                                (new SauceConnectHandler(
+                                        this,
+                                        listener,
+
+                                        workingDirectory,
+                                        resolvedOptions
+                                        ));
+                    }
                 } else {
-                    Computer.currentComputer().getChannel().call
-                            (new SauceConnectHandler(
-                                    listener,
-                                    getPort(),
-                                    workingDirectory,
-                                    resolvedOptions));
+                    listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+                    //launch Sauce Connect on the master
+                    SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(this, listener, workingDirectory, resolvedOptions);
+                    sauceConnectStarter.call();
                 }
             } else {
-                listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
-                //launch Sauce Connect on the master
-                SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(listener, getPort(), workingDirectory, resolvedOptions);
-                 sauceConnectStarter.call();
+                listener.getLogger().println("Sauce Connect launch skipped due to run condition");
             }
         }
 
@@ -277,12 +306,23 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
 
                 if (isEnableSauceConnect()) {
-                    listener.getLogger().println("Shutting down Sauce Connect");
-                    if (launchSauceConnectOnSlave) {
-                        Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName()));
-                    } else {
-                        SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName());
-                        tunnelCloser.call();
+                    boolean shouldClose = true;
+                    try {
+                        if (condition != null) {
+                            shouldClose = condition.runPerform(build, listener);
+                        }
+                    } catch (Exception e) {
+                        listener.getLogger().println("Error checking Sauce Connect run condition");
+                        throw new IOException(e);
+                    }
+                    if (shouldClose) {
+                        listener.getLogger().println("Shutting down Sauce Connect");
+                        if (launchSauceConnectOnSlave) {
+                            Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), getOptions(), useOldSauceConnect));
+                        } else {
+                            SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName(), getOptions(), useOldSauceConnect);
+                            tunnelCloser.call();
+                        }
                     }
                 }
 
@@ -580,7 +620,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public void close(TaskListener listener) {
             try {
-                getSauceTunnelManager().closeTunnelsForPlan(getUserName(), options, listener.getLogger());
+                getSauceTunnelManager(useOldSauceConnect).closeTunnelsForPlan(getUserName(), options, listener.getLogger());
             } catch (ComponentLookupException e) {
                 //shouldn't happen
                 logger.log(Level.SEVERE, "Unable to close tunnel", e);
@@ -592,20 +632,24 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles terminating any running Sauce Connect processes.
      */
-    private final class SauceConnectCloser implements Callable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectCloser implements Callable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
 
         private final BuildListener listener;
 
         private final String username;
+        private final String options;
+        private final boolean useOldSauceConnect;
 
-        public SauceConnectCloser(final BuildListener listener, final String username) {
+        public SauceConnectCloser(final BuildListener listener, final String username, String options, boolean useOldSauceConnect) {
             this.listener = listener;
             this.username = username;
+            this.options = options;
+            this.useOldSauceConnect = useOldSauceConnect;
         }
 
         public SauceConnectCloser call() throws AbstractSauceTunnelManager.SauceConnectException {
             try {
-                getSauceTunnelManager().closeTunnelsForPlan(username, options, listener.getLogger());
+                getSauceTunnelManager(useOldSauceConnect).closeTunnelsForPlan(username, options, listener.getLogger());
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             }
@@ -616,59 +660,50 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles starting Sauce Connect.
      */
-    private final class SauceConnectHandler implements Callable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectHandler implements Callable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
         private final String options;
         private final String workingDirectory;
-        private String username;
-        private String key;
+        private final String username;
+        private final String key;
 
-        private BuildListener listener;
+        private final BuildListener listener;
+        private final boolean useOldSauceConnect;
+        private final String httpsProtocol;
+        private final boolean verboseLogging;
         private File sauceConnectJar;
         private int port;
 
-        /**
-         * Constructs a new instance.
-         * @param listener
-         * @param port
-         * @param options
-         * @throws IOException
-         */
-        public SauceConnectHandler(BuildListener listener, int port, String workingDirectory, String options) throws IOException {
-            this.username = getUserName();
-            this.key = getApiKey();
-            this.listener = listener;
-            this.port = port;
-            this.workingDirectory = workingDirectory;
-            this.options = options;
 
+
+        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions) {
+            this.options = resolvedOptions;
+            this.workingDirectory = workingDirectory;
+            this.listener = listener;
+            this.username = sauceOnDemandBuildWrapper.getUserName();
+            this.port = sauceOnDemandBuildWrapper.getPort();
+            this.key = sauceOnDemandBuildWrapper.getApiKey();
+            this.useOldSauceConnect = sauceOnDemandBuildWrapper.isUseOldSauceConnect();
+            this.httpsProtocol = sauceOnDemandBuildWrapper.getHttpsProtocol();
+            this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
         }
 
-        /**
-         * Constructs a new instance.
-         *
-         * @param listener
-         * @param port
-         * @param sauceConnectJar
-         * @param options
-         * @throws IOException
-         */
-        public SauceConnectHandler(BuildListener listener, int port, String workingDirectory,File sauceConnectJar, String options) throws IOException {
-            this(listener, port, workingDirectory, options);
+        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions, File sauceConnectJar) {
+            this(sauceOnDemandBuildWrapper, listener, workingDirectory, resolvedOptions);
             this.sauceConnectJar = sauceConnectJar;
-
         }
 
         /**
          * Launches Sauce Connect.
          *
          * @return the current SauceConnectHandler instance
-         * @throws AbstractSauceTunnelManager.SauceConnectException thrown if an error occurs starting Sauce Connect
+         * @throws AbstractSauceTunnelManager.SauceConnectException
+         *          thrown if an error occurs starting Sauce Connect
          */
         public SauceConnectHandler call() throws AbstractSauceTunnelManager.SauceConnectException {
 
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager();
+                AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager(useOldSauceConnect);
                 if (sauceTunnelManager instanceof HudsonSauceConnectFourManager && workingDirectory != null) {
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
                 }
@@ -682,7 +717,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
-    public AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
+    public static AbstractSauceTunnelManager getSauceTunnelManager(boolean useOldSauceConnect) throws ComponentLookupException {
         return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
                 HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
     }
@@ -724,7 +759,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         /**
-         *
          * @return the list of supported Selenium RC browsers
          */
         public List<Browser> getSeleniumBrowsers() {
@@ -739,7 +773,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         /**
-         *
          * @return the list of supported WebDriver browsers
          */
         public List<Browser> getWebDriverBrowsers() {
@@ -757,6 +790,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * Captures the output of a Jenkins build, so that it can be parsed to find Sauce jobs invoked by the build.
+     *
      * @author Ross Rowe
      */
     public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable {
@@ -793,4 +827,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return lines;
         }
     }
+
+    public RunCondition getCondition() {
+        return condition;
+    }
+
+
 }

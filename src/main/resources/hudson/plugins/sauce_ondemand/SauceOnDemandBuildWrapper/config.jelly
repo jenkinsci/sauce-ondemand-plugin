@@ -6,6 +6,9 @@
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
             </f:entry>
+            <f:entry>
+                <f:dropdownDescriptorSelector title="${%Sauce Connect Launch Condition}" field="condition"/>
+            </f:entry>
 
             <f:radioBlock name="seleniumInformation" value="webDriver" title="${%WebDriver}"
                           checked="${instance.seleniumInformation.isWebDriver()}">
