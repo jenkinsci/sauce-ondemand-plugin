@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModule;
-import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
@@ -30,10 +29,10 @@ import java.util.Map;
  * @author Ross Rowe
  * @see <a href="https://issues.jenkins-ci.org/browse/JENKINS-11721">JENKINS-11721</a>
  */
-public class SauceOnDemandMavenTestPublisher extends Recorder {
+public class SauceOnDemandTestPublisher extends Recorder {
     private final DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers;
 
-    public SauceOnDemandMavenTestPublisher(DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
+    public SauceOnDemandTestPublisher(DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         super();
         this.testDataPublishers = testDataPublishers;
     }
@@ -103,12 +102,12 @@ public class SauceOnDemandMavenTestPublisher extends Recorder {
 
         @Override
         public String getDisplayName() {
-            return "Additional test report features (Sauce OnDemand)";
+            return "Run Sauce Labs Test Publisher";
         }
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return MavenModuleSet.class.isAssignableFrom(jobType) && !TestDataPublisher.all().isEmpty();
+            return !TestDataPublisher.all().isEmpty();
         }
 
         @Override
@@ -120,7 +119,7 @@ public class SauceOnDemandMavenTestPublisher extends Recorder {
             } catch (IOException e) {
                 throw new Descriptor.FormException(e, null);
             }
-            return new SauceOnDemandMavenTestPublisher(testDataPublishers);
+            return new SauceOnDemandTestPublisher(testDataPublishers);
         }
     }
 }

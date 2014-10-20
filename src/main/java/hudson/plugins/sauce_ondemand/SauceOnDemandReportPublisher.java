@@ -164,15 +164,20 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             for (CaseResult cr : sr.getCases()) {
                 //if job name matches test class/test name, and pass/fail status is null, then populate the Sauce job with the test result status
                 if (job.getName() != null && job.getStatus() == null) {
-                    Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
-                    Matcher matcher = jobNamePattern.matcher(cr.getFullName());
-                    if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
-                            || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                            || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
-                        //then we have a match
-                        //check the pass/fail status of the
-                        return cr.getStatus().equals(CaseResult.Status.PASSED) ||
-                                cr.getStatus().equals(CaseResult.Status.FIXED);
+                    try {
+                        Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                        Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                        if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                                || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                                || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                            //then we have a match
+                            //check the pass/fail status of the
+                            return cr.getStatus().equals(CaseResult.Status.PASSED) ||
+                                    cr.getStatus().equals(CaseResult.Status.FIXED);
+                        }
+                    } catch (Exception e) {
+                        //ignore and continue
+                        logger.log(Level.WARNING, "Error parsing line, attempting to continue");
                     }
 
                 }
