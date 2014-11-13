@@ -9,6 +9,7 @@ import hudson.util.DescribableList;
 import hudson.views.ListViewColumn;
 import hudson.views.ListViewColumnDescriptor;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Calendar;
@@ -55,6 +56,7 @@ public class SauceBadgeColumn extends ListViewColumn {
                     String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(project.asProject().getLastBuild()));
 
                     if (shouldRetrieveJobs()) {
+                      try {
                         JenkinsSauceREST sauceRest = new JenkinsSauceREST(sauceWrapper.getUserName(), sauceWrapper.getApiKey());
                         String lastJob = sauceRest.retrieveResults("/jobs?limit=1&full=true");
                         lastLookup = new Date();
@@ -63,9 +65,15 @@ public class SauceBadgeColumn extends ListViewColumn {
                         //does job have a build number and if so, does it equal the selected job?
                         lastBuildNumber = jsonArray.getJSONObject(0).getString("build");
                         if (buildNumber.equals(lastBuildNumber)) {
-                            //if so, return the username
-                            return sauceWrapper.getUserName();
+                          //if so, return the username
+                          return sauceWrapper.getUserName();
                         }
+                      } catch(JSONException e) {
+                        // If it is unable to connect to saucelabs, we should
+                        // not display the badge.
+                        e.printStackTrace();
+                        return null;
+                      }
                     } else if (buildNumber.equals(lastBuildNumber)) {
                         return sauceWrapper.getUserName();
                     }
