@@ -86,12 +86,14 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
 
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
-        processBuildOutput(build, buildAction, testResult);
-        if (buildAction.hasSauceOnDemandResults()) {
-            return SauceOnDemandReportFactory.INSTANCE;
-        } else {
-            buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
-            return null;
+        if (buildAction != null) {
+            processBuildOutput(build, buildAction, testResult);
+            if (buildAction.hasSauceOnDemandResults()) {
+                return SauceOnDemandReportFactory.INSTANCE;
+            } else {
+                buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
+                return null;
+            }
         }
     }
 

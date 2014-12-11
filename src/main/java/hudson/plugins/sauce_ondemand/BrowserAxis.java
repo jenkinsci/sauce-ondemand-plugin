@@ -71,15 +71,21 @@ public abstract class BrowserAxis extends Axis {
         }
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
-            map.put(getName(), browserInstance.getUri(username, accessKey));
-            map.put(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getOs());
-            map.put(SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName());
-            map.put(SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion());
+            SauceEnvironmentUtil.outputEnvironmentVariablesForBrowser(map, browserInstance, username, accessKey);
             StringBuilder builder = new StringBuilder();
             builder.append("-D").append(getName()).append('=').append(browserInstance.getUri(username, accessKey)).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_PLATFORM).append('=').append(browserInstance.getOs()).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_BROWSER).append('=').append(browserInstance.getBrowserName()).
                     append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_VERSION).append('=').append(browserInstance.getVersion());
+            if (browserInstance.getDevice() != null) {
+                builder.append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_DEVICE).append('=').append(browserInstance.getDevice());
+            }
+            if (browserInstance.getDeviceType() != null) {
+                builder.append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE).append('=').append(browserInstance.getDeviceType());
+            }
+            if (browserInstance.getDeviceOrientation() != null) {
+                builder.append("-D").append(SauceOnDemandBuildWrapper.SELENIUM_DEVICE_ORIENTATION).append('=').append(browserInstance.getDeviceOrientation());
+            }
             map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri(username, accessKey));
         }
     }
