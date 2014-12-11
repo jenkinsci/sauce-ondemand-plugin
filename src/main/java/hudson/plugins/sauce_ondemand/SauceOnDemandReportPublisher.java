@@ -95,6 +95,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 return null;
             }
         }
+        return null;
     }
 
     /**
