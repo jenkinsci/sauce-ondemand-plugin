@@ -185,7 +185,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.85</version>
+            <version>1.86</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
