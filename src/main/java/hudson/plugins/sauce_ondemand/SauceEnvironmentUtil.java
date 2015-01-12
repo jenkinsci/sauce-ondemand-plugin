@@ -114,6 +114,7 @@ public class SauceEnvironmentUtil {
         JSONObject config = new JSONObject();
         try {
             config.put("os", browserInstance.getOs());
+            config.put("platform", browserInstance.getPlatform().toString());
             config.put("browser", browserInstance.getBrowserName());
             config.put("browser-version", browserInstance.getVersion());
             config.put("long-name", browserInstance.getLongName());
