@@ -48,9 +48,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Persists the access credential to Sauce OnDemand.
+ * Persists the access credentials and common options for the Sauce plugin.
  *
  * @author Kohsuke Kawaguchi
+ * @author Ross Rowe
  */
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
@@ -70,6 +71,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     private boolean reuseSauceAuth;
 
     private String sauceConnectDirectory;
+
+    private String sauceConnectOptions;
 
     private boolean disableStatusColumn;
 
@@ -198,5 +201,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setDisableStatusColumn(boolean disableStatusColumn) {
         this.disableStatusColumn = disableStatusColumn;
+    }
+
+    public String getSauceConnectOptions() {
+        return sauceConnectOptions;
+    }
+
+    public void setSauceConnectOptions(String sauceConnectOptions) {
+        this.sauceConnectOptions = sauceConnectOptions;
     }
 }

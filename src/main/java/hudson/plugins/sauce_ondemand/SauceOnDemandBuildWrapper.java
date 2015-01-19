@@ -203,7 +203,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
             if (canRun) {
                 String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
-                String resolvedOptions = getResolvedOptions(build, listener);
+                String resolvedOptions = getCommandLineOptions(build, listener);
                 if (launchSauceConnectOnSlave) {
                     listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
 
@@ -214,17 +214,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                 new SauceConnectHandler(
                                         this,
                                         listener,
-
                                         workingDirectory,
                                         resolvedOptions,
-
                                         sauceConnectJar));
                     } else {
                         Computer.currentComputer().getChannel().call
                                 (new SauceConnectHandler(
                                         this,
                                         listener,
-
                                         workingDirectory,
                                         resolvedOptions
                                         ));
@@ -317,10 +314,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     }
                     if (shouldClose) {
                         listener.getLogger().println("Shutting down Sauce Connect");
+                        String resolvedOptions = getCommandLineOptions(build, listener);
                         if (launchSauceConnectOnSlave) {
-                            Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), getOptions(), useOldSauceConnect));
+                            Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), resolvedOptions, useOldSauceConnect));
                         } else {
-                            SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName(), getOptions(), useOldSauceConnect);
+                            SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName(), resolvedOptions, useOldSauceConnect);
                             tunnelCloser.call();
                         }
                     }
@@ -333,16 +331,26 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
+    private String getCommandLineOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+        String resolvedOptions = getResolvedOptions(build, listener, options);
+        String resolvedCommonOptions = getResolvedOptions(build, listener, PluginImpl.get().getSauceConnectOptions());
+        if (resolvedCommonOptions != null && !resolvedCommonOptions.equals("")) {
+            resolvedOptions = resolvedOptions + " " + resolvedCommonOptions;
+        }
+        return resolvedOptions;
+    }
+
     /**
      * Returns the Sauce Connect options, with any strings representing environment variables (eg. ${SOME_ENV_VAR}) resolved.
      *
      * @param build    The same {@link Build} object given to the set up method.
      * @param listener The same {@link BuildListener} object given to the set up method.
+     * @param options   The command line options to resolve
      * @return the Sauce Connect options to be used for the build
      * @throws IOException
      * @throws InterruptedException
      */
-    private String getResolvedOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+    private String getResolvedOptions(AbstractBuild build, BuildListener listener, String options) throws IOException, InterruptedException {
         String resolvedOptions = options;
         if (options != null) {
             //check to see if options contains any environment variables to be resolved

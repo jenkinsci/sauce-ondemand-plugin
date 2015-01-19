@@ -28,6 +28,9 @@
             <f:entry title="${%Sauce Connect Working Directory}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>
             </f:entry>
+            <f:entry title="${%Sauce Connect Options}" field="sauceConnectOptions">
+                <f:textbox id="sauceConnectOptionsBox"/>
+            </f:entry>
             <f:entry field="disableStatusColumn">
                 <f:checkbox id="disableStatusColumnCheckBox" title="${%Disable Sauce Status Column?}"/>
             </f:entry>
@@ -49,7 +52,8 @@
                 </script>
             </f:entry>
             <f:block>
-                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn,reuseSauceAuth" method="validate"/>
+                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn,reuseSauceAuth"
+                                  method="validate"/>
             </f:block>
         </j:scope>
     </f:section>

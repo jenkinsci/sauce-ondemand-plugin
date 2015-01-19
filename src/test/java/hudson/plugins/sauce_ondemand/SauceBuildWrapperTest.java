@@ -123,6 +123,8 @@ public class SauceBuildWrapperTest {
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
         SauceOnDemandBuildWrapper sauceBuildWrapper =
                 new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
                         sauceCredentials,
                         seleniumInformation,
                         null,
@@ -133,8 +135,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true,
-                        false);
+                        true);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -163,6 +164,8 @@ public class SauceBuildWrapperTest {
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
         SauceOnDemandBuildWrapper sauceBuildWrapper =
                 new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
                         sauceCredentials,
                         seleniumInformation,
                         null,
@@ -173,8 +176,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true,
-                        false);
+                        true);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
         assertEquals(Result.FAILURE, build.getResult());
@@ -192,6 +194,8 @@ public class SauceBuildWrapperTest {
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, Arrays.asList("androidandroid4.3."), null);
         SauceOnDemandBuildWrapper sauceBuildWrapper =
                 new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
                         sauceCredentials,
                         seleniumInformation,
                         null,
@@ -202,8 +206,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true,
-                        false);
+                        true);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -227,6 +230,8 @@ public class SauceBuildWrapperTest {
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
         SauceOnDemandBuildWrapper sauceBuildWrapper =
                 new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
                         sauceCredentials,
                         seleniumInformation,
                         null,
@@ -237,8 +242,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         true,
-                        true,
-                        false);
+                        true);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -257,6 +261,8 @@ public class SauceBuildWrapperTest {
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, Arrays.asList("", ""), null);
         SauceOnDemandBuildWrapper sauceBuildWrapper =
                 new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
                         sauceCredentials,
                         seleniumInformation,
                         null,
@@ -267,8 +273,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         true,
-                        true,
-                        false);
+                        true);
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
             @Override
