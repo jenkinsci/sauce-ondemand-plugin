@@ -109,7 +109,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
+        sauceConnectOptions = formData.getString("sauceConnectOptions");
         save();
+
     }
 
     public DescriptorImpl getDescriptor() {

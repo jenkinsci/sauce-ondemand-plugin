@@ -147,6 +147,49 @@ public class SauceBuildWrapperTest {
     }
 
     /**
+     * Verifies that common options are set when the build is run.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void commonOptions() throws Exception {
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+                assertTrue("Variable not resolved", options.equals("-i 1"));
+                return null;
+            }
+        };
+        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
+        Credentials sauceCredentials = new Credentials("username", "access key");
+        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
+        SauceOnDemandBuildWrapper sauceBuildWrapper =
+                new SauceOnDemandBuildWrapper(
+                        true,
+                        null,
+                        sauceCredentials,
+                        seleniumInformation,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        true,
+                        true,
+                        false,
+                        true);
+
+        runFreestyleBuild(sauceBuildWrapper);
+
+
+        //assert that the Sauce REST API was invoked for the Sauce job id
+        assertNotNull(restUpdates.get(currentSessionId));
+        //TODO verify that test results of build include Sauce results
+
+    }
+
+    /**
      * Simulates the handling of a Sauce Connect time out.
      *
      * @throws Exception
