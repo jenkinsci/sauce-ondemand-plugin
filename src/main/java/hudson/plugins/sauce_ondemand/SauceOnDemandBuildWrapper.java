@@ -715,6 +715,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (sauceTunnelManager instanceof HudsonSauceConnectFourManager && workingDirectory != null) {
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
                 }
+                sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key));
                 Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
                 return this;
             } catch (ComponentLookupException e) {
