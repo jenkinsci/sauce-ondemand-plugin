@@ -34,11 +34,13 @@ import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
+import hudson.util.VariableResolver;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
@@ -46,7 +48,10 @@ import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -224,7 +229,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                         listener,
                                         workingDirectory,
                                         resolvedOptions
-                                        ));
+                                ));
                     }
                 } else {
                     listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
@@ -345,27 +350,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      *
      * @param build    The same {@link Build} object given to the set up method.
      * @param listener The same {@link BuildListener} object given to the set up method.
-     * @param options   The command line options to resolve
+     * @param options  The command line options to resolve
      * @return the Sauce Connect options to be used for the build
      * @throws IOException
      * @throws InterruptedException
      */
     private String getResolvedOptions(AbstractBuild build, BuildListener listener, String options) throws IOException, InterruptedException {
-        String resolvedOptions = options;
-        if (options != null) {
-            //check to see if options contains any environment variables to be resolved
-            Pattern pattern = Pattern.compile("(\\$\\{.+\\})");
-            Matcher matcher = pattern.matcher(options);
-            while (matcher.find()) {
-                String match = matcher.group();
-                String key = match.replaceAll("[\\$\\{\\}]", "");
-                if (build.getEnvironment(listener).containsKey(key)) {
-                    resolvedOptions = resolvedOptions.replace(match, build.getEnvironment().get(key));
-                }
-            }
-
-        }
-        return resolvedOptions;
+        VariableResolver.ByMap<String> variableResolver = new VariableResolver.ByMap<String>(build.getEnvironment(listener));
+        return Util.replaceMacro(options, variableResolver);
     }
 
     /**
@@ -680,7 +672,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private final boolean verboseLogging;
         private File sauceConnectJar;
         private int port;
-
 
 
         public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions) {
