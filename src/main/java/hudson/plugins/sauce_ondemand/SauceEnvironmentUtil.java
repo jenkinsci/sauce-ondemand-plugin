@@ -166,7 +166,11 @@ public class SauceEnvironmentUtil {
 
     public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean overwrite) {
         if (env.get(key) == null || overwrite) {
-            env.put(key, value);
+            String environmentVariablePrefix = PluginImpl.get().getEnvironmentVariablePrefix();
+            if (environmentVariablePrefix == null) {
+                environmentVariablePrefix = "";
+            }
+            env.put(environmentVariablePrefix + key, value);
         }
     }
 

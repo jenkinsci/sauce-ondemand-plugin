@@ -158,7 +158,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             String httpsProtocol,
             String options,
             String startingURL,
-
             boolean launchSauceConnectOnSlave,
             boolean useOldSauceConnect,
             boolean verboseLogging,
@@ -256,14 +255,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
+                String environmentVariablePrefix = PluginImpl.get().getEnvironmentVariablePrefix();
+                if (environmentVariablePrefix == null) {
+                    environmentVariablePrefix = "";
+                }
+
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
-                    env.put(SELENIUM_BROWSER, (String) buildVariables.get(SELENIUM_BROWSER));
+                    env.put(environmentVariablePrefix + SELENIUM_BROWSER, (String) buildVariables.get(SELENIUM_BROWSER));
                 }
                 if (buildVariables.containsKey(SELENIUM_VERSION)) {
-                    env.put(SELENIUM_VERSION, (String) buildVariables.get(SELENIUM_VERSION));
+                    env.put(environmentVariablePrefix + SELENIUM_VERSION, (String) buildVariables.get(SELENIUM_VERSION));
                 }
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
-                    env.put(SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM));
+                    env.put(environmentVariablePrefix + SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM));
                 }
                 env.put(JENKINS_BUILD_NUMBER, sanitiseBuildNumber(build.toString()));
                 env.put(SAUCE_USERNAME, getUserName());

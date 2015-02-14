@@ -76,6 +76,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private boolean disableStatusColumn;
 
+    private String environmentVariablePrefix;
+
     public String getUsername() {
         return username;
     }
@@ -110,6 +112,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         apiKey = Secret.fromString(formData.getString("apiKey"));
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
+        environmentVariablePrefix = formData.getString("environmentVariablePrefix");
         save();
 
     }
@@ -132,6 +135,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setSauceConnectDirectory(String sauceConnectDirectory) {
         this.sauceConnectDirectory = sauceConnectDirectory;
+    }
+
+    public String getEnvironmentVariablePrefix() {
+        return environmentVariablePrefix;
+    }
+
+    public void setEnvironmentVariablePrefix(String environmentVariablePrefix) {
+        this.environmentVariablePrefix = environmentVariablePrefix;
     }
 
     @Extension

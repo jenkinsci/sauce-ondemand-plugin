@@ -81,6 +81,7 @@
                     <f:password value="${credentials.apiKey}"/>
                 </f:entry>
             </f:optionalBlock>
+
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
