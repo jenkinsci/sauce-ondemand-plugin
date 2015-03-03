@@ -341,12 +341,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private String getCommandLineOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-        String resolvedOptions = getResolvedOptions(build, listener, options);
+
+        StringBuilder resolvedOptions = new StringBuilder();
+        resolvedOptions.append(getResolvedOptions(build, listener, options));
         String resolvedCommonOptions = getResolvedOptions(build, listener, PluginImpl.get().getSauceConnectOptions());
         if (resolvedCommonOptions != null && !resolvedCommonOptions.equals("")) {
-            resolvedOptions = resolvedOptions + " " + resolvedCommonOptions;
+            if (!resolvedOptions.toString().equals("")) {
+                resolvedOptions.append(' ');
+            }
+            resolvedOptions.append(resolvedCommonOptions);
         }
-        return resolvedOptions;
+        return resolvedOptions.toString();
     }
 
     /**
@@ -360,6 +365,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @throws InterruptedException
      */
     private String getResolvedOptions(AbstractBuild build, BuildListener listener, String options) throws IOException, InterruptedException {
+        if (options == null) {
+            return "";
+        }
         VariableResolver.ByMap<String> variableResolver = new VariableResolver.ByMap<String>(build.getEnvironment(listener));
         return Util.replaceMacro(options, variableResolver);
     }
