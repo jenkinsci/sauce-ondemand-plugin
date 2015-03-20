@@ -90,6 +90,10 @@ public class SauceOnDemandTestPublisher extends Recorder {
 
             report.setData(data);
             build.save();
+        } else {
+            //no test publisher defined, process stdout only
+            SauceOnDemandReportPublisher saucePublisher = new SauceOnDemandReportPublisher();
+            saucePublisher.getTestData(build, launcher, listener, null);
         }
     }
 

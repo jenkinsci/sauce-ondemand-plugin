@@ -118,9 +118,11 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         buildAction.processSessionIds(null, array);
 
         //try the stdout for the tests
-        for (SuiteResult sr : testResult.getSuites()) {
-            for (CaseResult cr : sr.getCases()) {
-                buildAction.processSessionIds(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr());
+        if (testResult != null) {
+            for (SuiteResult sr : testResult.getSuites()) {
+                for (CaseResult cr : sr.getCases()) {
+                    buildAction.processSessionIds(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr());
+                }
             }
         }
 
