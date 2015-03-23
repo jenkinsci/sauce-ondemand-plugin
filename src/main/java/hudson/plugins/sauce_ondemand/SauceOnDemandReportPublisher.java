@@ -165,6 +165,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      */
     private Boolean hasTestPassed(TestResult testResult, JobInformation job) {
 
+        if (testResult == null) {
+            return null;
+        }
+
         for (SuiteResult sr : testResult.getSuites()) {
             for (CaseResult cr : sr.getCases()) {
                 //if job name matches test class/test name, and pass/fail status is null, then populate the Sauce job with the test result status

@@ -87,7 +87,9 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                 return Collections.singletonList(buildAction);
             }
         }
-        logger.info("No Sauce Build Action found for " + build.toString());
+        if (build != null) {
+            logger.info("No Sauce Build Action found for " + build.toString());
+        }
         return Collections.emptyList();
     }
 
