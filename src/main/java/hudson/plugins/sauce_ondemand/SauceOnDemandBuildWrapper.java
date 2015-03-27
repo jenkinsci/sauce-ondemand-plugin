@@ -98,17 +98,51 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
 
     private static final long serialVersionUID = 1L;
-    private final String startingURL;
-
+    /**
+     * The starting url to be used for tests run by the build.
+     */
+    private String startingURL;
+    /**
+     * The path to an existing Sauce Connect binary.
+     */
+    private String sauceConnectPath;
+    /**
+     * Indicates whether Sauce Connect v3 should be used.
+     */
     private boolean useOldSauceConnect;
+    /**
+     * Indicates whether Sauce Connect should be started as part of the build.
+     */
     private boolean enableSauceConnect;
+    /** */
     private Map<String, SauceOnDemandLogParser> logParserMap;
+    /**
+     * Host location of the selenium server.
+     */
     private String seleniumHost;
+    /**
+     * Port location of the selenium server.
+     */
     private String seleniumPort;
+    /**
+     * The Sauce username/access key that should be used for the build.
+     */
     private Credentials credentials;
+    /**
+     * The browser information that is to be used for the build.
+     */
     private SeleniumInformation seleniumInformation;
+    /**
+     * The list of selected Selenium RC browsers.
+     */
     private List<String> seleniumBrowsers;
+    /**
+     * The list of selected WebDriver browsers.
+     */
     private List<String> webDriverBrowsers;
+    /**
+     * The list of selected Appium browsers.
+     */
     private List<String> appiumBrowsers;
     /**
      * Boolean which indicates whether the latest available version of the browser should be used.
@@ -118,14 +152,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Default behaviour is to launch Sauce Connect on the slave node.
      */
     private boolean launchSauceConnectOnSlave = true;
-
+    /**
+     * String representing the HTTPS protocol to be used.
+     */
     private String httpsProtocol;
+    /**
+     * The Sauce Connect command line options to be used.
+     */
     private String options;
     /**
      * Default verbose logging to true.
      */
     private boolean verboseLogging = true;
-
     /**
      * RunCondition which allows users to define rules which enable Sauce Connect.
      */
@@ -135,17 +173,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Constructs a new instance using data entered on the job configuration screen.
      *
-     * @param credentials
-     * @param seleniumInformation
-     * @param seleniumHost
-     * @param seleniumPort
-     * @param httpsProtocol
-     * @param options
-     * @param startingURL
-     * @param enableSauceConnect
-     * @param launchSauceConnectOnSlave
-     * @param useOldSauceConnect
-     * @param verboseLogging
+     * @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
+     * @param condition                 allows users to define rules which enable Sauce Connect
+     * @param credentials               the Sauce username/access key that should be used for the build.
+     * @param seleniumInformation       the browser information that is to be used for the build.
+     * @param seleniumHost              host location of the selenium server.
+     * @param seleniumPort              port location of the selenium server.
+     * @param httpsProtocol             string representing the HTTPS protocol to be used.
+     * @param options                   the Sauce Connect command line options to be used
+     * @param startingURL               the starting url to be used for tests run by the build.
+     * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
+     * @param useOldSauceConnect        indicates whether Sauce Connect 3 should be launched
+     * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
+     * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
@@ -158,6 +198,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             String httpsProtocol,
             String options,
             String startingURL,
+            String sauceConnectPath,
             boolean launchSauceConnectOnSlave,
             boolean useOldSauceConnect,
             boolean verboseLogging,
@@ -181,6 +222,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.verboseLogging = verboseLogging;
         this.useLatestVersion = useLatestVersion;
         this.condition = condition;
+        this.sauceConnectPath = sauceConnectPath;
     }
 
 
@@ -306,6 +348,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
              * {@inheritDoc}
              *
              * Terminates the Sauce Connect process (if the build is configured to launch Sauce Connect), and adds a {@link SauceOnDemandBuildAction} instance to the build.
+             *  @param build
+             *      The build in progress for which an {@link Environment} object is created.
+             *      Never null.
+             * @param listener
+             *      Can be used to send any message.
              *
              */
             @Override
@@ -340,6 +387,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
+    /**
+     * Returns the command line options to be used as part of Sauce Connect.  Any variable references contained in the
+     * options specified within the Jenkins job configuration are resolved, and if common options are specified then these are appended to the list of options.
+     *
+     * @param build    The build in progress for which an {@link Environment} object is created.
+     *                 Never null.
+     * @param listener Can be used to send any message.
+     * @return String representing the Sauce Connect command line options
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private String getCommandLineOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
 
         StringBuilder resolvedOptions = new StringBuilder();
@@ -449,8 +507,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     /**
-     * @param build
-     * @param listener
+     * @param build    The build in progress for which an {@link Environment} object is created.
+     *                 Never null.
+     * @param listener Can be used to send any message.
      * @return
      * @throws IOException
      */
@@ -476,6 +535,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return null;
     }
 
+    /**
+     * @return the Sauce username to be used
+     */
     public String getUserName() {
         if (getCredentials() != null) {
             return getCredentials().getUsername();
@@ -492,6 +554,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
+    /**
+     * @return the Sauce access key to be used
+     */
     public String getApiKey() {
         if (getCredentials() != null) {
             return getCredentials().getApiKey();
@@ -619,6 +684,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return startingURL;
     }
 
+    public RunCondition getCondition() {
+        return condition;
+    }
+
+    public String getSauceConnectPath() {
+        return sauceConnectPath;
+    }
+
+    public void setSauceConnectPath(String sauceConnectPath) {
+        this.sauceConnectPath = sauceConnectPath;
+    }
+
     @Override
     public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
         SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
@@ -628,6 +705,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         logParserMap.put(build.toString(), sauceOnDemandLogParser);
         return sauceOnDemandLogParser;
     }
+
 
     /**
      *
@@ -686,10 +764,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private final boolean useOldSauceConnect;
         private final String httpsProtocol;
         private final boolean verboseLogging;
+        private final String sauceConnectPath;
         private File sauceConnectJar;
         private int port;
 
-
+        /**
+         * @param sauceOnDemandBuildWrapper
+         * @param listener
+         * @param workingDirectory
+         * @param resolvedOptions
+         */
         public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions) {
             this.options = resolvedOptions;
             this.workingDirectory = workingDirectory;
@@ -700,8 +784,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             this.useOldSauceConnect = sauceOnDemandBuildWrapper.isUseOldSauceConnect();
             this.httpsProtocol = sauceOnDemandBuildWrapper.getHttpsProtocol();
             this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
+            this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
         }
 
+        /**
+         * @param sauceOnDemandBuildWrapper
+         * @param listener
+         * @param workingDirectory
+         * @param resolvedOptions
+         * @param sauceConnectJar
+         */
         public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions, File sauceConnectJar) {
             this(sauceOnDemandBuildWrapper, listener, workingDirectory, resolvedOptions);
             this.sauceConnectJar = sauceConnectJar;
@@ -723,7 +815,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
                 }
                 sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key));
-                Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
+
+                Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging, sauceConnectPath);
                 return this;
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
@@ -733,6 +826,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
+    /**
+     * Retrieve
+     *
+     * @param useOldSauceConnect
+     * @return
+     * @throws ComponentLookupException
+     */
     public static AbstractSauceTunnelManager getSauceTunnelManager(boolean useOldSauceConnect) throws ComponentLookupException {
         return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
                 HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
@@ -758,10 +858,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
 
         /**
-         * The list of supported Appium devices isn't available via the Sauce REST API, so we hard-code
-         * the combinations.
-         *
-         * @return
+         * @return the list of supported Appium browsers
          */
         public List<Browser> getAppiumBrowsers() {
             try {
@@ -842,10 +939,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public List<String> getLines() {
             return lines;
         }
-    }
-
-    public RunCondition getCondition() {
-        return condition;
     }
 
 

@@ -110,6 +110,11 @@
                 <f:entry title="${%Sauce Connect Options}" field="options">
                     <f:textbox/>
                 </f:entry>
+
+                <f:entry title="${%Sauce Connect Binary Location}" description="Leave blank to use built-in Sauce Connect binary" field="sauceConnectPath">
+                    <f:textbox/>
+                </f:entry>
+
             </f:advanced>
         </f:section>
     </f:block>

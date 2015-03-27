@@ -88,14 +88,14 @@ public class SauceBuildWrapperTest {
         HudsonSauceManagerFactory.getInstance().start();
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
         };
 
         SauceConnectTwoManager sauceConnectTwoManager = new SauceConnectTwoManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
         };
@@ -113,7 +113,7 @@ public class SauceBuildWrapperTest {
     public void resolveVariables() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertTrue("Variable not resolved", options.equals("-i 1"));
                 return null;
             }
@@ -131,6 +131,7 @@ public class SauceBuildWrapperTest {
                         null,
                         null,
                         "-i ${BUILD_NUMBER}",
+                        null,
                         null,
                         true,
                         true,
@@ -155,7 +156,7 @@ public class SauceBuildWrapperTest {
     public void commonOptions() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertTrue("Variable not resolved", options.equals("-i 1"));
                 return null;
             }
@@ -170,6 +171,7 @@ public class SauceBuildWrapperTest {
                         null,
                         sauceCredentials,
                         seleniumInformation,
+                        null,
                         null,
                         null,
                         null,
@@ -198,7 +200,7 @@ public class SauceBuildWrapperTest {
     public void sauceConnectTimeOut() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 throw new SauceConnectDidNotStartException("Sauce Connect failed to start");
             }
         };
@@ -211,6 +213,7 @@ public class SauceBuildWrapperTest {
                         null,
                         sauceCredentials,
                         seleniumInformation,
+                        null,
                         null,
                         null,
                         null,
@@ -241,6 +244,7 @@ public class SauceBuildWrapperTest {
                         null,
                         sauceCredentials,
                         seleniumInformation,
+                        null,
                         null,
                         null,
                         null,
@@ -282,6 +286,7 @@ public class SauceBuildWrapperTest {
                         null,
                         null,
                         null,
+                        null,
                         true,
                         true,
                         true,
@@ -308,6 +313,7 @@ public class SauceBuildWrapperTest {
                         null,
                         sauceCredentials,
                         seleniumInformation,
+                        null,
                         null,
                         null,
                         null,
