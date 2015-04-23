@@ -41,19 +41,19 @@
                 <f:checkbox id="reuseSauceAuthCheckBox" onclick="enableDisable();"
                             title="${%Use authentication details in ~/.sauce-ondemand?}"/>
             </f:entry>
-            <f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">
-                <div id="progress" style="display:none;">
-                    <img src="${imagesURL}/spinner.gif"/>
-                </div>
-                <div id="msg"></div>
-                <script>
-                    var plugin =
-                    <st:bind value="${it}"/>
-                    plugin.checkForUpdates(function(t) {
-                    document.getElementById('msg').innerHTML = t.responseObject();
-                    })
-                </script>
-            </f:entry>
+            <!--<f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">-->
+                <!--<div id="progress" style="display:none;">-->
+                    <!--<img src="${imagesURL}/spinner.gif"/>-->
+                <!--</div>-->
+                <!--<div id="msg"></div>-->
+                <!--<script>-->
+                    <!--var plugin =-->
+                    <!--<st:bind value="${it}"/>-->
+                    <!--plugin.checkForUpdates(function(t) {-->
+                    <!--document.getElementById('msg').innerHTML = t.responseObject();-->
+                    <!--})-->
+                <!--</script>-->
+            <!--</f:entry>-->
             <f:block>
                 <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn,reuseSauceAuth"
                                   method="validate"/>

@@ -159,7 +159,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                 if (reuseSauceAuth && StringUtils.isBlank(credential.getUsername()) && StringUtils.isBlank(credential.getAccessKey())) {
                     return FormValidation.error("Unable to find ~/.sauce-ondemand file");
                 } else {
-                    String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("tunnels");
+                    String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
                     if (response != null && !response.equals("")) {
                         return FormValidation.ok("Success");
                     } else {
