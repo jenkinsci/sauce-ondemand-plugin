@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.126</version>
+    <version>1.127-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
