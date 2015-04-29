@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.127</version>
+    <version>1.128-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -189,7 +189,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.100</version>
+            <version>1.101</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
