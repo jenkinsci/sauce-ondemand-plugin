@@ -810,6 +810,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
+                if (useOldSauceConnect) {
+                    listener.getLogger().println("*** Support for Sauce Connect v3 is scheduled to end on 19 August 2015 *** ");
+                    listener.getLogger().println("*** Please update your settings to use Sauce Connect v4 *** ");
+                }
+
                 AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager(useOldSauceConnect);
                 if (sauceTunnelManager instanceof HudsonSauceConnectFourManager && workingDirectory != null) {
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
