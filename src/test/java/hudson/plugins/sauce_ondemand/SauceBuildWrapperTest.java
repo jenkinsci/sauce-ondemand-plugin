@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +84,22 @@ public class SauceBuildWrapperTest {
                 return null;
             }
         }).when(spySauceRest).updateJobInfo(anyString(), any(HashMap.class));
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return "{}";
+            }
+        }).when(spySauceRest).getJobInfo(anyString());
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return "{}";
+            }
+        }).when(spySauceRest).retrieveResults(anyString());
+
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return "{}";
+            }
+        }).when(spySauceRest).retrieveResults(any(URL.class));
 
         //store dummy implementations of Sauce Connect managers within Plexus container
         HudsonSauceManagerFactory.getInstance().start();
@@ -92,7 +110,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        SauceConnectFourManager sauceConnectTwoManager = new SauceConnectFourManager() {
+        SauceConnectTwoManager sauceConnectTwoManager = new SauceConnectTwoManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
@@ -141,7 +159,7 @@ public class SauceBuildWrapperTest {
 
 
         //assert that the Sauce REST API was invoked for the Sauce job id
-        //assertNotNull(restUpdates.get(currentSessionId));
+//        assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
 
     }
@@ -219,7 +237,7 @@ public class SauceBuildWrapperTest {
                         null,
                         null,
                         true,
-                        true,
+                        false,
                         false,
                         true);
 
@@ -264,7 +282,6 @@ public class SauceBuildWrapperTest {
 
 
     }
-
 
 
     /**
@@ -327,10 +344,11 @@ public class SauceBuildWrapperTest {
         DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(freeStyleProject);
         testDataPublishers.add(publisher);
         JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml", false, testDataPublishers);
-        freeStyleProject.getPublishersList().add(resultArchiver);
+//        freeStyleProject.getPublishersList().add(resultArchiver);
         QueueTaskFuture<FreeStyleBuild> future = freeStyleProject.scheduleBuild2(0);
 
         FreeStyleBuild build = future.get(1, TimeUnit.MINUTES);
+
         assertNotNull(build);
 
         return build;
