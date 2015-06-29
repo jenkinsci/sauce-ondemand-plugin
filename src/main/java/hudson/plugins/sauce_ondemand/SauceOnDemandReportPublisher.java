@@ -85,6 +85,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
 
+        try
+        {
+        buildListener.getLogger().println("Starting Sauce Labs test publisher");
         SauceOnDemandBuildAction buildAction = getBuildAction(build);
         if (buildAction != null) {
             processBuildOutput(build, buildAction, testResult);
@@ -96,6 +99,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
         }
         return null;
+        } finally {
+            buildListener.getLogger().println("Finished Sauce Labs test publisher");
+        }
     }
 
     /**
@@ -159,6 +165,17 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     /**
+     * Determines if a Sauce job has passed or failed by attempting to identify a matching test case.
+     *
+     * A test case is identified as a match if:
+     * <ul>
+     *     <li>if the job name equals full name of test; or</li>
+     *     <li>if job name contains the test name; or</li>
+     *     <li>if the full name of the test contains the job name (matching whole words only)</li>
+     * </ul>
+     *
+     * If a match is found, then a boolean representing whether the test passed will be returned.
+     *
      * @param testResult Contains the test results for the build.
      * @param job        details of a Sauce job which was run during the build.
      * @return Boolean indicating whether the test was successful.
@@ -214,9 +231,13 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      */
     @Extension
     public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+        /**
+         *
+         * @return the label to be displayed within the Jenkins job configuration.
+         */
         @Override
         public String getDisplayName() {
-            return "Embed Sauce OnDemand reports";
+            return "Embed Sauce Labs reports";
         }
     }
 }

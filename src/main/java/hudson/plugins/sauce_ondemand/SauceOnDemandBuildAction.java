@@ -4,23 +4,18 @@ import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
-import org.apache.commons.codec.binary.Hex;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -36,13 +31,15 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     /** Logger instance. */
     private static final Logger logger = Logger.getLogger(SauceOnDemandBuildAction.class.getName());
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
+    /**
+     * String pattern for the URL which retrieves Sauce job details from the REST API.
+     */
+    private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/%2$s/jobs?full=true";
 
-    public static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/build/%2$s/jobs?full=true";
-
+    /**
+     * Regex pattern that is used to identify Sauce job ids which have been run as part of a Jenkins build.
+     */
     public static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
-
-    private static final String HMAC_KEY = "HMACMD5";
 
     private transient final SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser;
 
@@ -103,7 +100,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
      *
-     * @throws Exception
      */
     public List<JobInformation> retrieveJobIdsFromSauce() throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
         //invoke Sauce Rest API to find plan results with those values
@@ -123,7 +119,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
-                JobInformation information = new JenkinsJobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                JobInformation information = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
                 String status = jobData.getString("passed");
                 information.setStatus(status);
                 String jobName = jobData.getString("name");
@@ -135,6 +131,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 if (build != null) {
                     information.setHasBuildNumber(true);
                 }
+                information.setOs(jobData.getString("os"));
+                information.setBrowser(jobData.getString("browser"));
+                information.setVersion(jobData.getString("browser_short_version"));
+                information.setVideoUrl(jobData.getString("video_url"));
+                information.setLogUrl(jobData.getString("log_url"));
 
                 jobInformation.add(information);
             }
@@ -145,38 +146,9 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-
-    public void doJobReport(StaplerRequest req, StaplerResponse rsp)
-            throws IOException {
-
-        ById byId = new ById(req.getParameter("jobId"));
-        try {
-            req.getView(byId, "index.jelly").forward(req, rsp);
-        } catch (ServletException e) {
-            throw new IOException(e);
-        }
-    }
-
-    public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String key = username + ":" + accessKey + ":" + format.format(calendar.getTime());
-        byte[] keyBytes = key.getBytes();
-        SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
-        Mac mac = Mac.getInstance(sks.getAlgorithm());
-        mac.init(sks);
-        byte[] hmacBytes = mac.doFinal(jobId.getBytes());
-        byte[] hexBytes = new Hex().encode(hmacBytes);
-        return new String(hexBytes, "ISO-8859-1");
-    }
-
     public ById getById(String id) {
         return new ById(id);
     }
-
-
 
     private JobInformation jobInformationForBuild(String jobId) {
         for (JobInformation jobInfo : getJobs()) {
@@ -191,47 +163,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return logParser;
     }
 
-
-    /**
-     *
-     */
-    public class ById {
-        public final String id;
-
-        public ById(String id) {
-            this.id = id;
-        }
-
-        public String getAuth() throws IOException {
-            try {
-                Calendar calendar = Calendar.getInstance();
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH");
-                format.setTimeZone(TimeZone.getTimeZone("UTC"));
-                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + format.format(calendar.getTime());
-                byte[] keyBytes = key.getBytes();
-                SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
-                Mac mac = Mac.getInstance(sks.getAlgorithm());
-                mac.init(sks);
-                byte[] hmacBytes = mac.doFinal(id.getBytes());
-                byte[] hexBytes = new Hex().encode(hmacBytes);
-                return new String(hexBytes, "ISO-8859-1");
-
-
-            } catch (NoSuchAlgorithmException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
-            } catch (InvalidKeyException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
-            } catch (UnsupportedEncodingException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
-            }
-
-        }
-
-    }
-
     /**
      * Processes the log output, and for lines which are in the valid log format, add a new {@link JobInformation}
      * instance to the {@link #jobInformation} list.
+     * @param caseResult test results being processed, can be null
+     * @param output lines of output to be processed, not null
      */
     public void processSessionIds(CaseResult caseResult, String... output) {
 
@@ -253,7 +189,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     continue;
                 }
                 try {
-                    jobInfo = new JenkinsJobInformation(jobId, calcHMAC(username, accessKey, jobId));
+                    jobInfo = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
                     //retrieve data from session id to see if build number and/or job name has been stored
                     String jsonResponse = sauceREST.getJobInfo(jobId);
                     if (!jsonResponse.equals("")) {

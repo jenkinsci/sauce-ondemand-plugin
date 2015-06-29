@@ -26,16 +26,11 @@ package hudson.plugins.sauce_ondemand;
 import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
-import org.apache.commons.codec.binary.Hex;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -90,7 +85,7 @@ public class SauceOnDemandReport extends TestAction {
         return "Sauce OnDemand report";
     }
 
-     public String getUrlName() {
+    public String getUrlName() {
         return "sauce-ondemand-report";
     }
 
@@ -106,28 +101,12 @@ public class SauceOnDemandReport extends TestAction {
         }
 
         public String getAuth() throws IOException {
+
             try {
-                Calendar calendar = Calendar.getInstance();
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH");
-                format.setTimeZone(TimeZone.getTimeZone("UTC"));
-                String key = PluginImpl.get().getUsername() + ":" + PluginImpl.get().getApiKey() + ":" + format.format(calendar.getTime());
-                byte[] keyBytes = key.getBytes();
-                SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
-                Mac mac = Mac.getInstance(sks.getAlgorithm());
-                mac.init(sks);
-                byte[] hmacBytes = mac.doFinal(id.getBytes());
-                byte[] hexBytes = new Hex().encode(hmacBytes);
-                return new String(hexBytes, "ISO-8859-1");
-
-
-            } catch (NoSuchAlgorithmException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
-            } catch (InvalidKeyException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
-            } catch (UnsupportedEncodingException e) {
-                throw new IOException("Could not generate Sauce-OnDemand access code", e);
+                return PluginImpl.get().calcHMAC(id);
+            } catch (Exception e) {
+                throw new IOException("Could not generate Sauce Labs access code", e);
             }
-
         }
 
     }

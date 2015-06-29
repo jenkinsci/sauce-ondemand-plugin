@@ -13,17 +13,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Multi-configuration project axis for Appium browsers.
+ *
  * @author Ross Rowe
  */
 public class WebDriverAxis extends BrowserAxis {
 
+    /**
+     * Logger instance.
+     */
     private static final Logger logger = Logger.getLogger(WebDriverAxis.class.getName());
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param values list of WebDriver browsers
+     */
     @DataBoundConstructor
     public WebDriverAxis(List<String> values) {
         super(values);
     }
 
+    /**
+     * @param value browser key
+     * @return WebDriver browser which corresponds to key
+     */
     @Override
     protected Browser getBrowserForKey(String value) {
         return BROWSER_FACTORY.webDriverBrowserForKey(value);
@@ -31,16 +45,22 @@ public class WebDriverAxis extends BrowserAxis {
 
     @Extension
     public static class DescriptorImpl extends AxisDescriptor {
+        /**
+         * @return label to be displayed in supported multi-configuration axis list
+         */
         @Override
         public String getDisplayName() {
-            return "Sauce OnDemand WebDriver tests";
+            return "Sauce Labs WebDriver tests";
         }
 
+        /**
+         * @return list of WebDriver browsers
+         */
         public List<Browser> getBrowsers() {
             try {
                 return BROWSER_FACTORY.getWebDriverBrowsers();
             } catch (IOException e) {
-                logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
+                logger.log(Level.WARNING, "Error retrieving browsers from Sauce Labs", e);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Error parsing JSON response", e);
             }

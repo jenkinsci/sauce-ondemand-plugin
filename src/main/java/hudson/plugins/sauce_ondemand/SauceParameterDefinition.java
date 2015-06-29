@@ -18,21 +18,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Allows users to select Sauce browsers as parameters for a Jenkins build.
+ *
  * @author Ross Rowe
  */
 public class SauceParameterDefinition extends ParameterDefinition {
 
+    /** Logger instance.*/
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
-    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
-
+    /** Handles the retrieval of browsers from Sauce Labs. */
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     @DataBoundConstructor
     public SauceParameterDefinition() {
         super("Sauce Labs Browsers", "Select the browser(s) that should be used when tests are run with Sauce Labs");
 
     }
-
 
     @Override
     public ParameterValue createValue(StaplerRequest request, JSONObject jo) {
@@ -60,6 +62,10 @@ public class SauceParameterDefinition extends ParameterDefinition {
     @Extension
     public static class DescriptorImpl extends ParameterDescriptor {
 
+        /**
+         *
+         * @return label to be displayed within the list of parameter options
+         */
         @Override
         public String getDisplayName() {
             return "Sauce Labs Browsers";

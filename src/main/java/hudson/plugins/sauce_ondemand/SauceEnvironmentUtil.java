@@ -19,23 +19,35 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Contains helper methods.
+ *
  * @author Ross Rowe
  */
-public class SauceEnvironmentUtil {
+public final class SauceEnvironmentUtil {
 
+    /**
+     * Logger instance.
+     */
     private static final Logger logger = Logger.getLogger(SauceEnvironmentUtil.class.getName());
-    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+    /**
+     * Handles the retrieval of browsers from Sauce Labs.
+     */
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
+    /**
+     * Disallow instantiation of class.
+     */
     private SauceEnvironmentUtil() {
     }
 
-
     /**
-     * @param env
-     * @param browsers
-     * @param userName
-     * @param apiKey
-     * @param useLatestVersion
+     * Adds the environment variables for the selected WebDriver browsers.
+     *
+     * @param env              the map of environment variables
+     * @param browsers         the list of selected browsers
+     * @param userName         the Sauce user name
+     * @param apiKey           the Sauce access key
+     * @param useLatestVersion indicates whether the latest version of the browser should be used
      */
     public static void outputWebDriverVariables(Map<String, String> env, List<String> browsers, String userName, String apiKey, boolean useLatestVersion) {
 
@@ -61,31 +73,15 @@ public class SauceEnvironmentUtil {
         }
     }
 
-    public static void outputSeleniumRCVariables(Map<String, String> env, List<String> browsers, String userName, String apiKey, boolean useLatestVersion) {
 
-        if (browsers != null && !browsers.isEmpty()) {
-            if (browsers.size() == 1) {
-                Browser browserInstance = BROWSER_FACTORY.seleniumBrowserForKey(browsers.get(0));
-                if (browserInstance != null) {
-                    outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, useLatestVersion);
-                }
-
-            }
-
-            JSONArray browsersJSON = new JSONArray();
-            for (String browser : browsers) {
-                Browser browserInstance = BROWSER_FACTORY.seleniumBrowserForKey(browser, useLatestVersion);
-                if (browserInstance != null) {
-                    browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
-                    //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                    outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
-                }
-            }
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
-
-        }
-    }
-
+    /**
+     * Adds the environment variables for the selected Appium browsers.
+     *
+     * @param env      the map of environment variables
+     * @param browsers the list of selected browsers
+     * @param userName the Sauce user name
+     * @param apiKey   the Sauce access key
+     */
     public static void outputAppiumVariables(Map<String, String> env, List<String> browsers, String userName, String apiKey) {
 
         if (browsers != null && !browsers.isEmpty()) {
@@ -106,7 +102,14 @@ public class SauceEnvironmentUtil {
         }
     }
 
-
+    /**
+     * Populates the JSONArray with a JSON representation of the selected browser
+     *
+     * @param browsersJSON    array of browsers
+     * @param browserInstance selected Browser being processed
+     * @param userName        the Sauce username
+     * @param apiKey          the Sauce access key
+     */
     public static void browserAsJSON(JSONArray browsersJSON, Browser browserInstance, String userName, String apiKey) {
         if (browserInstance == null) {
             return;
@@ -135,10 +138,25 @@ public class SauceEnvironmentUtil {
         browsersJSON.add(config);
     }
 
+    /**
+     * Adds the environment variables for the selected browser.
+     *
+     * @param env      the map of environment variables
+     * @param userName the Sauce user name
+     * @param apiKey   the Sauce access key
+     */
     public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey) {
         outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, false);
     }
 
+    /**
+     * Adds the environment variables for the selected browser.
+     *
+     * @param env       the map of environment variables
+     * @param userName  the Sauce user name
+     * @param apiKey    the Sauce access key
+     * @param overwrite indicates whether existing environment variables should be overwritten
+     */
     public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey, boolean overwrite) {
 
         if (browserInstance != null) {
@@ -160,10 +178,25 @@ public class SauceEnvironmentUtil {
         }
     }
 
+    /**
+     * Adds the key/value pair to the map of environment variables.
+     *
+     * @param env   the map of environment variables
+     * @param key   environment variable key
+     * @param value environment variable value
+     */
     public static void outputEnvironmentVariable(Map<String, String> env, String key, String value) {
         outputEnvironmentVariable(env, key, value, false);
     }
 
+    /**
+     * Adds the key/value pair to the map of environment variables.
+     *
+     * @param env       the map of environment variables
+     * @param key       environment variable key
+     * @param value     environment variable value
+     * @param overwrite indicates whether existing environment variables should be overwritten
+     */
     public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean overwrite) {
         if (env.get(key) == null || overwrite) {
             String environmentVariablePrefix = PluginImpl.get().getEnvironmentVariablePrefix();
@@ -174,7 +207,10 @@ public class SauceEnvironmentUtil {
         }
     }
 
-
+    /**
+     * @param project the Jenkins project to check
+     * @return the SauceOnDemandBuildWrapper instance associated with the project, can be null
+     */
     public static SauceOnDemandBuildWrapper getBuildWrapper(AbstractProject<?, ?> project) {
         SauceOnDemandBuildWrapper buildWrapper = null;
         if (project instanceof BuildableItemWithBuildWrappers) {
@@ -194,6 +230,11 @@ public class SauceEnvironmentUtil {
         return buildWrapper;
     }
 
+    /**
+     *
+     * @param build the Jenkins build
+     * @return String representing the Jenkins build
+     */
     public static String getBuildName(AbstractBuild<?, ?> build) {
         if (build == null) {
             return "";

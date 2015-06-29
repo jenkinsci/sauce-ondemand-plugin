@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * Contains information about the browser information selected in the Jenkins job configuration.
+ *
  * @author Ross Rowe
  */
 public class SeleniumInformation implements Serializable {

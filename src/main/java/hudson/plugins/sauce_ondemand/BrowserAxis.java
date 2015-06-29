@@ -33,20 +33,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@link Axis} that configures {@code SELENIUM_DRIVER}.
+ * {@link Axis} that allows Sauce browsers to be selected for multi-configuration projects.
  *
  * @author Kohsuke Kawaguchi
+ * @author Ross Rowe
  */
 public abstract class BrowserAxis extends Axis {
 
-    public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+    /** Handles the retrieval of browsers from Sauce Labs. */
+    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
-    }
-
-    public boolean hasValue(String v) {
-        return getValues().contains(v);
     }
 
     /**
@@ -60,8 +58,7 @@ public abstract class BrowserAxis extends Axis {
         String username;
         String accessKey;
         if (p.isReuseSauceAuth()) {
-            SauceOnDemandAuthentication storedCredentials = null;
-            storedCredentials = new SauceOnDemandAuthentication();
+            SauceOnDemandAuthentication storedCredentials = new SauceOnDemandAuthentication();
             username = storedCredentials.getUsername();
             accessKey = storedCredentials.getAccessKey();
         } else {
@@ -90,6 +87,11 @@ public abstract class BrowserAxis extends Axis {
         }
     }
 
+    /**
+     *
+     * @param value
+     * @return
+     */
     protected abstract Browser getBrowserForKey(String value);
 
 

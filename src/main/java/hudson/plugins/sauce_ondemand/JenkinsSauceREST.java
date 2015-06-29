@@ -8,7 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Jenkins-specific subclass which will open a URL connection using {@link hudson.ProxyConfiguration}
+ * Jenkins-specific subclass which will open a URL connection using {@link hudson.ProxyConfiguration}.
  *
  * @author Ross Rowe
  */
