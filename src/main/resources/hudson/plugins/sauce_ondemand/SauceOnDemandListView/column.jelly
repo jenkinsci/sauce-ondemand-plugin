@@ -24,7 +24,7 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core">
       <td>
       <j:if test="${it.getTotal(job) != 0}">
-          ${it.getPass(job)} / ${it.getTotal(job)} passed <img src="${rootURL}/plugin/robot/robot.png" />
+          ${it.getPass(job)} / ${it.getTotal(job)} passed
 	  </j:if>
       </td>
 </j:jelly>

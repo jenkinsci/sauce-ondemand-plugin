@@ -1,25 +1,24 @@
-
 <j:jelly xmlns:j="jelly:core">
 
     <j:if test="${it.hasSauceOnDemandResults()}">
-
+        <h2>Sauce Labs results</h2>
         <div>
-
             <table>
                 <tr>
-                    <th>Sauce Job Id</th>
-                    <th>Name</th>
-                    <th>Passed?</th>
+                    <th align="left">Job Name</th>
+                    <th align="left">OS/Browser</th>
+                    <th align="left">Pass/Fail</th>
+                    <th align="left">Job Links</th>
                 </tr>
                 <j:forEach var="job" items="${it.getJobs()}" indexVar="indexA">
                     <tr>
                         <td>
-                            <a href="${it.urlName}/jobReport?jobId=${job.getJobId()}">${job.getJobId()}</a>
+                            <a href="${it.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
                         </td>
-                        <td>${job.getName()}</td>
+                        <td>${job.getOs()} ${job.getBrowser()} ${job.getVersion()}</td>
                         <td>${job.getStatus()}</td>
+                        <td><a href="${job.getVideoUrl()}">Video</a> - <a href="${job.getLogUrl()}">Logs</a></td>
                     </tr>
-
                 </j:forEach>
             </table>
         </div>

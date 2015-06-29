@@ -1,0 +1,59 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+    <j:if test="${from.isSauceEnabled()}">
+        <h2>Sauce Labs results</h2>
+        <div>
+            <j:choose>
+                <j:when test="${from.hasSauceOnDemandResults()}">
+                    <div>
+                        <table width="50%">
+                            <tr>
+                                <th align="left">Job Name</th>
+                                <th align="left">OS/Browser</th>
+                                <th align="left">Pass/Fail</th>
+                                <th align="left">Job Links</th>
+                            </tr>
+                            <j:forEach var="job" items="${from.getJobs()}" indexVar="indexA">
+                                <tr>
+                                    <td>
+                                        <a href="${from.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
+                                    </td>
+                                    <td>${job.getOs()} ${job.getBrowser()} ${job.getVersion()}</td>
+                                    <td>${job.getStatus()}</td>
+                                    <td>
+                                        <a href="${job.getVideoUrl()}">Video</a>
+                                        -
+                                        <a href="${job.getLogUrl()}">Logs</a>
+                                    </td>
+                                </tr>
+                            </j:forEach>
+                        </table>
+                    </div>
+
+                </j:when>
+                <j:otherwise>
+                    <div>
+                        No Sauce results found
+                    </div>
+                </j:otherwise>
+            </j:choose>
+            <div>
+                <a id="generateSauceReport" href="#">Generate Sauce Support Zip</a>
+                <div id="msg"></div>
+                <script>
+                    var plugin =
+                    <st:bind value="${from}"/>
+
+                    var onclickFunction = function() {
+                    plugin.generateSupportZip(function(t) {
+                    document.getElementById('msg').innerHTML = t.responseObject();
+                    });
+                    };
+                    document.getElementById('generateSauceReport').onclick = onclickFunction;
+
+                </script>
+            </div>
+        </div>
+    </j:if>
+
+
+</j:jelly>

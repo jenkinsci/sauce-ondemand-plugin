@@ -23,6 +23,6 @@ THE SOFTWARE.
 -->
 <j:jelly xmlns:j="jelly:core">
     <th width="1">
-        Sauce OnDemand Results
+        Sauce Labs Results
     </th>
 </j:jelly>
