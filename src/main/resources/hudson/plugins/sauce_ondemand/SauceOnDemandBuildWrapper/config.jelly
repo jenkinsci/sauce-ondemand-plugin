@@ -1,19 +1,21 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
+    <script src="${rootURL}/plugin/sauce-ondemand/chosen_v1.4.2/chosen.proto.min.js"/>
+    <link href="${rootURL}/plugin/sauce-ondemand/chosen_v1.4.2/chosen.css" rel="stylesheet"/>
+
     <f:block>
         <f:section title="Sauce Labs Options">
             <f:entry field="enableSauceConnect">
-                <f:checkbox title="${%Enable Sauce Connect?}" default="checked"/>
-            </f:entry>
-            <f:entry>
-                <f:dropdownDescriptorSelector title="${%Sauce Connect Launch Condition}" field="condition"/>
+                <f:checkbox title="${%Enable Sauce Connect}" default="checked"/>
             </f:entry>
 
             <f:radioBlock name="seleniumInformation" value="webDriver" title="${%WebDriver}"
                           checked="${instance.seleniumInformation.isWebDriver()}">
                 <f:nested>
-                    <select name="webDriverBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
+                    <select id="webDriverBrowsers" name="webDriverBrowsers" multiple="multiple"
+                            style="height: 160px; width: 600px;"
+                            data-placeholder="Select supported WebDriver browser(s)">
                         <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
                             <j:choose>
                                 <j:when test="${instance.webDriverBrowsers.contains(b.key)}">
@@ -28,30 +30,12 @@
                     </select>
                 </f:nested>
             </f:radioBlock>
-            <f:radioBlock name="seleniumInformation" value="selenium" title="${%Selenium RC}"
-                          checked="${!instance.seleniumInformation.isWebDriver()}">
 
-                <f:nested>
-                    <select name="seleniumBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
-                        <j:forEach var="b" items="${descriptor.seleniumBrowsers}">
-                            <j:choose>
-                                <j:when test="${instance.seleniumBrowsers.contains(b.key)}">
-                                    <option value="${b.key}" selected="selected">${b.name}</option>
-                                </j:when>
-                                <j:otherwise>
-                                    <option value="${b.key}">${b.name}</option>
-                                </j:otherwise>
-                            </j:choose>
-
-                        </j:forEach>
-                    </select>
-
-                </f:nested>
-            </f:radioBlock>
             <f:radioBlock name="seleniumInformation" value="appium" title="${%Appium}"
                           checked="${instance.seleniumInformation.isAppium()}">
                 <f:nested>
-                    <select name="appiumBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
+                    <select id="appiumBrowsers" name="appiumBrowsers" multiple="multiple"
+                            style="height: 160px; width: 600px;" data-placeholder="Select supported Appium browser(s)">
                         <j:forEach var="b" items="${descriptor.appiumBrowsers}">
                             <j:choose>
                                 <j:when test="${instance.appiumBrowsers.contains(b.key)}">
@@ -67,12 +51,12 @@
                 </f:nested>
             </f:radioBlock>
             <f:entry field="useLatestVersion">
-                <f:checkbox title="${%Use latest version of selected browsers?}" default="checked"/>
+                <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
             </f:entry>
 
 
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
-                             title="${%Override default authentication?}">
+                             title="${%Override default authentication}">
                 <j:set var="credentials" value="${instance.credentials}"/>
                 <f:entry title="${%Username}" field="username">
                     <f:textbox value="${credentials.username}"/>
@@ -85,17 +69,17 @@
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>
-                <f:entry field="verboseLogging">
-                    <f:checkbox title="${%Verbose Logging?}"/>
+                <f:entry>
+                    <f:dropdownDescriptorSelector title="${%Sauce Connect Launch Condition}" field="condition"/>
                 </f:entry>
-                <f:entry title="${%Starting URL}" field="startingURL">
-                    <f:textbox/>
+                <f:entry field="verboseLogging">
+                    <f:checkbox title="${%Enable Verbose Logging}"/>
                 </f:entry>
                 <f:entry field="launchSauceConnectOnSlave">
                     <f:checkbox title="${%Launch Sauce Connect On Slave}"/>
                 </f:entry>
                 <f:entry field="useOldSauceConnect">
-                    <f:checkbox title="${%Run Sauce Connect v3?}"/>
+                    <f:checkbox title="${%Run Sauce Connect v3}"/>
                 </f:entry>
 
                 <f:entry title="${%Sauce Host}" field="seleniumHost">
@@ -111,12 +95,18 @@
                     <f:textbox/>
                 </f:entry>
 
-                <f:entry title="${%Sauce Connect Binary Location}" description="Leave blank to use built-in Sauce Connect binary" field="sauceConnectPath">
+                <f:entry title="${%Sauce Connect Binary Location}"
+                         description="Leave blank to use built-in Sauce Connect binary" field="sauceConnectPath">
                     <f:textbox/>
                 </f:entry>
 
             </f:advanced>
         </f:section>
     </f:block>
+
+    <script LANGUAGE="JavaScript">
+        new Chosen($("webDriverBrowsers"));
+        new Chosen($("appiumBrowsers"));
+    </script>
 
 </j:jelly>
