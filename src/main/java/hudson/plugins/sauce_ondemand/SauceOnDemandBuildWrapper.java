@@ -77,40 +77,74 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Logger instance.
      */
     private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class.getName());
-    /** Environment variable key which contains Selenium Client Factory driver for selected browser. */
+    /**
+     * Handles the retrieval of browsers from Sauce Labs.
+     */
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+
+    /**
+     * Environment variable key which contains Selenium Client Factory driver for selected browser.
+     */
     public static final String SELENIUM_DRIVER = "SELENIUM_DRIVER";
-    /** Environment variable key which contains a JSON formatted list of selected browsers. */
+    /**
+     * Environment variable key which contains a JSON formatted list of selected browsers.
+     */
     public static final String SAUCE_ONDEMAND_BROWSERS = "SAUCE_ONDEMAND_BROWSERS";
-    /** Environment variable key which contains the selenium host. */
+    /**
+     * Environment variable key which contains the selenium host.
+     */
     public static final String SELENIUM_HOST = "SELENIUM_HOST";
-    /** Environment variable key which contains the selenium port. */
+    /**
+     * Environment variable key which contains the selenium port.
+     */
     public static final String SELENIUM_PORT = "SELENIUM_PORT";
-    /** Environment variable key which contains the Sauce user name.*/
+    /**
+     * Environment variable key which contains the Sauce user name.
+     */
     private static final String SAUCE_USERNAME = "SAUCE_USER_NAME";
-    /** Environment variable key which contains the Sauce access key.*/
+    /**
+     * Environment variable key which contains the Sauce access key.
+     */
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
-    /** Environment variable key which contains the device value for the selected browser.*/
+    /**
+     * Environment variable key which contains the device value for the selected browser.
+     */
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
-    /** Environment variable key which contains the device type for the selected browser.*/
+    /**
+     * Environment variable key which contains the device type for the selected browser.
+     */
     public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
-    /** Environment variable key which contains the device orientation for the selected browser.*/
+    /**
+     * Environment variable key which contains the device orientation for the selected browser.
+     */
     public static final String SELENIUM_DEVICE_ORIENTATION = "SELENIUM_DEVICE_ORIENTATION";
-    /** Regex pattern which is used to identify replacement parameters. */
+    /**
+     * Regex pattern which is used to identify replacement parameters.
+     */
     public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
-    /** Environment variable key which contains the browser value for the selected browser.*/
+    /**
+     * Environment variable key which contains the browser value for the selected browser.
+     */
     public static final String SELENIUM_BROWSER = "SELENIUM_BROWSER";
-    /** Environment variable key which contains the platform for the selected browser.*/
+    /**
+     * Environment variable key which contains the platform for the selected browser.
+     */
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
-    /** Environment variable key which contains the version for the selected browser.*/
+    /**
+     * Environment variable key which contains the version for the selected browser.
+     */
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
-    /** Environment variable key which contains the Jenkins build number.*/
+    /**
+     * Environment variable key which contains the Jenkins build number.
+     */
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
 
     private static final long serialVersionUID = 1L;
     /**
-     * The starting url to be used for tests run by the build.
+     * Indicates whether the plugin should send usage data to Sauce Labs.
      */
-    private String startingURL;
+    private final boolean sendUsageData;
+
     /**
      * The path to an existing Sauce Connect binary.
      */
@@ -188,7 +222,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param seleniumPort              port location of the selenium server.
      * @param httpsProtocol             string representing the HTTPS protocol to be used.
      * @param options                   the Sauce Connect command line options to be used
-     * @param startingURL               the starting url to be used for tests run by the build.
      * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
      * @param useOldSauceConnect        indicates whether Sauce Connect 3 should be launched
      * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
@@ -204,12 +237,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             String seleniumPort,
             String httpsProtocol,
             String options,
-            String startingURL,
             String sauceConnectPath,
             boolean launchSauceConnectOnSlave,
             boolean useOldSauceConnect,
             boolean verboseLogging,
-            boolean useLatestVersion
+            boolean useLatestVersion,
+            List<String> webDriverBrowsers,
+            List<String> appiumBrowsers,
+            boolean sendUsageData
     ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
@@ -218,7 +253,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.seleniumPort = seleniumPort;
         this.httpsProtocol = httpsProtocol;
         this.options = options;
-        this.startingURL = startingURL;
+        this.webDriverBrowsers = webDriverBrowsers;
+        this.appiumBrowsers = appiumBrowsers;
         if (seleniumInformation != null) {
             this.webDriverBrowsers = seleniumInformation.getWebDriverBrowsers();
             this.appiumBrowsers = seleniumInformation.getAppiumBrowsers();
@@ -229,6 +265,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useLatestVersion = useLatestVersion;
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
+        this.sendUsageData = sendUsageData;
     }
 
 
@@ -301,8 +338,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 logger.fine("Creating Sauce environment variables");
-                SauceEnvironmentUtil.outputWebDriverVariables(env, webDriverBrowsers, getUserName(), getApiKey(), isUseLatestVersion());
-                SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
+                List<Browser> browsers = new ArrayList<Browser>();
+                for (String webDriverBrowser : webDriverBrowsers) {
+                    browsers.add(BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
+                }
+                for (String appiumBrowser : appiumBrowsers) {
+                    browsers.add(BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
+                }
+                SauceEnvironmentUtil.outputVariables(env, browsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
                 String environmentVariablePrefix = PluginImpl.get().getEnvironmentVariablePrefix();
@@ -679,10 +722,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.options = options;
     }
 
-    public String getStartingURL() {
-        return startingURL;
-    }
-
     public RunCondition getCondition() {
         return condition;
     }
@@ -697,7 +736,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * Creates a new {@link SauceOnDemandLogParser} instance, which is added to the {@link #logParserMap}.
      */
     @Override
@@ -729,7 +768,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         /**
          * {@inheritDoc}
-         *
+         * <p/>
          * Closes the Sauce Connect tunnel.
          */
         public SauceConnectCloser call() throws AbstractSauceTunnelManager.SauceConnectException {
@@ -840,11 +879,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 
-        /** Handles retrieving details for supported browsers. */
+        /**
+         * Handles retrieving details for supported browsers.
+         */
         private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
         /**
-         *
          * @return text to be displayed within Jenkins job configuration
          */
         @Override
@@ -898,9 +938,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         /**
          * @return the list of supported WebDriver browsers
          */
-        public Map<String,List<Browser>> getWebDriverMap() {
+        public Map<String, List<Browser>> getWebDriverMap() {
             try {
-                Map<String,List<Browser>> map = new HashMap<String,List<Browser>>();
+                Map<String, List<Browser>> map = new HashMap<String, List<Browser>>();
                 for (Browser browser : BROWSER_FACTORY.getWebDriverBrowsers()) {
                     List<Browser> browsers = map.get(browser.getOs());
                     if (browsers == null) {
@@ -939,7 +979,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         /**
          * {@inheritDoc}
-         *
+         * <p/>
          * Decodes the line and add it to the {@link #lines} list.
          */
         @Override

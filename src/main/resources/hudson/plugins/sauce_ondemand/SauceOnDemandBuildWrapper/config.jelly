@@ -10,48 +10,45 @@
                 <f:checkbox title="${%Enable Sauce Connect}" default="checked"/>
             </f:entry>
 
-            <f:radioBlock name="seleniumInformation" value="webDriver" title="${%WebDriver}"
-                          checked="${instance.seleniumInformation.isWebDriver()}">
-                <f:nested>
-                    <select id="webDriverBrowsers" name="webDriverBrowsers" multiple="multiple"
-                            style="height: 160px; width: 600px;"
-                            data-placeholder="Select supported WebDriver browser(s)">
-                        <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
-                            <j:choose>
-                                <j:when test="${instance.webDriverBrowsers.contains(b.key)}">
-                                    <option value="${b.key}" selected="selected">${b.name}</option>
-                                </j:when>
-                                <j:otherwise>
-                                    <option value="${b.key}">${b.name}</option>
-                                </j:otherwise>
-                            </j:choose>
+            <f:entry field="webDriverBrowsers" name="seleniumInformation" value="webDriver" title="${%WebDriver}">
+                <select id="webDriverBrowsers" name="webDriverBrowsers" multiple="multiple"
+                        style="height: 160px; width: 600px;"
+                        data-placeholder="Select supported WebDriver browser(s)">
+                    <j:forEach var="b" items="${descriptor.webDriverBrowsers}">
+                        <j:choose>
+                            <j:when test="${instance.webDriverBrowsers.contains(b.key)}">
+                                <option value="${b.key}" selected="selected">${b.name}</option>
+                            </j:when>
+                            <j:otherwise>
+                                <option value="${b.key}">${b.name}</option>
+                            </j:otherwise>
+                        </j:choose>
 
-                        </j:forEach>
-                    </select>
-                </f:nested>
-            </f:radioBlock>
+                    </j:forEach>
+                </select>
+            </f:entry>
 
-            <f:radioBlock name="seleniumInformation" value="appium" title="${%Appium}"
-                          checked="${instance.seleniumInformation.isAppium()}">
-                <f:nested>
-                    <select id="appiumBrowsers" name="appiumBrowsers" multiple="multiple"
-                            style="height: 160px; width: 600px;" data-placeholder="Select supported Appium browser(s)">
-                        <j:forEach var="b" items="${descriptor.appiumBrowsers}">
-                            <j:choose>
-                                <j:when test="${instance.appiumBrowsers.contains(b.key)}">
-                                    <option value="${b.key}" selected="selected">${b.name}</option>
-                                </j:when>
-                                <j:otherwise>
-                                    <option value="${b.key}">${b.name}</option>
-                                </j:otherwise>
-                            </j:choose>
-
-                        </j:forEach>
-                    </select>
-                </f:nested>
-            </f:radioBlock>
+            <f:entry field="appiumBrowsers" name="seleniumInformation" value="appium" title="${%Appium}">
+                <select id="appiumBrowsers" name="appiumBrowsers" multiple="multiple"
+                        style="height: 160px; width: 600px;" data-placeholder="Select supported Appium browser(s)">
+                    <j:forEach var="b" items="${descriptor.appiumBrowsers}">
+                        <j:choose>
+                            <j:when test="${instance.appiumBrowsers.contains(b.key)}">
+                                <option value="${b.key}" selected="selected">${b.name}</option>
+                            </j:when>
+                            <j:otherwise>
+                                <option value="${b.key}">${b.name}</option>
+                            </j:otherwise>
+                        </j:choose>
+                    </j:forEach>
+                </select>
+            </f:entry>
             <f:entry field="useLatestVersion">
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
+            </f:entry>
+
+            <f:entry field="sendUsageData">
+                <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
             </f:entry>
 
 

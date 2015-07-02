@@ -41,40 +41,6 @@ public final class SauceEnvironmentUtil {
     }
 
     /**
-     * Adds the environment variables for the selected WebDriver browsers.
-     *
-     * @param env              the map of environment variables
-     * @param browsers         the list of selected browsers
-     * @param userName         the Sauce user name
-     * @param apiKey           the Sauce access key
-     * @param useLatestVersion indicates whether the latest version of the browser should be used
-     */
-    public static void outputWebDriverVariables(Map<String, String> env, List<String> browsers, String userName, String apiKey, boolean useLatestVersion) {
-
-        if (browsers != null && !browsers.isEmpty()) {
-            if (browsers.size() == 1) {
-                Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browsers.get(0), useLatestVersion);
-                if (browserInstance != null) {
-                    outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
-                }
-            }
-
-            JSONArray browsersJSON = new JSONArray();
-            for (String browser : browsers) {
-                Browser browserInstance = BROWSER_FACTORY.webDriverBrowserForKey(browser, useLatestVersion);
-                if (browserInstance != null) {
-                    browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
-                    //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                    outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
-                }
-            }
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
-
-        }
-    }
-
-
-    /**
      * Adds the environment variables for the selected Appium browsers.
      *
      * @param env      the map of environment variables
@@ -82,17 +48,17 @@ public final class SauceEnvironmentUtil {
      * @param userName the Sauce user name
      * @param apiKey   the Sauce access key
      */
-    public static void outputAppiumVariables(Map<String, String> env, List<String> browsers, String userName, String apiKey) {
+    public static void outputVariables(Map<String, String> env, List<Browser> browsers, String userName, String apiKey) {
 
         if (browsers != null && !browsers.isEmpty()) {
             if (browsers.size() == 1) {
-                Browser browserInstance = BROWSER_FACTORY.appiumBrowserForKey(browsers.get(0));
+                Browser browserInstance = browsers.get(0);
                 outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
             }
 
             JSONArray browsersJSON = new JSONArray();
-            for (String browser : browsers) {
-                Browser browserInstance = BROWSER_FACTORY.appiumBrowserForKey(browser);
+            for (Browser browserInstance : browsers) {
+
                 browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
                 //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
                 outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));

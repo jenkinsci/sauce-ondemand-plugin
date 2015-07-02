@@ -137,23 +137,7 @@ public class SauceBuildWrapperTest {
         };
         HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
-        SauceOnDemandBuildWrapper sauceBuildWrapper =
-                new SauceOnDemandBuildWrapper(
-                        true,
-                        null,
-                        sauceCredentials,
-                        seleniumInformation,
-                        null,
-                        null,
-                        null,
-                        "-i ${BUILD_NUMBER}",
-                        null,
-                        null,
-                        true,
-                        true,
-                        false,
-                        true);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -162,6 +146,27 @@ public class SauceBuildWrapperTest {
 //        assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
 
+    }
+
+    private SauceOnDemandBuildWrapper createSauceOnDemandBuildWrapper(Credentials sauceCredentials) {
+        SeleniumInformation seleniumInformation = new SeleniumInformation(null, null);
+        return new SauceOnDemandBuildWrapper(
+                true,
+                null,
+                sauceCredentials,
+                seleniumInformation,
+                null,
+                null,
+                null,
+                "-i ${BUILD_NUMBER}",
+                null,
+                true,
+                true,
+                false,
+                true,
+                null,
+                null,
+                false);
     }
 
     /**
@@ -181,23 +186,7 @@ public class SauceBuildWrapperTest {
         HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
-        SauceOnDemandBuildWrapper sauceBuildWrapper =
-                new SauceOnDemandBuildWrapper(
-                        true,
-                        null,
-                        sauceCredentials,
-                        seleniumInformation,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        true,
-                        true,
-                        false,
-                        true);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -223,23 +212,7 @@ public class SauceBuildWrapperTest {
         };
         HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
-        SauceOnDemandBuildWrapper sauceBuildWrapper =
-                new SauceOnDemandBuildWrapper(
-                        true,
-                        null,
-                        sauceCredentials,
-                        seleniumInformation,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        true,
-                        false,
-                        false,
-                        true);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
         assertEquals(Result.FAILURE, build.getResult());
@@ -254,23 +227,7 @@ public class SauceBuildWrapperTest {
     @Test
     public void runSauceConnectVersion4() throws Exception {
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, Arrays.asList("androidandroid4.3."), null);
-        SauceOnDemandBuildWrapper sauceBuildWrapper =
-                new SauceOnDemandBuildWrapper(
-                        true,
-                        null,
-                        sauceCredentials,
-                        seleniumInformation,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        true,
-                        true,
-                        false,
-                        true);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -290,23 +247,9 @@ public class SauceBuildWrapperTest {
     @Test
     public void multipleBrowsers() throws Exception {
 
-        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, Arrays.asList("", ""), null);
-        SauceOnDemandBuildWrapper sauceBuildWrapper =
-                new SauceOnDemandBuildWrapper(
-                        true,
-                        null,
-                        sauceCredentials,
-                        seleniumInformation,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        true,
-                        true,
-                        true,
-                        true);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("", ""));
+
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
             @Override

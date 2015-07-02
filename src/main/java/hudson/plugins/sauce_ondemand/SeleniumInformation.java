@@ -12,87 +12,28 @@ import java.util.List;
  */
 public class SeleniumInformation implements Serializable {
 
-    private String startingURL;
-
-    private List<String> seleniumBrowsers;
     private List<String> webDriverBrowsers;
     private List<String> appiumBrowsers;
-    private boolean isWebDriver;
-    private boolean isAppium;
-
 
     @DataBoundConstructor
-    public SeleniumInformation(String value, String startingURL, List<String> seleniumBrowsers, List<String> webDriverBrowsers, List<String> appiumBrowsers) {
-        this.isWebDriver = value != null && value.equals("webDriver");
-        this.isAppium = value != null && value.equals("appium");
-        this.startingURL = startingURL;
-        this.seleniumBrowsers = seleniumBrowsers;
+    public SeleniumInformation(List<String> webDriverBrowsers, List<String> appiumBrowsers) {
         this.webDriverBrowsers = webDriverBrowsers;
         this.appiumBrowsers = appiumBrowsers;
-    }
-
-    public String getStartingURL() {
-        return startingURL;
-    }
-
-    public void setStartingURL(String startingURL) {
-        this.startingURL = startingURL;
-    }
-
-
-    @Override
-    public int hashCode() {
-        int result = 17;
-        if (startingURL != null) {
-            result = 31 * result + startingURL.hashCode();
-        }
-
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof SeleniumInformation)) {
-            return false;
-        }
-        SeleniumInformation seleniumInformation = (SeleniumInformation) object;
-        return (startingURL == null ? seleniumInformation.startingURL == null : startingURL.equals(seleniumInformation.startingURL));
-    }
-
-    @Override
-    public String toString() {
-        return startingURL == null ? super.toString() : startingURL;
-    }
-
-    public List<String> getSeleniumBrowsers() {
-        return seleniumBrowsers;
-    }
-
-    public void setSeleniumBrowsers(List<String> seleniumBrowsers) {
-        this.seleniumBrowsers = seleniumBrowsers;
     }
 
     public List<String> getWebDriverBrowsers() {
         return webDriverBrowsers;
     }
 
-    public void setWebDriverBrowsers(List<String> webDriverBrowsers) {
-        this.webDriverBrowsers = webDriverBrowsers;
-    }
-
-    public boolean isWebDriver() {
-        return isWebDriver;
-    }
-
-    public void setWebDriver(boolean webDriver) {
-        isWebDriver = webDriver;
-    }
-
     public List<String> getAppiumBrowsers() {
         return appiumBrowsers;
     }
 
-    public boolean isAppium() {
-        return isAppium;
+    public void setWebDriverBrowsers(List<String> webDriverBrowsers) {
+        this.webDriverBrowsers = webDriverBrowsers;
+    }
+
+    public void setAppiumBrowsers(List<String> appiumBrowsers) {
+        this.appiumBrowsers = appiumBrowsers;
     }
 }
