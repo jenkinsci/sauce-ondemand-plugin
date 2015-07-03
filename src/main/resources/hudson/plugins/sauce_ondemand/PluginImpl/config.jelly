@@ -37,10 +37,7 @@
             <f:entry field="disableStatusColumn">
                 <f:checkbox id="disableStatusColumnCheckBox" title="${%Disable Sauce Status Column?}"/>
             </f:entry>
-            <f:entry field="reuseSauceAuth">
-                <f:checkbox id="reuseSauceAuthCheckBox" onclick="enableDisable();"
-                            title="${%Use authentication details in ~/.sauce-ondemand?}"/>
-            </f:entry>
+
             <!--<f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">-->
                 <!--<div id="progress" style="display:none;">-->
                     <!--<img src="${imagesURL}/spinner.gif"/>-->
