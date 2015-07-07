@@ -1,6 +1,5 @@
 package hudson.plugins.sauce_ondemand;
 
-import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -29,7 +28,7 @@ public class SauceBrowserResolutionParameterDefinition extends ParameterDefiniti
         throw new RuntimeException("Not supported");
     }
 
-    @Extension
+    //@Extension
     public static class DescriptorImpl extends ParameterDescriptor {
 
         /**

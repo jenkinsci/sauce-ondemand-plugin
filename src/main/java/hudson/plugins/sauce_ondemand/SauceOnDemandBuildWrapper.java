@@ -139,11 +139,29 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
 
+    /**
+     * Environment variable key which contains the native app path.
+     */
+    private static final String SAUCE_NATIVE_APP = "SAUCE_NATIVE_APP";
+
+    /**
+     * Environment variable key which specifies whether Chrome should be used for Android devices.
+     */
+    private static final String SAUCE_USE_CHROME = "SAUCE_USE_CHROME";
+
     private static final long serialVersionUID = 1L;
     /**
      * Indicates whether the plugin should send usage data to Sauce Labs.
      */
-    private final boolean sendUsageData;
+    private boolean sendUsageData;
+    /**
+     * The path to the native app package to be tested.
+     */
+    private String nativeAppPackage;
+    /**
+     * Indicates whether Chrome should be used for Android devices.
+     */
+    private boolean useChromeForAndroid;
 
     /**
      * The path to an existing Sauce Connect binary.
@@ -244,7 +262,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             boolean useLatestVersion,
             List<String> webDriverBrowsers,
             List<String> appiumBrowsers,
-            boolean sendUsageData
+            boolean sendUsageData,
+            String nativeAppPackage,
+            boolean useChromeForAndroid
     ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
@@ -266,6 +286,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
         this.sendUsageData = sendUsageData;
+        this.nativeAppPackage = nativeAppPackage;
+        this.useChromeForAndroid = useChromeForAndroid;
     }
 
 
@@ -366,6 +388,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
+                if (StringUtils.isNotBlank(getNativeAppPackage())) {
+                    env.put(SAUCE_NATIVE_APP, getNativeAppPackage());
+                }
+
+                env.put(SAUCE_USE_CHROME, String.valueOf(isUseChromeForAndroid()));
 
                 DecimalFormat myFormatter = new DecimalFormat("####");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
@@ -732,6 +759,30 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setSauceConnectPath(String sauceConnectPath) {
         this.sauceConnectPath = sauceConnectPath;
+    }
+
+    public boolean isUseChromeForAndroid() {
+        return useChromeForAndroid;
+    }
+
+    public String getNativeAppPackage() {
+        return nativeAppPackage;
+    }
+
+    public void setUseLatestVersion(boolean useLatestVersion) {
+        this.useLatestVersion = useLatestVersion;
+    }
+
+    public void setNativeAppPackage(String nativeAppPackage) {
+        this.nativeAppPackage = nativeAppPackage;
+    }
+
+    public void setSendUsageData(boolean sendUsageData) {
+        this.sendUsageData = sendUsageData;
+    }
+
+    public void setUseChromeForAndroid(boolean useChromeForAndroid) {
+        this.useChromeForAndroid = useChromeForAndroid;
     }
 
     /**

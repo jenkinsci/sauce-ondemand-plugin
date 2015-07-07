@@ -43,6 +43,14 @@
                     </j:forEach>
                 </select>
             </f:entry>
+            <f:entry title="${%Native App Package Path}" field="nativeAppPackage">
+                <f:textbox />
+            </f:entry>
+
+            <f:entry field="useChromeForAndroid">
+                <f:checkbox title="${%Use Chrome for Android devices?}"/>
+            </f:entry>
+
             <f:entry field="useLatestVersion">
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
             </f:entry>
