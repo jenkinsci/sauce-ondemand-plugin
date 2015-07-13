@@ -242,7 +242,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         logger.fine("Setting up Sauce Build Wrapper");
 
-        final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
+        final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
 
         if (isEnableSauceConnect()) {
 

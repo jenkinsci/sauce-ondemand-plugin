@@ -213,9 +213,9 @@ public class SauceEnvironmentUtil {
         return builder.toString();
     }
 
-    public static String generateTunnelIdentifier(final AbstractBuild build) {
-        String rawName = build.getProject().getName();
-        String sanitizedName = rawName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
+    public static String generateTunnelIdentifier(final String projectName) {
+        //String rawName = build.getProject().getName();
+        String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
         return sanitizedName + "-" + System.currentTimeMillis();
     }
 }

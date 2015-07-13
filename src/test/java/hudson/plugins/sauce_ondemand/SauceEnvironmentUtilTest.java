@@ -14,44 +14,21 @@ public class SauceEnvironmentUtilTest {
     public void generateTunnelIdentifier_should_use_the_project_name_in_the_tunnel_id(){
         String expectedProjectName = "My_Project_Name";
 
-        AbstractProject project = makeMockProject(expectedProjectName);
-        AbstractBuild build = mock(AbstractBuild.class);
-
-        when(build.getProject()).thenReturn(project);
-
-        String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
-
-        assertThat(tunnelIdentifier, containsString(expectedProjectName));
-        verify(build).getProject();
-        verify(project).getName();
+        assertThat(SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName), containsString(expectedProjectName));
     }
 
     @Test
     public void generateTunnelIdentifier_should_sanitize_the_project_name(){
         String expectedProjectName = "My Project!@#$%&*()Name-012345689";
 
-        AbstractProject project = makeMockProject(expectedProjectName);
-        AbstractBuild build = mock(AbstractBuild.class);
-
-        when(build.getProject()).thenReturn(project);
-
-        String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
-
-        assertThat(tunnelIdentifier, containsString("My_Project_Name-012345689"));
-        verify(build).getProject();
-        verify(project).getName();
+        assertThat(SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName), containsString("My_Project_Name-012345689"));
     }
 
     @Test
     public void generateTunnelIdentifier_should_include_an_epoch_timestamp(){
         String expectedProjectName = "My Project";
 
-        AbstractProject project = makeMockProject(expectedProjectName);
-        AbstractBuild build = mock(AbstractBuild.class);
-
-        when(build.getProject()).thenReturn(project);
-
-        String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
+        String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName);
 
         String epochTimeMSStr = tunnelIdentifier.split("-")[1];
         long epochTimeMS = Long.parseLong(epochTimeMSStr);
@@ -59,11 +36,5 @@ public class SauceEnvironmentUtilTest {
         int deltaBetweenNowAndTunnelIdentifier = (int) (now - epochTimeMS);
 
         assertThat(deltaBetweenNowAndTunnelIdentifier, is(lessThan(10)));
-    }
-
-    private AbstractProject makeMockProject(String projectName) {
-        AbstractProject project = mock(AbstractProject.class);
-        when(project.getName()).thenReturn(projectName);
-        return project;
     }
 }
