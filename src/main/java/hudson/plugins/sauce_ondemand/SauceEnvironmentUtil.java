@@ -26,6 +26,9 @@ public class SauceEnvironmentUtil {
     private static final Logger logger = Logger.getLogger(SauceEnvironmentUtil.class.getName());
     public static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
+    //only allow word, digit, and hyphen characters
+    private static final String PATTERN_DISALLOWED_TUNNEL_ID_CHARS = "[^\\w\\d-]+";
+
     private SauceEnvironmentUtil() {
     }
 
@@ -208,5 +211,11 @@ public class SauceEnvironmentUtil {
             builder.replace(displayName.lastIndexOf(buildName), displayName.length(), "#" + build.getNumber());
         }
         return builder.toString();
+    }
+
+    public static String generateTunnelIdentifier(final AbstractBuild build) {
+        String rawName = build.getProject().getName();
+        String sanitizedName = rawName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
+        return sanitizedName + "-" + System.currentTimeMillis();
     }
 }

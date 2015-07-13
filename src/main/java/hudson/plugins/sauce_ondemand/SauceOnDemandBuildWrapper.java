@@ -96,6 +96,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_PLATFORM = "SELENIUM_PLATFORM";
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
+    private static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
+
+    private boolean useGeneratedTunnelIdentifier;
 
     private static final long serialVersionUID = 1L;
     /**
@@ -202,7 +205,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             boolean launchSauceConnectOnSlave,
             boolean useOldSauceConnect,
             boolean verboseLogging,
-            boolean useLatestVersion
+            boolean useLatestVersion,
+            boolean useGeneratedTunnelIdentifier
     ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
@@ -223,6 +227,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useLatestVersion = useLatestVersion;
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
 
@@ -236,9 +241,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         logger.fine("Setting up Sauce Build Wrapper");
+
+        final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
+
         if (isEnableSauceConnect()) {
 
             boolean canRun = true;
+            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+            String resolvedOptions = getCommandLineOptions(build, listener);
+
+            if(isUseGeneratedTunnelIdentifier()){
+                build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+            }
+
             try {
                 if (condition != null) {
                     canRun = condition.runPerform(build, listener);
@@ -248,10 +264,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 throw new IOException(e);
             }
             if (canRun) {
-                String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
-                String resolvedOptions = getCommandLineOptions(build, listener);
                 if (launchSauceConnectOnSlave) {
-                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
 
                     if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                         //only copy sauce connect jar if we are using Sauce Connect v3
@@ -316,6 +330,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
 
+                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()){
+                    env.put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                }
+
                 DecimalFormat myFormatter = new DecimalFormat("####");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
                 if (getStartingURL() != null) {
@@ -371,6 +389,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     if (shouldClose) {
                         listener.getLogger().println("Shutting down Sauce Connect");
                         String resolvedOptions = getCommandLineOptions(build, listener);
+
+                        if(isUseGeneratedTunnelIdentifier()){
+                            build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                            resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+                        }
+
                         if (launchSauceConnectOnSlave) {
                             Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), resolvedOptions, useOldSauceConnect));
                         } else {
@@ -654,6 +678,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setUseOldSauceConnect(boolean useOldSauceConnect) {
         this.useOldSauceConnect = useOldSauceConnect;
+    }
+
+    public boolean isUseGeneratedTunnelIdentifier() {
+        return useGeneratedTunnelIdentifier;
+    }
+
+    public void setUseGeneratedTunnelIdentifier(boolean useGeneratedTunnelIdentifier) {
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
     public boolean isVerboseLogging() {

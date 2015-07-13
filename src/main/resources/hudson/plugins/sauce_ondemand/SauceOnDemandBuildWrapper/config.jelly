@@ -88,6 +88,9 @@
                 <f:entry field="verboseLogging">
                     <f:checkbox title="${%Verbose Logging?}"/>
                 </f:entry>
+                <f:entry field="useGeneratedTunnelIdentifier">
+                    <f:checkbox title="${%Generate and Export Tunnel Identifier}"/>
+                </f:entry>
                 <f:entry title="${%Starting URL}" field="startingURL">
                     <f:textbox/>
                 </f:entry>

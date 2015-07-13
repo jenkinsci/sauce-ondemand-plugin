@@ -153,7 +153,8 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true);
+                        true,
+                        false);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -197,6 +198,7 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
+                        true,
                         true);
 
         runFreestyleBuild(sauceBuildWrapper);
@@ -239,7 +241,8 @@ public class SauceBuildWrapperTest {
                         true,
                         false,
                         false,
-                        true);
+                        true,
+                        false);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
         assertEquals(Result.FAILURE, build.getResult());
@@ -270,7 +273,8 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true);
+                        true,
+                        false);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -306,7 +310,8 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         true,
-                        true);
+                        true,
+                        false);
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
             @Override
