@@ -34,6 +34,9 @@ public final class SauceEnvironmentUtil {
      */
     private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
+    //only allow word, digit, and hyphen characters
+    private static final String PATTERN_DISALLOWED_TUNNEL_ID_CHARS = "[^\\w\\d-]+";
+
     /**
      * Disallow instantiation of class.
      */
@@ -215,5 +218,11 @@ public final class SauceEnvironmentUtil {
             builder.replace(displayName.lastIndexOf(buildName), displayName.length(), "#" + build.getNumber());
         }
         return builder.toString();
+    }
+
+    public static String generateTunnelIdentifier(final String projectName) {
+        //String rawName = build.getProject().getName();
+        String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
+        return sanitizedName + "-" + System.currentTimeMillis();
     }
 }

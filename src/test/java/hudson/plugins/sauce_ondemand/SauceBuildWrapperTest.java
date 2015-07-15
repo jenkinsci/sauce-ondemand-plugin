@@ -168,6 +168,7 @@ public class SauceBuildWrapperTest {
                 null,
                 false,
                 null,
+                false,
                 false);
     }
 
