@@ -138,6 +138,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Environment variable key which contains the Jenkins build number.
      */
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
+    private static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
 
     /**
      * Environment variable key which contains the native app path.
@@ -148,6 +149,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Environment variable key which specifies whether Chrome should be used for Android devices.
      */
     private static final String SAUCE_USE_CHROME = "SAUCE_USE_CHROME";
+
+    private boolean useGeneratedTunnelIdentifier;
 
     private static final long serialVersionUID = 1L;
     /**
@@ -264,7 +267,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             List<String> appiumBrowsers,
             boolean sendUsageData,
             String nativeAppPackage,
-            boolean useChromeForAndroid
+            boolean useChromeForAndroid,
+            boolean useGeneratedTunnelIdentifier
     ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
@@ -288,6 +292,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.sendUsageData = sendUsageData;
         this.nativeAppPackage = nativeAppPackage;
         this.useChromeForAndroid = useChromeForAndroid;
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
 
@@ -302,9 +307,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         listener.getLogger().println("Starting pre-build for Sauce Labs plugin");
         logger.fine("Setting up Sauce Build Wrapper");
+
+        final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
+
         if (isEnableSauceConnect()) {
 
             boolean canRun = true;
+            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+            String resolvedOptions = getCommandLineOptions(build, listener);
+
+            if(isUseGeneratedTunnelIdentifier()){
+                build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+            }
+
             try {
                 if (condition != null) {
                     canRun = condition.runPerform(build, listener);
@@ -314,10 +330,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 throw new IOException(e);
             }
             if (canRun) {
-                String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
-                String resolvedOptions = getCommandLineOptions(build, listener);
                 if (launchSauceConnectOnSlave) {
-                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
 
                     if (useOldSauceConnect && !(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
                         //only copy sauce connect jar if we are using Sauce Connect v3
@@ -392,6 +406,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     env.put(SAUCE_NATIVE_APP, getNativeAppPackage());
                 }
 
+                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()){
+                    env.put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                }
+
                 env.put(SAUCE_USE_CHROME, String.valueOf(isUseChromeForAndroid()));
 
                 DecimalFormat myFormatter = new DecimalFormat("####");
@@ -446,6 +464,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     if (shouldClose) {
                         listener.getLogger().println("Shutting down Sauce Connect");
                         String resolvedOptions = getCommandLineOptions(build, listener);
+
+                        if(isUseGeneratedTunnelIdentifier()){
+                            build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                            resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+                        }
+
                         if (launchSauceConnectOnSlave) {
                             Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), resolvedOptions, useOldSauceConnect));
                         } else {
@@ -723,6 +747,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setUseOldSauceConnect(boolean useOldSauceConnect) {
         this.useOldSauceConnect = useOldSauceConnect;
+    }
+
+    public boolean isUseGeneratedTunnelIdentifier() {
+        return useGeneratedTunnelIdentifier;
+    }
+
+    public void setUseGeneratedTunnelIdentifier(boolean useGeneratedTunnelIdentifier) {
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
     public boolean isVerboseLogging() {
