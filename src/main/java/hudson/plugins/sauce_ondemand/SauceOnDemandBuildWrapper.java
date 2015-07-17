@@ -28,7 +28,6 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectUtils;
-import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
@@ -644,14 +643,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return getCredentials().getUsername();
         } else {
             PluginImpl p = PluginImpl.get();
-            if (p.isReuseSauceAuth()) {
-                SauceOnDemandAuthentication storedCredentials = null;
-                storedCredentials = new SauceOnDemandAuthentication();
-                return storedCredentials.getUsername();
-            } else {
-                return p.getUsername();
 
-            }
+            return p.getUsername();
+
+
         }
     }
 
@@ -663,13 +658,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return getCredentials().getApiKey();
         } else {
             PluginImpl p = PluginImpl.get();
-            if (p.isReuseSauceAuth()) {
-                SauceOnDemandAuthentication storedCredentials;
-                storedCredentials = new SauceOnDemandAuthentication();
-                return storedCredentials.getAccessKey();
-            } else {
-                return Secret.toString(p.getApiKey());
-            }
+
+            return Secret.toString(p.getApiKey());
+
         }
     }
 

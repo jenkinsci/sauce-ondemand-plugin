@@ -38,7 +38,6 @@ import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.codec.binary.Hex;
-import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -157,7 +156,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
-        reuseSauceAuth = formData.getBoolean("reuseSauceAuth");
+
         disableStatusColumn = formData.getBoolean("disableStatusColumn");
         username = formData.getString("username");
         apiKey = Secret.fromString(formData.getString("apiKey"));
@@ -174,10 +173,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public static PluginImpl get() {
         return Jenkins.getInstance().getPlugin(PluginImpl.class);
-    }
-
-    public boolean isReuseSauceAuth() {
-        return reuseSauceAuth;
     }
 
     public String getSauceConnectDirectory() {
@@ -203,20 +198,18 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean disableStatusColumn, @QueryParameter boolean reuseSauceAuth) {
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean disableStatusColumn) {
             try {
-                SauceOnDemandAuthentication credential = reuseSauceAuth ? new SauceOnDemandAuthentication() : new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
+                SauceOnDemandAuthentication credential = new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
-                if (reuseSauceAuth && StringUtils.isBlank(credential.getUsername()) && StringUtils.isBlank(credential.getAccessKey())) {
-                    return FormValidation.error("Unable to find ~/.sauce-ondemand file");
-                } else {
+
                     String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
                     if (response != null && !response.equals("")) {
                         return FormValidation.ok("Success");
                     } else {
                         return FormValidation.error("Failed to connect to Sauce OnDemand");
                     }
-                }
+
             } catch (Exception e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
             }

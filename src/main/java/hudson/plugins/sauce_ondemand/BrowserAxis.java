@@ -25,7 +25,6 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
-import com.saucelabs.common.SauceOnDemandAuthentication;
 import hudson.matrix.Axis;
 import hudson.util.Secret;
 
@@ -55,17 +54,11 @@ public abstract class BrowserAxis extends Axis {
      */
     public void addBuildVariable(String value, Map<String, String> map) {
         PluginImpl p = PluginImpl.get();
-        String username;
-        String accessKey;
-        if (p.isReuseSauceAuth()) {
-            SauceOnDemandAuthentication storedCredentials = new SauceOnDemandAuthentication();
-            username = storedCredentials.getUsername();
-            accessKey = storedCredentials.getAccessKey();
-        } else {
-            username = p.getUsername();
-            accessKey = Secret.toString(p.getApiKey());
 
-        }
+        String username = p.getUsername();
+        String accessKey = Secret.toString(p.getApiKey());
+
+
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
             SauceEnvironmentUtil.outputEnvironmentVariablesForBrowser(map, browserInstance, username, accessKey);

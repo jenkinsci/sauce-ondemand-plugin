@@ -1,20 +1,6 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <script LANGUAGE="JavaScript">
-        function enableDisable() {
 
-        if(document.getElementById('reuseSauceAuthCheckBox').checked)
-        {
-        document.getElementById('userBox').disabled=true;
-        document.getElementById('apiKeyBox').disabled=true;
-        }
-        else
-        {
-        document.getElementById('userBox').disabled=false;
-        document.getElementById('apiKeyBox').disabled=false;
-        }
-        }
-    </script>
     <f:section title="Sauce Support">
         <j:scope>
             <j:set var="instance" value="${it}"/>
@@ -52,7 +38,7 @@
                 <!--</script>-->
             <!--</f:entry>-->
             <f:block>
-                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn,reuseSauceAuth"
+                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn"
                                   method="validate"/>
             </f:block>
         </j:scope>
