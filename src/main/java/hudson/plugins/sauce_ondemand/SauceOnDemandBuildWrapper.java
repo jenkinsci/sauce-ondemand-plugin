@@ -374,11 +374,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             public void buildEnvVars(Map<String, String> env) {
                 logger.fine("Creating Sauce environment variables");
                 List<Browser> browsers = new ArrayList<Browser>();
-                for (String webDriverBrowser : webDriverBrowsers) {
-                    browsers.add(BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
+                if (webDriverBrowsers != null) {
+                    for (String webDriverBrowser : webDriverBrowsers) {
+                        browsers.add(BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
+                    }
                 }
-                for (String appiumBrowser : appiumBrowsers) {
-                    browsers.add(BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
+                if (appiumBrowsers != null) {
+                    for (String appiumBrowser : appiumBrowsers) {
+                        browsers.add(BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
+                    }
                 }
                 SauceEnvironmentUtil.outputVariables(env, browsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
@@ -643,10 +647,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return getCredentials().getUsername();
         } else {
             PluginImpl p = PluginImpl.get();
-
             return p.getUsername();
-
-
         }
     }
 
@@ -658,9 +659,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return getCredentials().getApiKey();
         } else {
             PluginImpl p = PluginImpl.get();
-
             return Secret.toString(p.getApiKey());
-
         }
     }
 
