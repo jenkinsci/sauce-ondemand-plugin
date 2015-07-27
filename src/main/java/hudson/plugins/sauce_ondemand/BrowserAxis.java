@@ -46,6 +46,11 @@ public abstract class BrowserAxis extends Axis {
         super("SELENIUM_DRIVER", values);
     }
 
+    public boolean hasValue(String key)
+    {
+        return getValues().contains(key);
+    }
+
     /**
      * Adds the browser URI to the environment map.  Will override any values set in {@link SauceOnDemandBuildWrapper#setUp(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)}
      *
