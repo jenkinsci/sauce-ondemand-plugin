@@ -266,7 +266,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             List<String> appiumBrowsers,
             boolean sendUsageData,
             String nativeAppPackage,
-            boolean useChromeForAndroid,
+//            boolean useChromeForAndroid,
             boolean useGeneratedTunnelIdentifier
     ) {
         this.credentials = credentials;
@@ -290,7 +290,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.sauceConnectPath = sauceConnectPath;
         this.sendUsageData = sendUsageData;
         this.nativeAppPackage = nativeAppPackage;
-        this.useChromeForAndroid = useChromeForAndroid;
+//        this.useChromeForAndroid = useChromeForAndroid;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
