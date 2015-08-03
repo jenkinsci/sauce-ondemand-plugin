@@ -28,7 +28,9 @@ import java.util.regex.Pattern;
  */
 public class SauceOnDemandBuildAction extends AbstractAction {
 
-    /** Logger instance. */
+    /**
+     * Logger instance.
+     */
     private static final Logger logger = Logger.getLogger(SauceOnDemandBuildAction.class.getName());
 
     /**
@@ -99,7 +101,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     /**
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
-     *
      */
     public List<JobInformation> retrieveJobIdsFromSauce() throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
         //invoke Sauce Rest API to find plan results with those values
@@ -166,12 +167,13 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     /**
      * Processes the log output, and for lines which are in the valid log format, add a new {@link JobInformation}
      * instance to the {@link #jobInformation} list.
+     *
      * @param caseResult test results being processed, can be null
-     * @param output lines of output to be processed, not null
+     * @param output     lines of output to be processed, not null
      */
     public void processSessionIds(CaseResult caseResult, String... output) {
 
-        logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout": "Parsing Sauce Session ids in test results");
+        logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
         SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
 
         for (String text : output) {
@@ -200,6 +202,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                             jobInfo.setName(job.getString("name"));
                         }
                         jobInfo.setHasBuildNumber(job.has("build") && !job.isNull("build"));
+                        jobInfo.setOs(job.getString("os"));
+                        jobInfo.setBrowser(job.getString("browser"));
+                        jobInfo.setVersion(job.getString("browser_short_version"));
+                        jobInfo.setVideoUrl(job.getString("video_url"));
+                        jobInfo.setLogUrl(job.getString("log_url"));
                     }
                     if (!jobInfo.isHasJobName() && jobName != null) {
                         jobInfo.setName(jobName);
