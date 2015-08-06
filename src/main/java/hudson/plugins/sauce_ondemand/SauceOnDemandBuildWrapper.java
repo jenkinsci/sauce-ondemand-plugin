@@ -50,7 +50,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -315,7 +314,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
             String resolvedOptions = getCommandLineOptions(build, listener);
 
-            if(isUseGeneratedTunnelIdentifier()){
+            if (isUseGeneratedTunnelIdentifier()) {
                 build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
                 resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
             }
@@ -409,7 +408,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     env.put(SAUCE_NATIVE_APP, getNativeAppPackage());
                 }
 
-                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()){
+                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                     env.put(TUNNEL_IDENTIFIER, tunnelIdentifier);
                 }
 
@@ -468,7 +467,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         listener.getLogger().println("Shutting down Sauce Connect");
                         String resolvedOptions = getCommandLineOptions(build, listener);
 
-                        if(isUseGeneratedTunnelIdentifier()){
+                        if (isUseGeneratedTunnelIdentifier()) {
                             build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
                             resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
                         }
@@ -564,7 +563,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @return the hostname for the current environment.
      */
-    private String getCurrentHostName() {
+    private static String getCurrentHostName() {
         try {
             String hostName = Computer.currentComputer().getHostName();
             if (hostName != null) {
@@ -912,7 +911,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public SauceConnectHandler call() throws AbstractSauceTunnelManager.SauceConnectException {
 
             try {
-                listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
+                listener.getLogger().println("Launching Sauce Connect on " + getCurrentHostName());
                 if (useOldSauceConnect) {
                     listener.getLogger().println("*** Support for Sauce Connect v3 is scheduled to end on 19 August 2015 *** ");
                     listener.getLogger().println("*** Please update your settings to use Sauce Connect v4 *** ");
@@ -927,8 +926,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging, sauceConnectPath);
                 return this;
             } catch (ComponentLookupException e) {
-                throw new AbstractSauceTunnelManager.SauceConnectException(e);
-            } catch (UnknownHostException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             }
         }
