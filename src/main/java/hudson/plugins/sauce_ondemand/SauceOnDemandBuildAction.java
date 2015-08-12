@@ -121,23 +121,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
                 JobInformation information = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
-                String status = jobData.getString("passed");
-                information.setStatus(status);
-                String jobName = jobData.getString("name");
-                if (jobName != null) {
-                    information.setHasJobName(true);
-                    information.setName(jobName);
-                }
-                String build = jobData.getString("build");
-                if (build != null) {
-                    information.setHasBuildNumber(true);
-                }
-                information.setOs(jobData.getString("os"));
-                information.setBrowser(jobData.getString("browser"));
-                information.setVersion(jobData.getString("browser_short_version"));
-                information.setVideoUrl(jobData.getString("video_url"));
-                information.setLogUrl(jobData.getString("log_url"));
-
+                information.populateFromJson(jobData);
                 jobInformation.add(information);
             }
             //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
@@ -196,17 +180,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     String jsonResponse = sauceREST.getJobInfo(jobId);
                     if (!jsonResponse.equals("")) {
                         JSONObject job = new JSONObject(jsonResponse);
-                        boolean hasJobName = job.has("name") && !job.isNull("name");
-                        jobInfo.setHasJobName(hasJobName);
-                        if (hasJobName) {
-                            jobInfo.setName(job.getString("name"));
-                        }
-                        jobInfo.setHasBuildNumber(job.has("build") && !job.isNull("build"));
-                        jobInfo.setOs(job.getString("os"));
-                        jobInfo.setBrowser(job.getString("browser"));
-                        jobInfo.setVersion(job.getString("browser_short_version"));
-                        jobInfo.setVideoUrl(job.getString("video_url"));
-                        jobInfo.setLogUrl(job.getString("log_url"));
+                        jobInfo.populateFromJson(job);
                     }
                     if (!jobInfo.isHasJobName() && jobName != null) {
                         jobInfo.setName(jobName);
