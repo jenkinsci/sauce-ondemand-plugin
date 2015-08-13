@@ -119,7 +119,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Regex pattern which is used to identify replacement parameters.
      */
-    public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%]([a-zA-Z_][a-zA-Z0-9_]+)");
+    public static final Pattern ENVIRONMENT_VARIABLE_PATTERN = Pattern.compile("[$|%][{]?([a-zA-Z_][a-zA-Z0-9_]+)[}]?");
     /**
      * Environment variable key which contains the browser value for the selected browser.
      */
