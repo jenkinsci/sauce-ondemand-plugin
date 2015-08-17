@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -569,13 +568,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             if (hostName != null) {
                 return hostName;
             }
-        } catch (UnknownHostException e) {
-            //shouldn't happen
-            logger.log(Level.SEVERE, "Unable to retrieve host name", e);
-        } catch (InterruptedException e) {
-            //shouldn't happen
-            logger.log(Level.SEVERE, "Unable to retrieve host name", e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             //shouldn't happen
             logger.log(Level.SEVERE, "Unable to retrieve host name", e);
         }
