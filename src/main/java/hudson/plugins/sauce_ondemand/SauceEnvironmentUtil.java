@@ -1,7 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
@@ -13,6 +12,7 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -29,10 +29,6 @@ public final class SauceEnvironmentUtil {
      * Logger instance.
      */
     private static final Logger logger = Logger.getLogger(SauceEnvironmentUtil.class.getName());
-    /**
-     * Handles the retrieval of browsers from Sauce Labs.
-     */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     //only allow word, digit, and hyphen characters
     private static final String PATTERN_DISALLOWED_TUNNEL_ID_CHARS = "[^\\w\\d-]+";
@@ -50,13 +46,15 @@ public final class SauceEnvironmentUtil {
      * @param browsers the list of selected browsers
      * @param userName the Sauce user name
      * @param apiKey   the Sauce access key
+     * @param verboseLogging
+     * @param logger
      */
-    public static void outputVariables(Map<String, String> env, List<Browser> browsers, String userName, String apiKey) {
+    public static void outputVariables(Map<String, String> env, List<Browser> browsers, String userName, String apiKey, boolean verboseLogging, PrintStream logger) {
 
         if (browsers != null && !browsers.isEmpty()) {
             if (browsers.size() == 1) {
                 Browser browserInstance = browsers.get(0);
-                outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey);
+                outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, verboseLogging, logger);
             }
 
             JSONArray browsersJSON = new JSONArray();
@@ -64,9 +62,9 @@ public final class SauceEnvironmentUtil {
 
                 browserAsJSON(browsersJSON, browserInstance, userName, apiKey);
                 //output SELENIUM_DRIVER for the first browser so that the Selenium Client Factory picks up a valid uri pattern
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey));
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), verboseLogging, logger);
             }
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString());
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SAUCE_ONDEMAND_BROWSERS, browsersJSON.toString(), verboseLogging, logger);
 
         }
     }
@@ -114,8 +112,8 @@ public final class SauceEnvironmentUtil {
      * @param userName the Sauce user name
      * @param apiKey   the Sauce access key
      */
-    public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey) {
-        outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, false);
+    public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey, boolean verboseLogging, PrintStream printStream) {
+        outputEnvironmentVariablesForBrowser(env, browserInstance, userName, apiKey, false, verboseLogging, printStream);
     }
 
     /**
@@ -126,23 +124,23 @@ public final class SauceEnvironmentUtil {
      * @param apiKey    the Sauce access key
      * @param overwrite indicates whether existing environment variables should be overwritten
      */
-    public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey, boolean overwrite) {
+    public static void outputEnvironmentVariablesForBrowser(Map<String, String> env, Browser browserInstance, String userName, String apiKey, boolean overwrite, boolean verboseLogging, PrintStream printStream) {
 
         if (browserInstance != null) {
 
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getOs(), overwrite);
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName(), overwrite);
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion(), overwrite);
-            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), overwrite);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_PLATFORM, browserInstance.getOs(), overwrite, verboseLogging, printStream);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_BROWSER, browserInstance.getBrowserName(), overwrite, verboseLogging, printStream);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_VERSION, browserInstance.getVersion(), overwrite, verboseLogging, printStream);
+            outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DRIVER, browserInstance.getUri(userName, apiKey), overwrite, verboseLogging, printStream);
 
             if (browserInstance.getDevice() != null) {
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE, browserInstance.getDevice(), overwrite);
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE, browserInstance.getDevice(), overwrite, verboseLogging, printStream);
             }
             if (browserInstance.getDeviceType() != null) {
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE, browserInstance.getDeviceType(), overwrite);
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_TYPE, browserInstance.getDeviceType(), overwrite, verboseLogging, printStream);
             }
             if (browserInstance.getDeviceOrientation() != null) {
-                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_ORIENTATION, browserInstance.getDeviceOrientation(), overwrite);
+                outputEnvironmentVariable(env, SauceOnDemandBuildWrapper.SELENIUM_DEVICE_ORIENTATION, browserInstance.getDeviceOrientation(), overwrite, verboseLogging, printStream);
             }
         }
     }
@@ -154,8 +152,8 @@ public final class SauceEnvironmentUtil {
      * @param key   environment variable key
      * @param value environment variable value
      */
-    public static void outputEnvironmentVariable(Map<String, String> env, String key, String value) {
-        outputEnvironmentVariable(env, key, value, false);
+    public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean verboseLogging, PrintStream printStream) {
+        outputEnvironmentVariable(env, key, value, false, verboseLogging, printStream);
     }
 
     /**
@@ -166,13 +164,17 @@ public final class SauceEnvironmentUtil {
      * @param value     environment variable value
      * @param overwrite indicates whether existing environment variables should be overwritten
      */
-    public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean overwrite) {
+    public static void outputEnvironmentVariable(Map<String, String> env, String key, String value, boolean overwrite, boolean verboseLogging, PrintStream printStream) {
         if (env.get(key) == null || overwrite) {
             String environmentVariablePrefix = PluginImpl.get().getEnvironmentVariablePrefix();
             if (environmentVariablePrefix == null) {
                 environmentVariablePrefix = "";
             }
             env.put(environmentVariablePrefix + key, value);
+            if (verboseLogging)
+            {
+                printStream.println(key + ": " + value);
+            }
         }
     }
 
@@ -191,10 +193,10 @@ public final class SauceEnvironmentUtil {
                 }
             }
         } else {
-            logger.info("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
+            logger.fine("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
         }
         if (buildWrapper == null) {
-            logger.info("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
+            logger.fine("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
         }
         return buildWrapper;
     }

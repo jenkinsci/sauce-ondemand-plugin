@@ -1,8 +1,6 @@
 package com.saucelabs.hudson;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
-import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
@@ -27,16 +25,6 @@ public class HudsonSauceManagerFactory {
     }
 
     private HudsonSauceManagerFactory() {
-    }
-
-    public SauceConnectTwoManager createSauceConnectTwoManager() throws ComponentLookupException {
-        accessLock.lock();
-        try {
-            start();
-            return (SauceConnectTwoManager) this.plexus.lookup(SauceTunnelManager.class.getName());
-        } finally {
-            accessLock.unlock();
-        }
     }
 
     public SauceConnectFourManager createSauceConnectFourManager() throws ComponentLookupException {

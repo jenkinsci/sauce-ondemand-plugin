@@ -105,7 +105,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    logger.info("No Sauce Build Action found for " + build.toString() + " adding a new one");
+                    logger.fine("No Sauce Build Action found for " + build.toString() + " adding a new one");
                     return Collections.emptyList();
                 }
                 return Collections.singletonList(buildAction);
@@ -124,7 +124,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             }
             return allJobs;
         }
-        logger.info("No Sauce jobs found");
+        logger.fine("No Sauce jobs found");
         return Collections.emptyList();
     }
 
