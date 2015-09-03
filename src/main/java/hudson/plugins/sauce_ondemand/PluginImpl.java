@@ -26,7 +26,6 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
@@ -145,7 +144,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper", SauceOnDemandBuildWrapper.class);
 
         load();
-        HudsonSauceManagerFactory.getInstance().start();
     }
 
     public void setCredential(String username, String apiKey) throws IOException {
