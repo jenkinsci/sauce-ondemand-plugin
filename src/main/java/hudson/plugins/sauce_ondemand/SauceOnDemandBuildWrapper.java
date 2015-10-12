@@ -569,7 +569,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumPort);
             if (matcher.matches()) {
                 String variableName = matcher.group(1);
-                return MapUtils.getInteger(envVars, variableName, 0);
+                String port = envVars.get(variableName);
+                if (port == null) {
+                    port = System.getenv(variableName);
+                }
+                if (port == null) {
+                    port = "0";
+                }
+                return Integer.parseInt(port);
             } else {
                 return Integer.parseInt(seleniumPort);
             }
