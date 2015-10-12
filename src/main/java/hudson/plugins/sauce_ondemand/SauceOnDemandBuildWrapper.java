@@ -28,7 +28,6 @@ import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -39,7 +38,6 @@ import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -313,16 +311,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 throw new IOException(e);
             }
 
-			EnvVars env = new EnvVars();
-			try {
-				env = build.getEnvironment(listener);
-			} catch (IOException e) {
-				listener.getLogger().println("Error getting environment variables");
-				throw e;
-			} catch (InterruptedException e) {
-				listener.getLogger().println("Error getting environment variables");
-				throw e;
-			}
+            EnvVars env = new EnvVars();
+            try {
+                env = build.getEnvironment(listener);
+            } catch (IOException e) {
+                listener.getLogger().println("Error getting environment variables");
+                throw e;
+            } catch (InterruptedException e) {
+                listener.getLogger().println("Error getting environment variables");
+                throw e;
+            }
 
             if (canRun) {
                 if (launchSauceConnectOnSlave) {
