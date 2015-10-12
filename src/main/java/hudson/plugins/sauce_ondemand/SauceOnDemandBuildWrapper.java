@@ -28,6 +28,8 @@ import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -37,6 +39,8 @@ import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
+
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
@@ -308,6 +312,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 listener.getLogger().println("Error checking Sauce Connect run condition");
                 throw new IOException(e);
             }
+
+			EnvVars env = new EnvVars();
+			try {
+				env = build.getEnvironment(listener);
+			} catch (IOException e) {
+				listener.getLogger().println("Error getting environment variables");
+				throw e;
+			} catch (InterruptedException e) {
+				listener.getLogger().println("Error getting environment variables");
+				throw e;
+			}
+
             if (canRun) {
                 if (launchSauceConnectOnSlave) {
                     listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
@@ -315,6 +331,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     Computer.currentComputer().getChannel().call
                             (new SauceConnectHandler(
                                     this,
+                                    env,
                                     listener,
                                     workingDirectory,
                                     resolvedOptions
@@ -323,7 +340,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 } else {
                     listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
                     //launch Sauce Connect on the master
-                    SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(this, listener, workingDirectory, resolvedOptions);
+                    SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(this, env, listener, workingDirectory, resolvedOptions);
                     sauceConnectStarter.call();
 
                 }
@@ -384,7 +401,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USE_CHROME, String.valueOf(isUseChromeForAndroid()), true, verboseLogging, listener.getLogger());
 
                 DecimalFormat myFormatter = new DecimalFormat("####");
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PORT, myFormatter.format(getPort()), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PORT, myFormatter.format(getPort(env)), true, verboseLogging, listener.getLogger());
 
             }
 
@@ -549,16 +566,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @return the port to be used
      */
-    private int getPort() {
+    private int getPort(Map<String, String> envVars) {
         if (StringUtils.isNotBlank(seleniumPort) && !seleniumPort.equals("0")) {
             Matcher matcher = ENVIRONMENT_VARIABLE_PATTERN.matcher(seleniumPort);
             if (matcher.matches()) {
                 String variableName = matcher.group(1);
-                String value = System.getenv(variableName);
-                if (value == null) {
-                    value = "0";
-                }
-                return Integer.parseInt(value);
+                return MapUtils.getInteger(envVars, variableName, 0);
             } else {
                 return Integer.parseInt(seleniumPort);
             }
@@ -792,12 +805,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          * @param workingDirectory
          * @param resolvedOptions
          */
-        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions) {
+        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, EnvVars env, BuildListener listener, String workingDirectory, String resolvedOptions) {
             this.options = resolvedOptions;
             this.workingDirectory = workingDirectory;
             this.listener = listener;
             this.username = sauceOnDemandBuildWrapper.getUserName();
-            this.port = sauceOnDemandBuildWrapper.getPort();
+            this.port = sauceOnDemandBuildWrapper.getPort(env);
             this.key = sauceOnDemandBuildWrapper.getApiKey();
             this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
             this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
@@ -810,8 +823,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          * @param resolvedOptions
          * @param sauceConnectJar
          */
-        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, BuildListener listener, String workingDirectory, String resolvedOptions, File sauceConnectJar) {
-            this(sauceOnDemandBuildWrapper, listener, workingDirectory, resolvedOptions);
+        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, EnvVars env, BuildListener listener, String workingDirectory, String resolvedOptions, File sauceConnectJar) {
+            this(sauceOnDemandBuildWrapper, env, listener, workingDirectory, resolvedOptions);
             this.sauceConnectJar = sauceConnectJar;
         }
 
