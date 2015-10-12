@@ -1,7 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager; 
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
@@ -28,7 +27,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit; 
+
+import java.lang.reflect.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -101,24 +102,23 @@ public class SauceBuildWrapperTest {
             }
         }).when(spySauceRest).retrieveResults(any(URL.class));
 
-        //store dummy implementations of Sauce Connect managers within Plexus container
-        HudsonSauceManagerFactory.getInstance().start();
+        //store dummy implementations of Sauce Connect manager 
+         
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
-        };
+        };   
+        storeDummyManager(sauceConnectFourManager);
+    } 
 
-        SauceConnectTwoManager sauceConnectTwoManager = new SauceConnectTwoManager() {
-            @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                return null;
-            }
-        };
-        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
-        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectTwoManager, SauceTunnelManager.class.getName());
-
+    private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {   
+	    HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
+		Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");  
+        field.setAccessible(true);
+        field.set(factory, sauceConnectFourManager);
+	
     }
 
     /**
@@ -130,12 +130,12 @@ public class SauceBuildWrapperTest {
     public void resolveVariables() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertTrue("Variable not resolved", options.equals("-i 1"));
                 return null;
             }
         };
-        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        storeDummyManager(sauceConnectFourManager);  
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
@@ -156,8 +156,7 @@ public class SauceBuildWrapperTest {
                 sauceCredentials,
                 seleniumInformation,
                 null,
-                null,
-                null,
+                null, 
                 "-i ${BUILD_NUMBER}",
                 null,
                 false,
@@ -180,12 +179,12 @@ public class SauceBuildWrapperTest {
     public void commonOptions() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertTrue("Variable not resolved", options.equals("-i 1"));
                 return null;
             }
         };
-        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        storeDummyManager(sauceConnectFourManager);  
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
@@ -208,11 +207,11 @@ public class SauceBuildWrapperTest {
     public void sauceConnectTimeOut() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 throw new SauceConnectDidNotStartException("Sauce Connect failed to start");
             }
         };
-        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        storeDummyManager(sauceConnectFourManager);  
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
 
