@@ -139,7 +139,7 @@ public class SauceBuildWrapperTest {
         };
         storeDummyManager(sauceConnectFourManager);  
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -148,28 +148,6 @@ public class SauceBuildWrapperTest {
 //        assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
 
-    }
-
-    private SauceOnDemandBuildWrapper createSauceOnDemandBuildWrapper(Credentials sauceCredentials) {
-        SeleniumInformation seleniumInformation = new SeleniumInformation(null, null);
-        return new SauceOnDemandBuildWrapper(
-                true,
-                null,
-                sauceCredentials,
-                seleniumInformation,
-                null,
-                null, 
-                "-i ${BUILD_NUMBER}",
-                null,
-                false,
-                false,
-                true,
-                null,
-                null,
-                false,
-                null,
-//                false,
-                false);
     }
 
     /**
@@ -189,7 +167,7 @@ public class SauceBuildWrapperTest {
         storeDummyManager(sauceConnectFourManager);  
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -215,7 +193,7 @@ public class SauceBuildWrapperTest {
         };
         storeDummyManager(sauceConnectFourManager);  
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
         assertEquals(Result.FAILURE, build.getResult());
@@ -230,7 +208,7 @@ public class SauceBuildWrapperTest {
     @Test
     public void runSauceConnectVersion4() throws Exception {
         Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -250,9 +228,8 @@ public class SauceBuildWrapperTest {
     @Test
     public void multipleBrowsers() throws Exception {
 
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
-        sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("", ""));
-
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("", ""));  /// THIS Actually crashes the buld but things are not properly checked
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
             @Override
@@ -278,7 +255,7 @@ public class SauceBuildWrapperTest {
     @Test
     public void newPortIsGeneratedWhenManagingSauceConnect() throws Exception {
 
-        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
         sauceBuildWrapper.setEnableSauceConnect(true);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
 

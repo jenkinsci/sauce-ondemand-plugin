@@ -898,7 +898,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Plugin descriptor, which adds the plugin details to the Jenkins job configuration page.
      */
     @Extension
-    public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
+    public static class DescriptorImpl extends Descriptor<BuildWrapper> {
 
         /**
          * Handles retrieving details for supported browsers.
