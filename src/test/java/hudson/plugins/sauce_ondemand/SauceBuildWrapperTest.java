@@ -10,6 +10,7 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +37,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
+import static org.hamcrest.Matchers.*;
 
 /**
  * @author Ross Rowe
@@ -270,6 +272,47 @@ public class SauceBuildWrapperTest {
 
     }
 
+    /**
+     * @throws Exception thrown if an unexpected error occurs
+     */
+    @Test
+    public void newPortIsGeneratedWhenManagingSauceConnect() throws Exception {
+
+        SauceOnDemandBuildWrapper sauceBuildWrapper = createSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper.setEnableSauceConnect(true);
+        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+
+        final JSONObject holder = new JSONObject();
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+                holder.element("scProvidedPort", port);
+                return null;
+            }
+        };
+
+        storeDummyManager(sauceConnectFourManager);
+        SauceBuilder sauceBuilder = new SauceBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                Map<String, String> envVars = build.getEnvironment(listener);
+                int port = Integer.parseInt(envVars.get("SELENIUM_PORT"));
+                holder.element("port", port);
+                return super.perform(build, launcher, listener);
+            }
+        };
+
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
+        assertEquals("Port provided to SC is the same as generated", holder.getInt("scProvidedPort"), holder.getInt("port"));
+        assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
+
+        //assert that the Sauce REST API was invoked for the Sauce job id
+//        assertNotNull(restUpdates.get(currentSessionId));
+        //TODO verify that test results of build include Sauce results
+
+    }
+
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper) throws Exception {
         return runFreestyleBuild(sauceBuildWrapper, new SauceBuilder());
     }
@@ -319,6 +362,5 @@ public class SauceBuildWrapperTest {
             return true;
         }
     }
-
 
 }
