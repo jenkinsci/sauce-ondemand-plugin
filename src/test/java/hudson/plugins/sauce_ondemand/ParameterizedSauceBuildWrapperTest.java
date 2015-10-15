@@ -66,7 +66,7 @@ public class ParameterizedSauceBuildWrapperTest {
         super();
         sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
         sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
-        sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlavex);
+        sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
         sauceBuildWrapper.setUseLatestVersion(useLatestVersion);
         sauceBuildWrapper.setSeleniumPort(seleniumPort);
