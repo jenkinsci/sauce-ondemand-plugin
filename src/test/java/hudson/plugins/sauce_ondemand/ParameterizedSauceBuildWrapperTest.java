@@ -57,6 +57,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
     public ParameterizedSauceBuildWrapperTest(
             boolean enableSauceConnect,
+            boolean launchSauceConnectOnSlave,
             boolean useGeneratedTunnelIdentifier,
             boolean useLatestVersion,
             String seleniumPort,
@@ -65,6 +66,7 @@ public class ParameterizedSauceBuildWrapperTest {
         super();
         sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
         sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
+        sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlavex);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
         sauceBuildWrapper.setUseLatestVersion(useLatestVersion);
         sauceBuildWrapper.setSeleniumPort(seleniumPort);
@@ -75,18 +77,21 @@ public class ParameterizedSauceBuildWrapperTest {
     public static Collection SauceOnDemandBuildWrapperValues() {
         ArrayList<Object[]> list = new ArrayList<Object[]>();
         for(boolean enableSauceConnect : new boolean[] {true}) {
-            for(boolean useGeneratedTunnelIdentifier : new boolean[] {true, false}) {
-                for(boolean verboseLogging : new boolean[] {true, false}) {
-                    for (boolean useLatestVersion : new boolean[]{true, false}) {
-                        for (String seleniumPort : new String[]{"", "4444"}) {
-                            for (String seleniumHost : new String[]{"", "localhost"}) {
-                                list.add(new Object[]{
-                                        enableSauceConnect,
-                                        useGeneratedTunnelIdentifier,
-                                        useLatestVersion,
-                                        seleniumPort,
-                                        seleniumHost
-                                });
+            for(boolean launchSauceConnectOnSlave : new boolean[] { true, false }) {
+                for (boolean useGeneratedTunnelIdentifier : new boolean[]{true, false}) {
+                    for (boolean verboseLogging : new boolean[]{true, false}) {
+                        for (boolean useLatestVersion : new boolean[]{true, false}) {
+                            for (String seleniumPort : new String[]{"", "4444"}) {
+                                for (String seleniumHost : new String[]{"", "localhost"}) {
+                                    list.add(new Object[]{
+                                            enableSauceConnect,
+                                            launchSauceConnectOnSlave,
+                                            useGeneratedTunnelIdentifier,
+                                            useLatestVersion,
+                                            seleniumPort,
+                                            seleniumHost
+                                    });
+                                }
                             }
                         }
                     }
