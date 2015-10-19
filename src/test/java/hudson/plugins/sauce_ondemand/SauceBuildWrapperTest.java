@@ -342,7 +342,7 @@ public class SauceBuildWrapperTest {
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
         jenkinsRule.assertBuildStatusSuccess(build);
         assertEquals("Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
-        Map<String, String> envVars = (Map<String, String>)holder.getOrDefault("env", null);
+        Map<String, String> envVars = (Map<String, String>)holder.get("env");
         assertNotNull(envVars);
         assertEquals("Port Provided as ENV equals SELENIUM_PORT", port, envVars.get("SELENIUM_PORT"));
     }
