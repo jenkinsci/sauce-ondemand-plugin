@@ -18,7 +18,7 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
                 new SeleniumInformation(null, null),
                 null,
                 null,
-                "-i ${BUILD_NUMBER}",
+                "",
                 null,
                 false,
                 false,

@@ -79,6 +79,9 @@ public class SauceBuildWrapperTest {
     public void setUp() throws Exception {
 
         JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key");
+        // Reset connection string every run
+        PluginImpl.get().setSauceConnectOptions("");
+
         //create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
         spySauceRest = spy(sauceRest);
         restUpdates = new HashMap<String, Map>();
@@ -147,8 +150,10 @@ public class SauceBuildWrapperTest {
         storeDummyManager(sauceConnectFourManager);  
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
 
-        runFreestyleBuild(sauceBuildWrapper);
+        Build build = runFreestyleBuild(sauceBuildWrapper);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
 
         //assert that the Sauce REST API was invoked for the Sauce job id
@@ -167,16 +172,18 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertTrue("Variable not resolved", options.equals("-i 1"));
+                assertEquals("Variables are resolved correctly", options, "-i 1");
                 return null;
             }
         };
-        storeDummyManager(sauceConnectFourManager);  
-        PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
+        storeDummyManager(sauceConnectFourManager);
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
+        sauceBuildWrapper.setOptions("");
 
-        runFreestyleBuild(sauceBuildWrapper);
+        Build build = runFreestyleBuild(sauceBuildWrapper);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
 
         //assert that the Sauce REST API was invoked for the Sauce job id
@@ -203,8 +210,7 @@ public class SauceBuildWrapperTest {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
-        assertEquals(Result.FAILURE, build.getResult());
-
+        jenkinsRule.assertBuildStatus(Result.FAILURE, build);
     }
 
     /**
@@ -217,7 +223,8 @@ public class SauceBuildWrapperTest {
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
-        runFreestyleBuild(sauceBuildWrapper);
+        Build build = runFreestyleBuild(sauceBuildWrapper);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
         //assert that the Sauce REST API was invoked for the Sauce job id
 //        assertNotNull(restUpdates.get(currentSessionId));
@@ -248,7 +255,8 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        //jenkinsRule.assertBuildStatusSuccess(build);
 
         //assert that the Sauce REST API was invoked for the Sauce job id
 //        assertNotNull(restUpdates.get(currentSessionId));
@@ -287,6 +295,8 @@ public class SauceBuildWrapperTest {
         };
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        jenkinsRule.assertBuildStatusSuccess(build);
+
         assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
         assertEquals("Port provided to SC is the same as generated", holder.getInt("scProvidedPort"), holder.getInt("port"));
         assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
@@ -296,7 +306,7 @@ public class SauceBuildWrapperTest {
         //TODO verify that test results of build include Sauce results
 
     }
-    
+
     /**
      * @throws Exception thrown if an unexpected error occurs
      */
@@ -330,7 +340,7 @@ public class SauceBuildWrapperTest {
         };
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
-        assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
+        jenkinsRule.assertBuildStatusSuccess(build);
         assertEquals("Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
         Map<String, String> envVars = (Map<String, String>)holder.getOrDefault("env", null);
         assertNotNull(envVars);

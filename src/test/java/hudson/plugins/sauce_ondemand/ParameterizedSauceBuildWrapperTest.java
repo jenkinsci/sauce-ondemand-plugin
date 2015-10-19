@@ -13,26 +13,21 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.spy;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.*;
+
 
 /**
  * Created by gavinmogan on 10/14/15.
@@ -59,6 +54,7 @@ public class ParameterizedSauceBuildWrapperTest {
             boolean enableSauceConnect,
             boolean launchSauceConnectOnSlave,
             boolean useGeneratedTunnelIdentifier,
+            boolean verboseLogging,
             boolean useLatestVersion,
             String seleniumPort,
             String seleniumHost
@@ -68,6 +64,7 @@ public class ParameterizedSauceBuildWrapperTest {
         sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
         sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
+        sauceBuildWrapper.setVerboseLogging(verboseLogging);
         sauceBuildWrapper.setUseLatestVersion(useLatestVersion);
         sauceBuildWrapper.setSeleniumPort(seleniumPort);
         sauceBuildWrapper.setSeleniumHost(seleniumHost);
@@ -76,7 +73,7 @@ public class ParameterizedSauceBuildWrapperTest {
     @Parameterized.Parameters
     public static Collection SauceOnDemandBuildWrapperValues() {
         ArrayList<Object[]> list = new ArrayList<Object[]>();
-        for(boolean enableSauceConnect : new boolean[] {true}) {
+        for(boolean enableSauceConnect : new boolean[] {true, false }) {
             for(boolean launchSauceConnectOnSlave : new boolean[] { true, false }) {
                 for (boolean useGeneratedTunnelIdentifier : new boolean[]{true, false}) {
                     for (boolean verboseLogging : new boolean[]{true, false}) {
@@ -87,6 +84,7 @@ public class ParameterizedSauceBuildWrapperTest {
                                             enableSauceConnect,
                                             launchSauceConnectOnSlave,
                                             useGeneratedTunnelIdentifier,
+                                            verboseLogging,
                                             useLatestVersion,
                                             seleniumPort,
                                             seleniumHost
@@ -103,6 +101,14 @@ public class ParameterizedSauceBuildWrapperTest {
 
     @Before
     public void setUp() throws Exception {
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+                return null;
+            }
+        };
+
+        storeDummyManager(sauceConnectFourManager);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -117,6 +123,8 @@ public class ParameterizedSauceBuildWrapperTest {
      */
     @Test
     public void portIsProperlyProvidedToSauceConnect() throws Exception {
+        if (!sauceBuildWrapper.isEnableSauceConnect()) { return; } /* Don't test sauce connect functionality if its not enabled */
+
         final JSONObject holder = new JSONObject();
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
@@ -141,7 +149,55 @@ public class ParameterizedSauceBuildWrapperTest {
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
         assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
         assertEquals("Port provided to SC is the same as generated", holder.getInt("scProvidedPort"), holder.getInt("port"));
-        assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
+        jenkinsRule.assertBuildStatusSuccess(build);
+    }
+
+    @Test
+    public void confirmEnvVariablesAreAlwaysSet() throws Exception {
+        final JSONObject holder = new JSONObject();
+        SauceBuilder sauceBuilder = new SauceBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                Map<String, String> envVars = build.getEnvironment(listener);
+                holder.element("env", envVars);
+                return super.perform(build, launcher, listener);
+            }
+        };
+
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        jenkinsRule.assertBuildStatusSuccess(build);
+
+        Map<String, String> envVars = (Map<String, String>)holder.getOrDefault("env", null);
+        assertNotNull(envVars);
+        if (envVars != null) {
+            assertEquals("legacy SAUCE_USER_NAME is set to API username", "username", envVars.get("SAUCE_USER_NAME"));
+            assertEquals("SAUCE_API_KEY equals something", "access key", envVars.get("SAUCE_API_KEY"));
+            assertThat("SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(isEmptyOrNullString()));
+            assertThat("SELENIUM_PORT equals something", envVars.get("SELENIUM_PORT"), not(isEmptyOrNullString()));
+            assertThat("JENKINS_BUILD_NUMBER equals something", envVars.get("JENKINS_BUILD_NUMBER"), not(isEmptyOrNullString()));
+
+            if (!"".equals(sauceBuildWrapper.getNativeAppPackage())) {
+                assertNull("SAUCE_NATIVE_APP is not set when native package is not set", envVars.get("SAUCE_NATIVE_APP"));
+            } else {
+                assertThat("SAUCE_NATIVE_APP is set when native package is set", envVars.get("SAUCE_NATIVE_APP"), not(isEmptyOrNullString()));
+            }
+            if (sauceBuildWrapper.isEnableSauceConnect() && sauceBuildWrapper.isUseGeneratedTunnelIdentifier()) {
+                assertThat("TUNNEL_IDENTIFIER is set when we are managing it", envVars.get("TUNNEL_IDENTIFIER"), not(isEmptyOrNullString()));
+
+            } else {
+                assertNull("TUNNEL_IDENTIFIER is not set when we are not managing it", envVars.get("SAUCE_NATIVE_APP"));
+
+            }
+            if (sauceBuildWrapper.isUseChromeForAndroid()) {
+                assertNull("SAUCE_USE_CHROME is not set when use chrome is not set", envVars.get("SAUCE_USE_CHROME"));
+            } else {
+                assertThat("SAUCE_USE_CHROME is set when use chrome is set", envVars.get("SAUCE_USE_CHROME"), not(isEmptyOrNullString()));
+            }
+            /*
+            SELENIUM_PLATFORM, SELENIUM_BROWSER, SELENIUM_VERSION, SELENIUM_DRIVER, SELENIUM_DEVICE, SELENIUM_DEVICE_TYPE, SELENIUM_DEVICE_ORIENTATION
+            SAUCE_ONDEMAND_BROWSERS
+            */
+        }
     }
 
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder) throws Exception {
@@ -164,7 +220,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-            Thread.sleep(1000);
+            Thread.sleep(1);
             return true;
         }
     }
