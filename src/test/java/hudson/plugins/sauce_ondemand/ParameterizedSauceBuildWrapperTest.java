@@ -167,7 +167,7 @@ public class ParameterizedSauceBuildWrapperTest {
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
         jenkinsRule.assertBuildStatusSuccess(build);
 
-        Map<String, String> envVars = (Map<String, String>)holder.getOrDefault("env", null);
+        Map<String, String> envVars = (Map<String, String>)holder.get("env");
         assertNotNull(envVars);
         if (envVars != null) {
             assertEquals("legacy SAUCE_USER_NAME is set to API username", "username", envVars.get("SAUCE_USER_NAME"));
