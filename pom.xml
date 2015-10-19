@@ -7,7 +7,7 @@
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.141</version>
+    <version>1.142-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -16,6 +16,14 @@
         <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
     </scm>
+
+    <developers>
+      <developer>
+        <id>halkeye</id>
+        <name>Gavin Mogan</name>
+        <email>gavin@saucelabs.com</email>
+      </developer>
+    </developers>
 
     <distributionManagement>
         <repository>
