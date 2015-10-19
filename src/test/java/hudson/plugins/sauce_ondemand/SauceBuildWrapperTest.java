@@ -4,9 +4,11 @@ import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
@@ -113,6 +115,11 @@ public class SauceBuildWrapperTest {
             }
         };   
         storeDummyManager(sauceConnectFourManager);
+
+        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+        EnvVars envVars = prop.getEnvVars();
+        envVars.put("TEST_PORT_VARIABLE_4321", "4321");
+        this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
     } 
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {   
@@ -288,6 +295,46 @@ public class SauceBuildWrapperTest {
 //        assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
 
+    }
+    
+    /**
+     * @throws Exception thrown if an unexpected error occurs
+     */
+    @Test
+    public void providingPortWithEnvVariableStartsUpOnThatPort() throws Exception {
+
+        String port = "4321";
+
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper.setEnableSauceConnect(true);
+        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+        sauceBuildWrapper.setSeleniumPort("$TEST_PORT_VARIABLE_4321");
+
+        final JSONObject holder = new JSONObject();
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+                holder.element("scProvidedPort", Integer.toString(port,10));
+                return null;
+            }
+        };
+
+        storeDummyManager(sauceConnectFourManager);
+        SauceBuilder sauceBuilder = new SauceBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                Map<String, String> envVars = build.getEnvironment(listener);
+                holder.element("env", envVars);
+                return super.perform(build, launcher, listener);
+            }
+        };
+
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
+        assertEquals("Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
+        Map<String, String> envVars = (Map<String, String>)holder.getOrDefault("env", null);
+        assertNotNull(envVars);
+        assertEquals("Port Provided as ENV equals SELENIUM_PORT", port, envVars.get("SELENIUM_PORT"));
     }
 
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper) throws Exception {
