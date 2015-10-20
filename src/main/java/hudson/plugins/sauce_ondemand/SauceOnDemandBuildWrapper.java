@@ -302,7 +302,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         logger.fine("Setting up Sauce Build Wrapper");
 
         final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
-
+        final SauceConnectHandler sauceConnectStarter;
         if (isEnableSauceConnect()) {
 
             boolean canRun = true;
@@ -335,28 +335,24 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             if (canRun) {
+                sauceConnectStarter = new SauceConnectHandler(this, env, listener, workingDirectory, resolvedOptions);
+
                 if (launchSauceConnectOnSlave) {
                     listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
-
-                    Computer.currentComputer().getChannel().call
-                            (new SauceConnectHandler(
-                                    this,
-                                    env,
-                                    listener,
-                                    workingDirectory,
-                                    resolvedOptions
-                            ));
+                    Computer.currentComputer().getChannel().call(sauceConnectStarter);
 
                 } else {
                     listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
                     //launch Sauce Connect on the master
-                    SauceConnectHandler sauceConnectStarter = new SauceConnectHandler(this, env, listener, workingDirectory, resolvedOptions);
                     sauceConnectStarter.call();
 
                 }
             } else {
                 listener.getLogger().println("Sauce Connect launch skipped due to run condition");
+                sauceConnectStarter = null;
             }
+        } else {
+            sauceConnectStarter = null;
         }
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
@@ -419,8 +415,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USE_CHROME, String.valueOf(isUseChromeForAndroid()), true, verboseLogging, listener.getLogger());
 
                 DecimalFormat myFormatter = new DecimalFormat("####");
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PORT, myFormatter.format(getPort(env)), true, verboseLogging, listener.getLogger());
-
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PORT, myFormatter.format(sauceConnectStarter != null ? sauceConnectStarter.port : getPort(env)), true, verboseLogging, listener.getLogger());
             }
 
             /**
@@ -580,6 +575,23 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
+    private static class GetAvailablePort implements Callable<Integer,RuntimeException> {
+        public Integer call() {
+            int foundPort = -1;
+            java.net.ServerSocket socket = null;
+            try {
+                socket = new java.net.ServerSocket(0);
+                foundPort = socket.getLocalPort();
+            } catch (IOException e) {
+            } finally {
+                if (socket != null) try {
+                    socket.close();
+                } catch (IOException e) { /* e.printStackTrace(); */ }
+            }
+            return foundPort;
+        }
+        private static final long serialVersionUID = 1L;
+    }
 
     /**
      * @return the port to be used
@@ -602,6 +614,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
         } else {
             if (isEnableSauceConnect()) {
+                if (isUseGeneratedTunnelIdentifier()) {
+                    try {
+                        if (launchSauceConnectOnSlave) {
+                            return Computer.currentComputer().getChannel().call(new GetAvailablePort());
+                        } else {
+                            return new GetAvailablePort().call();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return 0;
+                }
                 return 4445;
             } else {
                 return 4444;
@@ -899,7 +925,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Plugin descriptor, which adds the plugin details to the Jenkins job configuration page.
      */
     @Extension
-    public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
+    public static class DescriptorImpl extends Descriptor<BuildWrapper> {
 
         /**
          * Handles retrieving details for supported browsers.
