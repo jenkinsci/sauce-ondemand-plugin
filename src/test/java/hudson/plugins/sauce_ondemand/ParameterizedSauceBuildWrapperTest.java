@@ -171,7 +171,9 @@ public class ParameterizedSauceBuildWrapperTest {
         assertNotNull(envVars);
         if (envVars != null) {
             assertEquals("legacy SAUCE_USER_NAME is set to API username", "username", envVars.get("SAUCE_USER_NAME"));
-            assertEquals("SAUCE_API_KEY equals something", "access key", envVars.get("SAUCE_API_KEY"));
+            assertEquals("proper SAUCE_USERNAME is set to API username", "username", envVars.get("SAUCE_USERNAME"));
+            assertEquals("legacy SAUCE_API_KEY is set to API username", "access key", envVars.get("SAUCE_API_KEY"));
+            assertEquals("proper SAUCE_ACCESS_KEY is set to API username", "access key", envVars.get("SAUCE_ACCESS_KEY"));
             assertThat("SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(isEmptyOrNullString()));
             assertThat("SELENIUM_PORT equals something", envVars.get("SELENIUM_PORT"), not(isEmptyOrNullString()));
             assertThat("JENKINS_BUILD_NUMBER equals something", envVars.get("JENKINS_BUILD_NUMBER"), not(isEmptyOrNullString()));
