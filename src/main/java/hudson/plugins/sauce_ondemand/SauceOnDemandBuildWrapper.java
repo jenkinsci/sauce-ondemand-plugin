@@ -105,8 +105,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String SAUCE_USER_NAME = "SAUCE_USER_NAME";
     /**
      * Environment variable key which contains the Sauce access key.
+     * @deprecated  As of release 1.142, please use the standard SAUCE_USERNAME instead
      */
+    @Deprecated
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
+    /**
+     * Environment variable key which contains the Sauce access key.
+     */
+    private static final String SAUCE_ACCESS_KEY = "SAUCE_ACCESS_KEY";
     /**
      * Environment variable key which contains the device value for the selected browser.
      */
@@ -396,7 +402,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 /* New standard env name */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USERNAME, getUserName(), true, verboseLogging, listener.getLogger());
 
+                /* Legacy Env name */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_API_KEY, getApiKey(), true, verboseLogging, listener.getLogger());
+                /* New standard env name */
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_ACCESS_KEY, getApiKey(), true, verboseLogging, listener.getLogger());
+
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_HOST, getHostName(), true, verboseLogging, listener.getLogger());
                 if (StringUtils.isNotBlank(getNativeAppPackage())) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_NATIVE_APP, getNativeAppPackage(), true, verboseLogging, listener.getLogger());
