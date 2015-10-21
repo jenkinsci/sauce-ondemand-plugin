@@ -241,9 +241,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param seleniumHost              host location of the selenium server.
      * @param seleniumPort              port location of the selenium server.
      * @param options                   the Sauce Connect command line options to be used
+     * @param sauceConnectPath          Path to sauce connect
      * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
      * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
+     * @param webDriverBrowsers         which browser(s) should be used for web driver
+     * @param appiumBrowsers            which browser(s( should be used for appium
+     * @param sendUsageData             indicates wheter usage data should be sent along
+     * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
+     * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
@@ -291,7 +297,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * {@inheritDoc}
-     * <p/>
+     *
      * Invoked prior to the running of a Jenkins build.  Populates the Sauce specific environment variables and launches Sauce Connect.
      *
      * @return a new {@link hudson.model.Environment} instance populated with the Sauce environment variables
@@ -789,7 +795,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * {@inheritDoc}
-     * <p/>
+     *
      * Creates a new {@link SauceOnDemandLogParser} instance, which is added to the {@link #logParserMap}.
      */
     @Override
@@ -915,7 +921,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Retrieve the {@link AbstractSauceTunnelManager} instance to be used to launch Sauce Connect.
      *
      * @return {@link AbstractSauceTunnelManager} instance
-     * @throws ComponentLookupException
+     * @throws ComponentLookupException see plexus
      */
     public static AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
         return HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
@@ -1027,7 +1033,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         /**
          * {@inheritDoc}
-         * <p/>
+         *
          * Decodes the line and add it to the {@link #lines} list.
          */
         @Override

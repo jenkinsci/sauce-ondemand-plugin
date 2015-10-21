@@ -113,11 +113,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      * @param accessKey the Sauce access key
      * @param jobId     the Sauce job id
      * @return the HMAC token
-     * @throws java.security.NoSuchAlgorithmException
-     *
-     * @throws java.security.InvalidKeyException
-     *
-     * @throws java.io.UnsupportedEncodingException
+     * @throws java.security.NoSuchAlgorithmException FIXME
+     * @throws java.security.InvalidKeyException FIXME
+     * @throws java.io.UnsupportedEncodingException FIXME
      *
      */
     public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
@@ -215,7 +213,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * @return
+     * @return String to show to the user on screen
      */
     @JavaScriptMethod
     public String checkForUpdates() {
@@ -237,7 +235,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * @return
+     * @return Results of applying update
      */
     @JavaScriptMethod
     public String applyUpdates() {
