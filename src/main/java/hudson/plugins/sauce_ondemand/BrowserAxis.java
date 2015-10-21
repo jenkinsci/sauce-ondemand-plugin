@@ -54,8 +54,8 @@ public abstract class BrowserAxis extends Axis {
     /**
      * Adds the browser URI to the environment map.  Will override any values set in {@link SauceOnDemandBuildWrapper#setUp(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)}
      *
-     * @param value
-     * @param map
+     * @param value Browser key
+     * @param map FIXME ??
      */
     public void addBuildVariable(String value, Map<String, String> map) {
         PluginImpl p = PluginImpl.get();
@@ -87,8 +87,8 @@ public abstract class BrowserAxis extends Axis {
 
     /**
      *
-     * @param value
-     * @return
+     * @param value Browser Key
+     * @return A Browser for a given key
      */
     protected abstract Browser getBrowserForKey(String value);
 

@@ -11,10 +11,7 @@ import java.net.URISyntaxException;
  */
 public class HudsonSauceLibraryManager extends SauceLibraryManager {
     /**
-     * 
-     * @param jarFile
-     * @throws IOException
-     * @throws URISyntaxException
+     * {@inheritDoc}
      */
     @Override
     public void updatePluginJar(File jarFile) throws IOException, URISyntaxException {
