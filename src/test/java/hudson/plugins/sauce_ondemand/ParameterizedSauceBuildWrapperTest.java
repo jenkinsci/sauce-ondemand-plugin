@@ -109,6 +109,18 @@ public class ParameterizedSauceBuildWrapperTest {
         };
 
         storeDummyManager(sauceConnectFourManager);
+
+        JSONObject pluginConfig = new JSONObject();
+        pluginConfig.put("username", "fakeuser");
+        pluginConfig.put("apiKey", "fakeapi");
+        pluginConfig.put("reuseSauceAuth", true);
+        pluginConfig.put("sauceConnectDirectory", "");
+        pluginConfig.put("sauceConnectOptions", "");
+        pluginConfig.put("disableStatusColumn", false);
+        pluginConfig.put("environmentVariablePrefix", "");
+        pluginConfig.put("sendUsageData", true);
+
+        jenkinsRule.getPluginManager().getPlugin("sauce-ondemand").getPlugin().configure(null, pluginConfig);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {

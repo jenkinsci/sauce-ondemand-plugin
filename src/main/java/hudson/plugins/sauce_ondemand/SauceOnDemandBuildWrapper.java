@@ -28,7 +28,6 @@ import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.saucerest.SauceREST;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -40,7 +39,6 @@ import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
 import jenkins.model.Jenkins;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
@@ -74,10 +72,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Logger instance.
      */
     private static final Logger logger = Logger.getLogger(SauceOnDemandBuildWrapper.class.getName());
-    /**
-     * Handles the retrieval of browsers from Sauce Labs.
-     */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     /**
      * Environment variable key which contains Selenium Client Factory driver for selected browser.
@@ -390,12 +384,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 List<Browser> browsers = new ArrayList<Browser>();
                 if (webDriverBrowsers != null) {
                     for (String webDriverBrowser : webDriverBrowsers) {
-                        browsers.add(BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
+                        browsers.add(PluginImpl.BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
                     }
                 }
                 if (appiumBrowsers != null) {
                     for (String appiumBrowser : appiumBrowsers) {
-                        browsers.add(BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
+                        browsers.add(PluginImpl.BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
                     }
                 }
                 SauceEnvironmentUtil.outputVariables(env, browsers, getUserName(), getApiKey(), verboseLogging, listener.getLogger());

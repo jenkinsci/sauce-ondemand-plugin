@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
@@ -73,6 +74,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
+    /**
+     * Handles the retrieval of browsers from Sauce Labs.
+     */
+    static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**

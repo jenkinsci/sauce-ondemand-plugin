@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.saucerest.SauceREST;
+import hudson.Plugin;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 
@@ -21,9 +22,11 @@ public class JenkinsSauceREST extends SauceREST {
 
     @Override
     protected String getUserAgent() {
+        Plugin p = PluginImpl.get();
+        String pluginVersion = p == null ? "UNKNOWN" : p.getWrapper().getVersion();
         return super.getUserAgent() + " " +
             "Jenkins/" + Jenkins.VERSION.toString() + " " +
-            "JenkinsSauceOnDemand/" + PluginImpl.get().getWrapper().getVersion();
+            "JenkinsSauceOnDemand/" + pluginVersion;
     }
 
     @Override
