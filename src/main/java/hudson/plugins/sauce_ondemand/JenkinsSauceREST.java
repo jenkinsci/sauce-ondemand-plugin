@@ -18,17 +18,17 @@ public class JenkinsSauceREST extends SauceREST {
         super(username, accessKey);
     }
 
+
+    @Override
+    protected String getUserAgent() {
+        return super.getUserAgent() + " " +
+            "Jenkins/" + Jenkins.VERSION.toString() + " " +
+            "JenkinsSauceOnDemand/" + PluginImpl.get().getWrapper().getVersion();
+    }
+
     @Override
     public HttpURLConnection openConnection(URL url) throws IOException {
         HttpURLConnection hc = (HttpURLConnection) ProxyConfiguration.open(url);
-        hc.setRequestProperty(
-            "User-Agent",
-            "Jenkins/" + Jenkins.VERSION.toString() +
-                " " +
-                "SauceREST/" + SauceREST.class.getPackage().getImplementationVersion() +
-                " " +
-                "JenkinsSauceOnDemand/" + PluginImpl.get().getWrapper().getVersion()
-        );
         return hc;
     }
 }
