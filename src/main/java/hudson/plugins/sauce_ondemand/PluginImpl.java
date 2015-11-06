@@ -94,6 +94,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String environmentVariablePrefix;
 
+    private boolean sendUsageData;
+
     public String getUsername() {
         return username;
     }
@@ -159,6 +161,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
+        setSendUsageData(formData.getBoolean("sendUsageData"));
         save();
 
     }
@@ -199,12 +202,12 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                 SauceOnDemandAuthentication credential = new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
 
-                    String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
-                    if (response != null && !response.equals("")) {
-                        return FormValidation.ok("Success");
-                    } else {
-                        return FormValidation.error("Failed to connect to Sauce OnDemand");
-                    }
+                String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
+                if (response != null && !response.equals("")) {
+                    return FormValidation.ok("Success");
+                } else {
+                    return FormValidation.error("Failed to connect to Sauce OnDemand");
+                }
 
             } catch (Exception e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
@@ -262,5 +265,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setSauceConnectOptions(String sauceConnectOptions) {
         this.sauceConnectOptions = sauceConnectOptions;
+    }
+
+    public void setSendUsageData(boolean sendUsageData) {
+        this.sendUsageData = sendUsageData;
+    }
+
+    public boolean isSendUsageData() {
+        return sendUsageData;
     }
 }

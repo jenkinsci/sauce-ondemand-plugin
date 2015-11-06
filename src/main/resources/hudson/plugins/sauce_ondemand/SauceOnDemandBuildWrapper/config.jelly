@@ -55,11 +55,6 @@
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
             </f:entry>
 
-            <f:entry field="sendUsageData">
-                <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
-            </f:entry>
-
-
             <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
                              title="${%Override default authentication}">
                 <j:set var="credentials" value="${instance.credentials}"/>

@@ -28,6 +28,7 @@ import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -38,6 +39,7 @@ import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
+import jenkins.model.Jenkins;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -162,8 +164,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final long serialVersionUID = 1L;
     /**
      * Indicates whether the plugin should send usage data to Sauce Labs.
+     * @deprecated moved to global scope
+     * @see PluginImpl
      */
-    private boolean sendUsageData;
+    transient private boolean sendUsageData;
     /**
      * The path to the native app package to be tested.
      */
@@ -247,7 +251,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
      * @param webDriverBrowsers         which browser(s) should be used for web driver
      * @param appiumBrowsers            which browser(s( should be used for appium
-     * @param sendUsageData             indicates wheter usage data should be sent along
      * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
      * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
      */
@@ -266,7 +269,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             boolean useLatestVersion,
             List<String> webDriverBrowsers,
             List<String> appiumBrowsers,
-            boolean sendUsageData,
             String nativeAppPackage,
 //            boolean useChromeForAndroid,
             boolean useGeneratedTunnelIdentifier
@@ -288,7 +290,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useLatestVersion = useLatestVersion;
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
-        this.sendUsageData = sendUsageData;
         this.nativeAppPackage = nativeAppPackage;
 //        this.useChromeForAndroid = useChromeForAndroid;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
@@ -361,6 +362,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             sauceConnectStarter = null;
         }
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
+
+        if (PluginImpl.get().isSendUsageData()) {
+            JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
+            try {
+                logger.fine("Reporting usage data");
+                sauceREST.recordCI("jenkins", Jenkins.VERSION.toString());
+            } catch (Exception e) {
+                logger.finest("Error reporting in: " + e.getMessage());
+                // This is purely for informational purposes, so if it fails, just keep going
+            }
+        }
 
         return new Environment() {
 
@@ -783,10 +795,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setNativeAppPackage(String nativeAppPackage) {
         this.nativeAppPackage = nativeAppPackage;
-    }
-
-    public void setSendUsageData(boolean sendUsageData) {
-        this.sendUsageData = sendUsageData;
     }
 
     public void setUseChromeForAndroid(boolean useChromeForAndroid) {
