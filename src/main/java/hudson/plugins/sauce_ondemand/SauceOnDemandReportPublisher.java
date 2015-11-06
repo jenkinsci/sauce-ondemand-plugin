@@ -146,13 +146,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
                 updates.put("name", jobInformation.getName());
             }
-            //TODO should we make the setting of the public status configurable?
-//            if (!PluginImpl.get().isDisableStatusColumn()) {
-            updates.put("public", true);
-//            }
             if (!jobInformation.isHasBuildNumber()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
+            updates.put("public", "share");
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
