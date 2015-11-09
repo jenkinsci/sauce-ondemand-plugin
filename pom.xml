@@ -160,13 +160,13 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.28-SNAPSHOT</version>
+            <version>1.0.28</version>
         </dependency>
 
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.108-SNAPSHOT</version>
+            <version>1.108</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
