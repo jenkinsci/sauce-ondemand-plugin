@@ -1,6 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager; 
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
@@ -8,6 +8,7 @@ import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
@@ -30,7 +31,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit; 
+import java.util.concurrent.TimeUnit;
 
 import java.lang.reflect.*;
 
@@ -109,28 +110,28 @@ public class SauceBuildWrapperTest {
             }
         }).when(spySauceRest).retrieveResults(any(URL.class));
 
-        //store dummy implementations of Sauce Connect manager 
-         
+        //store dummy implementations of Sauce Connect manager
+
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
-        };   
+        };
         storeDummyManager(sauceConnectFourManager);
 
         EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
         EnvVars envVars = prop.getEnvVars();
         envVars.put("TEST_PORT_VARIABLE_4321", "4321");
         this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
-    } 
+    }
 
-    private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {   
+    private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
 	    HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
-		Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");  
+		Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
         field.setAccessible(true);
         field.set(factory, sauceConnectFourManager);
-	
+
     }
 
     /**
@@ -147,7 +148,7 @@ public class SauceBuildWrapperTest {
                 return null;
             }
         };
-        storeDummyManager(sauceConnectFourManager);  
+        storeDummyManager(sauceConnectFourManager);
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
         sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
@@ -205,7 +206,7 @@ public class SauceBuildWrapperTest {
                 throw new SauceConnectDidNotStartException("Sauce Connect failed to start");
             }
         };
-        storeDummyManager(sauceConnectFourManager);  
+        storeDummyManager(sauceConnectFourManager);
         Credentials sauceCredentials = new Credentials("username", "access key");
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
 
@@ -233,6 +234,20 @@ public class SauceBuildWrapperTest {
 //        verify(sauceConnectFourManager.closeTunnelsForPlan(anyString(), anyString(), any(PrintStream.class)));
 
 
+    }
+
+    /**
+     * Runs a basic build on the slave
+     */
+    @Test
+    public void runSlaveBuild() throws Exception {
+        Credentials sauceCredentials = new Credentials("username", "access key");
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+
+        DumbSlave s = jenkinsRule.createOnlineSlave();
+        sauceBuildWrapper.setLaunchSauceConnectOnSlave(true);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, s);
+        jenkinsRule.assertBuildStatusSuccess(build);
     }
 
 
@@ -348,12 +363,24 @@ public class SauceBuildWrapperTest {
     }
 
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper) throws Exception {
-        return runFreestyleBuild(sauceBuildWrapper, new SauceBuilder());
+        return runFreestyleBuild(sauceBuildWrapper, null);
     }
 
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder) throws Exception {
+        return runFreestyleBuild(sauceBuildWrapper, builder, null);
 
+    }
+
+    /* FIXME - move to setup() */
+    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node node) throws Exception {
+
+        if (builder == null) {
+            builder = new SauceBuilder();
+        }
         FreeStyleProject freeStyleProject = jenkinsRule.createFreeStyleProject();
+        if (node != null) {
+            freeStyleProject.setAssignedNode(node);
+        }
         freeStyleProject.getBuildWrappersList().add(sauceBuildWrapper);
         freeStyleProject.getBuildersList().add(builder);
         SauceOnDemandReportPublisher publisher = new SauceOnDemandReportPublisher() {

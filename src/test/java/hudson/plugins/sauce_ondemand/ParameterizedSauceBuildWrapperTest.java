@@ -158,7 +158,7 @@ public class ParameterizedSauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
         assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
         assertEquals("Port provided to SC is the same as generated", holder.getInt("scProvidedPort"), holder.getInt("port"));
         jenkinsRule.assertBuildStatusSuccess(build);
@@ -176,7 +176,7 @@ public class ParameterizedSauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
         jenkinsRule.assertBuildStatusSuccess(build);
 
         Map<String, String> envVars = (Map<String, String>)holder.get("env");
@@ -214,8 +214,28 @@ public class ParameterizedSauceBuildWrapperTest {
         }
     }
 
-    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder) throws Exception {
+    /**
+     * Confirms nothing breaks on slave
+     * @throws Exception thrown if an unexpected error occurs
+     */
+    @Test
+    public void nothingBreaksOnSlave() throws Exception {
+        Slave slave = jenkinsRule.createOnlineSlave();
+
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, new TestBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                return true;
+            }
+        }, slave);
+        jenkinsRule.assertBuildStatusSuccess(build);
+    }
+
+    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node slave) throws Exception {
         FreeStyleProject freeStyleProject = jenkinsRule.createFreeStyleProject();
+        if (slave != null) {
+            freeStyleProject.setAssignedNode(slave);
+        }
         freeStyleProject.getBuildWrappersList().add(sauceBuildWrapper);
         freeStyleProject.getBuildersList().add(builder);
 
