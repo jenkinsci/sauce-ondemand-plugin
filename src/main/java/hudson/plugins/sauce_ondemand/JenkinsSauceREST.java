@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.saucerest.SauceREST;
 import hudson.Plugin;
+import hudson.PluginManager;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 
@@ -15,18 +16,24 @@ import java.net.URL;
  * @author Ross Rowe
  */
 public class JenkinsSauceREST extends SauceREST {
+    public static String pluginVersion = "";
     public JenkinsSauceREST(String username, String accessKey) {
         super(username, accessKey);
     }
 
+    public static String getPluginVersion() {
+        return pluginVersion;
+    }
+
+    public static void setPluginVersion(String pluginVersion) {
+        JenkinsSauceREST.pluginVersion = pluginVersion;
+    }
 
     @Override
     protected String getUserAgent() {
-        Plugin p = PluginImpl.get();
-        String pluginVersion = p == null ? "UNKNOWN" : p.getWrapper().getVersion();
         return super.getUserAgent() + " " +
             "Jenkins/" + Jenkins.VERSION.toString() + " " +
-            "JenkinsSauceOnDemand/" + pluginVersion;
+            "JenkinsSauceOnDemand/" + getPluginVersion();
     }
 
     @Override

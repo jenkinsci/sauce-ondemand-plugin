@@ -142,6 +142,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void start() throws Exception {
+        JenkinsSauceREST.setPluginVersion(getWrapper().getVersion());
         // backward compatibility with the legacy class name
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
         Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
@@ -176,7 +177,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     public static PluginImpl get() {
-        return Jenkins.getInstance().getPlugin(PluginImpl.class);
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) { return null; }
+        return j.getPlugin(PluginImpl.class);
     }
 
     public String getSauceConnectDirectory() {
