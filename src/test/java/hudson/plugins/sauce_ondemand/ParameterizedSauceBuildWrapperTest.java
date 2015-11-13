@@ -214,23 +214,6 @@ public class ParameterizedSauceBuildWrapperTest {
         }
     }
 
-    /**
-     * Confirms nothing breaks on slave
-     * @throws Exception thrown if an unexpected error occurs
-     */
-    @Test
-    public void nothingBreaksOnSlave() throws Exception {
-        Slave slave = jenkinsRule.createOnlineSlave();
-
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, new TestBuilder() {
-            @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                return true;
-            }
-        }, slave);
-        jenkinsRule.assertBuildStatusSuccess(build);
-    }
-
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node slave) throws Exception {
         FreeStyleProject freeStyleProject = jenkinsRule.createFreeStyleProject();
         if (slave != null) {
