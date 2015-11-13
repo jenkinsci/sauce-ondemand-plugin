@@ -101,6 +101,11 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     /**
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
+     * @return List of processed job information
+     * @throws IOException Unable to contact server
+     * @throws JSONException Not json returned properly
+     * @throws InvalidKeyException Bad keys
+     * @throws NoSuchAlgorithmException Should never be returned but can't do encoding
      */
     public List<JobInformation> retrieveJobIdsFromSauce() throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
         //invoke Sauce Rest API to find plan results with those values

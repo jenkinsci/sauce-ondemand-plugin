@@ -79,8 +79,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param buildListener Can be used to send any message.
      * @param testResult    Contains the test results for the build.
      * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException FIXME - pretty sure this can't be thrown in this function
+     * @throws InterruptedException FIXME - pretty sure this can't be thrown in this function
      */
     @Override
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
@@ -146,13 +146,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
                 updates.put("name", jobInformation.getName());
             }
-            //TODO should we make the setting of the public status configurable?
-//            if (!PluginImpl.get().isDisableStatusColumn()) {
-            updates.put("public", true);
-//            }
             if (!jobInformation.isHasBuildNumber()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
+            updates.put("public", "share");
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);

@@ -5,6 +5,9 @@
         <j:scope>
             <j:set var="instance" value="${it}"/>
             <j:set var="descriptor" value="${instance.descriptor}"/>
+            <f:entry field="sendUsageData">
+                <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
+            </f:entry>
             <f:entry title="${%Username}" field="username">
                 <f:textbox id="userBox"/>
             </f:entry>

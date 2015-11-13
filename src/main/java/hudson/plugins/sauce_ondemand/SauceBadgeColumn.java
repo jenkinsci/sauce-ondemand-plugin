@@ -42,7 +42,7 @@ public class SauceBadgeColumn extends ListViewColumn {
     }
 
     /**
-     * @param job
+     * @param job    Jenkins Job
      * @return the username to be used to retrieve the Sauce badge.  If null, then the badge won't be displayed.
      */
     public String getSauceUser(Job job) {

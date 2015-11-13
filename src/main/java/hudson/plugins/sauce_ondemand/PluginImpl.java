@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
@@ -73,6 +74,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
+    /**
+     * Handles the retrieval of browsers from Sauce Labs.
+     */
+    static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
     private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
@@ -94,6 +99,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String environmentVariablePrefix;
 
+    private boolean sendUsageData;
+
     public String getUsername() {
         return username;
     }
@@ -113,11 +120,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      * @param accessKey the Sauce access key
      * @param jobId     the Sauce job id
      * @return the HMAC token
-     * @throws java.security.NoSuchAlgorithmException
-     *
-     * @throws java.security.InvalidKeyException
-     *
-     * @throws java.io.UnsupportedEncodingException
+     * @throws java.security.NoSuchAlgorithmException FIXME
+     * @throws java.security.InvalidKeyException FIXME
+     * @throws java.io.UnsupportedEncodingException FIXME
      *
      */
     public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
@@ -137,6 +142,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void start() throws Exception {
+        JenkinsSauceREST.setPluginVersion(getWrapper().getVersion());
         // backward compatibility with the legacy class name
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
         Items.XSTREAM.alias("hudson.plugins.sauce__ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
@@ -161,6 +167,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
+        setSendUsageData(formData.getBoolean("sendUsageData"));
         save();
 
     }
@@ -170,7 +177,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     public static PluginImpl get() {
-        return Jenkins.getInstance().getPlugin(PluginImpl.class);
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) { return null; }
+        return j.getPlugin(PluginImpl.class);
     }
 
     public String getSauceConnectDirectory() {
@@ -201,12 +210,12 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
                 SauceOnDemandAuthentication credential = new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
                 //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
 
-                    String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
-                    if (response != null && !response.equals("")) {
-                        return FormValidation.ok("Success");
-                    } else {
-                        return FormValidation.error("Failed to connect to Sauce OnDemand");
-                    }
+                String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
+                if (response != null && !response.equals("")) {
+                    return FormValidation.ok("Success");
+                } else {
+                    return FormValidation.error("Failed to connect to Sauce OnDemand");
+                }
 
             } catch (Exception e) {
                 return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
@@ -215,7 +224,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * @return
+     * @return String to show to the user on screen
      */
     @JavaScriptMethod
     public String checkForUpdates() {
@@ -237,7 +246,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * @return
+     * @return Results of applying update
      */
     @JavaScriptMethod
     public String applyUpdates() {
@@ -264,5 +273,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setSauceConnectOptions(String sauceConnectOptions) {
         this.sauceConnectOptions = sauceConnectOptions;
+    }
+
+    public void setSendUsageData(boolean sendUsageData) {
+        this.sendUsageData = sendUsageData;
+    }
+
+    public boolean isSendUsageData() {
+        return sendUsageData;
     }
 }

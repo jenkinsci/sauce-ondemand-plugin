@@ -55,7 +55,7 @@ public class SauceOnDemandReportFactory extends Data {
     /**
      * Makes this a singleton -- since it's stateless, there's no need to keep one around for every build.
      *
-     * @return
+     * @return Singleton Report Factory Instance
      */
     public Object readResolve() {
         return INSTANCE;

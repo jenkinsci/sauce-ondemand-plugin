@@ -16,14 +16,14 @@ import java.security.NoSuchAlgorithmException;
 public abstract class AbstractAction implements Action {
 
     /**
-     * @return
+     * {@inheritDoc}
      */
     public String getIconFileName() {
         return null;
     }
 
     /**
-     * @return
+     * {@inheritDoc}
      */
     public String getDisplayName() {
 //        return "Sauce OnDemand Results";
@@ -31,7 +31,7 @@ public abstract class AbstractAction implements Action {
     }
 
     /**
-     * @return
+     * {@inheritDoc}
      */
     public String getUrlName() {
         return "sauce-ondemand-report";
@@ -39,9 +39,9 @@ public abstract class AbstractAction implements Action {
 
     /**
      *
-     * @param req
-     * @param rsp
-     * @throws IOException
+     * @param req Standard Request Object
+     * @param rsp Standard Response Object
+     * @throws IOException Unable to load index.jelly template
      */
     public void doJobReport(StaplerRequest req, StaplerResponse rsp)
             throws IOException {

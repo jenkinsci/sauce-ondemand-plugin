@@ -52,7 +52,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     /**
-     * @return
+     * @return Whether sauce results were found for this project/builds
      */
     public boolean hasSauceOnDemandResults() {
         logger.fine("checking if project has sauce results");

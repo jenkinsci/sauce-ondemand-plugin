@@ -1,7 +1,10 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.saucerest.SauceREST;
+import hudson.Plugin;
+import hudson.PluginManager;
 import hudson.ProxyConfiguration;
+import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -13,12 +16,29 @@ import java.net.URL;
  * @author Ross Rowe
  */
 public class JenkinsSauceREST extends SauceREST {
+    public static String pluginVersion = "";
     public JenkinsSauceREST(String username, String accessKey) {
         super(username, accessKey);
     }
 
+    public static String getPluginVersion() {
+        return pluginVersion;
+    }
+
+    public static void setPluginVersion(String pluginVersion) {
+        JenkinsSauceREST.pluginVersion = pluginVersion;
+    }
+
+    @Override
+    protected String getUserAgent() {
+        return super.getUserAgent() + " " +
+            "Jenkins/" + Jenkins.VERSION.toString() + " " +
+            "JenkinsSauceOnDemand/" + getPluginVersion();
+    }
+
     @Override
     public HttpURLConnection openConnection(URL url) throws IOException {
-        return (HttpURLConnection) ProxyConfiguration.open(url);
+        HttpURLConnection hc = (HttpURLConnection) ProxyConfiguration.open(url);
+        return hc;
     }
 }
