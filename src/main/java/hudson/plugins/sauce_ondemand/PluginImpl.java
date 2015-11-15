@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.google.common.base.Strings;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.common.SauceOnDemandAuthentication;
@@ -31,8 +32,9 @@ import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.model.Items;
+import hudson.model.listeners.ItemListener;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
@@ -44,6 +46,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -61,7 +64,7 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  * @author Ross Rowe
  */
-@Extension
+@Extension(ordinal = 1000)
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     /**
@@ -83,11 +86,13 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     /**
      * User name to access Sauce OnDemand.
      */
-    private String username;
+    @Deprecated
+    private transient String username;
     /**
      * Password for Sauce OnDemand.
      */
-    private Secret apiKey;
+    @Deprecated
+    private transient Secret apiKey;
 
     private boolean reuseSauceAuth;
 
@@ -101,16 +106,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private boolean sendUsageData;
 
-    public String getUsername() {
-        return username;
-    }
-
-    public Secret getApiKey() {
-        return apiKey;
-    }
+    private String globalCredentialId;
 
     public String calcHMAC(String id) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        return calcHMAC(getUsername(), getApiKey().getPlainText(), id);
+        throw new RuntimeException("UNIMPLEMENTED");
     }
 
     /**
@@ -152,18 +151,11 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         load();
     }
 
-    public void setCredential(String username, String apiKey) throws IOException {
-        this.username = username;
-        this.apiKey = Secret.fromString(apiKey);
-        save();
-    }
 
     @Override
     public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
 
-        disableStatusColumn = formData.getBoolean("disableStatusColumn");
-        username = formData.getString("username");
-        apiKey = Secret.fromString(formData.getString("apiKey"));
+        disableStatusColumn = formData.getBoolean("disableStatusColumn");;
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
@@ -173,7 +165,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) Hudson.getInstance().getDescriptorOrDie(getClass());
+        return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static PluginImpl get() {
@@ -196,6 +188,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setEnvironmentVariablePrefix(String environmentVariablePrefix) {
         this.environmentVariablePrefix = environmentVariablePrefix;
+    }
+
+    public String getGlobalCredentialId() {
+        return globalCredentialId;
+    }
+
+    public void setGlobalCredentialId(String globalCredentialId) {
+        this.globalCredentialId = globalCredentialId;
     }
 
     @Extension
@@ -282,4 +282,33 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     public boolean isSendUsageData() {
         return sendUsageData;
     }
+
+    protected void migrateCredentials() {
+        if (Strings.isNullOrEmpty(this.globalCredentialId) && !Strings.isNullOrEmpty(this.username) && this.apiKey != null) {
+            try {
+                String credentialId = SauceCredentialsImpl.migrateToCredentials(
+                    this.username,
+                    this.apiKey.getPlainText(),
+                    "Global"
+                );
+                this.globalCredentialId = credentialId;
+                this.username = null;
+                this.apiKey = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Extension
+    static final public class ItemListenerImpl extends ItemListener {
+        public void onLoaded() {
+            PluginImpl.get().migrateCredentials();
+        }
+    }
+
+
+
 }

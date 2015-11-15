@@ -60,6 +60,8 @@ public abstract class BrowserAxis extends Axis {
     public void addBuildVariable(String value, Map<String, String> map) {
         PluginImpl p = PluginImpl.get();
 
+        throw new RuntimeException("FIXME");
+        /*
         String username = p.getUsername();
         String accessKey = Secret.toString(p.getApiKey());
 
@@ -83,6 +85,7 @@ public abstract class BrowserAxis extends Axis {
             }
             map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri(username, accessKey));
         }
+        */
     }
 
     /**

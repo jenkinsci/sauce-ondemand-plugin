@@ -4,9 +4,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 
-/**
- * @author Ross Rowe
- */
 public class Credentials implements Serializable {
 
     private String username;

@@ -6,9 +6,12 @@
 
     <f:block>
         <f:section title="Sauce Labs Options">
-            <!-- <f:entry title="${%Credentials}" field="credentialsId">
-                <c:select/>
-            </f:entry> -->
+            <f:entry title="${%Credentials}">
+                <c:select xmlns:c="/lib/credentials" name="credentialId" field="credentialId" value="${site.credentialId}"
+                          checkMethod="post"
+                          checkUrl="'${rootURL}/descriptor/SSHBuildWrapper/loginCheck?credentialId='+escape(Form.findMatchingInput(this,'credentialId').value)"
+                />
+            </f:entry>
 
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect}" default="checked"/>

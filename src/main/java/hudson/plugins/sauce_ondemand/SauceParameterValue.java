@@ -58,7 +58,9 @@ public class SauceParameterValue extends ParameterValue {
 
         SauceOnDemandBuildWrapper buildWrapper = getBuildWrapper(build);
         if (buildWrapper == null) {
+            /* FIXME
             return Secret.toString(PluginImpl.get().getApiKey());
+            */
         }
         return buildWrapper.getApiKey();
     }
@@ -66,7 +68,9 @@ public class SauceParameterValue extends ParameterValue {
     private String getUserName(AbstractBuild<?, ?> build) {
         SauceOnDemandBuildWrapper buildWrapper = getBuildWrapper(build);
         if (buildWrapper == null) {
+            /* FIXME
             return PluginImpl.get().getUsername();
+            */
         }
         return getBuildWrapper(build).getUserName();
     }

@@ -23,21 +23,24 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.google.common.base.Strings;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.Launcher;
-import hudson.Util;
+import hudson.*;
 import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
+import hudson.model.listeners.ItemListener;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.remoting.Callable;
+import hudson.security.ACL;
 import hudson.tasks.BuildWrapper;
-import hudson.util.Secret;
 import hudson.util.VariableResolver;
+import hudson.util.XStream2;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -227,12 +230,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * RunCondition which allows users to define rules which enable Sauce Connect.
      */
     private RunCondition condition;
+    private String credentialId;
 
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
-     *
-     * @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
+     *  @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
      * @param condition                 allows users to define rules which enable Sauce Connect
      * @param credentials               the Sauce username/access key that should be used for the build.
      * @param seleniumInformation       the browser information that is to be used for the build.
@@ -247,26 +250,27 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param appiumBrowsers            which browser(s( should be used for appium
      * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
      * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
+     * @param credentialId
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
-            boolean enableSauceConnect,
-            RunCondition condition,
-            Credentials credentials,
-            SeleniumInformation seleniumInformation,
-            String seleniumHost,
-            String seleniumPort,
-            String options,
-            String sauceConnectPath,
-            boolean launchSauceConnectOnSlave,
-            boolean verboseLogging,
-            boolean useLatestVersion,
-            List<String> webDriverBrowsers,
-            List<String> appiumBrowsers,
-            String nativeAppPackage,
+        boolean enableSauceConnect,
+        RunCondition condition,
+        Credentials credentials,
+        SeleniumInformation seleniumInformation,
+        String seleniumHost,
+        String seleniumPort,
+        String options,
+        String sauceConnectPath,
+        boolean launchSauceConnectOnSlave,
+        boolean verboseLogging,
+        boolean useLatestVersion,
+        List<String> webDriverBrowsers,
+        List<String> appiumBrowsers,
+        String nativeAppPackage,
 //            boolean useChromeForAndroid,
-            boolean useGeneratedTunnelIdentifier
-    ) {
+        boolean useGeneratedTunnelIdentifier,
+        String credentialId) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -587,6 +591,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     private static class GetAvailablePort implements Callable<Integer,RuntimeException> {
         public Integer call() {
             int foundPort = -1;
@@ -650,26 +658,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @return the Sauce username to be used
      */
-    public String getUserName() {
-        if (getCredentials() != null) {
-            return getCredentials().getUsername();
-        } else {
-            PluginImpl p = PluginImpl.get();
-            return p.getUsername();
-        }
-    }
+    public String getUserName() { return getCredentials().getUsername(); }
 
     /**
      * @return the Sauce access key to be used
      */
-    public String getApiKey() {
-        if (getCredentials() != null) {
-            return getCredentials().getApiKey();
-        } else {
-            PluginImpl p = PluginImpl.get();
-            return Secret.toString(p.getApiKey());
-        }
-    }
+    public String getApiKey() { return getCredentials().getApiKey(); }
 
     public boolean isUseLatestVersion() {
         return useLatestVersion;
@@ -692,7 +686,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     public Credentials getCredentials() {
-        return credentials;
+        List<SauceCredentialsImpl> all = CredentialsProvider.lookupCredentials(SauceCredentialsImpl.class, (Item) this, ACL.SYSTEM, SauceCredentialsImpl.DOMAIN_REQUIREMENT);
+        SauceCredentialsImpl cred = CredentialsMatchers.firstOrNull(all, CredentialsMatchers.withId(credentialId));
+        return new Credentials(cred.getUsername(), cred.getPassword().getPlainText()); // FIXME
     }
 
     public void setCredentials(Credentials credentials) {
@@ -1061,6 +1057,37 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         public List<String> getLines() {
             return lines;
+        }
+    }
+
+    protected void migrateCredentials(Project project) {
+        if (Strings.isNullOrEmpty(this.credentialId) && this.credentials != null) {
+            try {
+                String credentialId = SauceCredentialsImpl.migrateToCredentials(
+                    this.credentials.getUsername(),
+                    this.credentials.getApiKey(),
+                    project == null ? "Unknown" : project.getDisplayName()
+                );
+                this.credentialId = credentialId;
+                this.credentials = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Extension
+    static final public class ItemListenerImpl extends ItemListener {
+        public void onLoaded() {
+            for (Project p : Jenkins.getInstance().getItems(Project.class))
+            {
+                for (SauceOnDemandBuildWrapper bw : (List<SauceOnDemandBuildWrapper>) p.getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
+                {
+                    bw.migrateCredentials(p);
+                }
+            }
         }
     }
 
