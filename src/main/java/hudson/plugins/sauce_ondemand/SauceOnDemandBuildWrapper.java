@@ -27,7 +27,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.google.common.base.Strings;
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
@@ -36,16 +35,18 @@ import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
 import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsListBoxModel;
 import hudson.remoting.Callable;
 import hudson.security.ACL;
 import hudson.tasks.BuildWrapper;
+import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
-import hudson.util.XStream2;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.json.JSONException;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -164,6 +165,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @deprecated moved to global scope
      * @see PluginImpl
      */
+    @SuppressWarnings("unused")
+    @Deprecated
     transient private boolean sendUsageData;
     /**
      * The path to the native app package to be tested.
@@ -196,7 +199,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private String seleniumPort;
     /**
      * The Sauce username/access key that should be used for the build.
+     * @deprecated use credentialsId instead
      */
+    @Deprecated
     private Credentials credentials;
     /**
      * The browser information that is to be used for the build.
@@ -230,6 +235,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * RunCondition which allows users to define rules which enable Sauce Connect.
      */
     private RunCondition condition;
+    /**
+     * @see CredentialsProvider
+     */
     private String credentialId;
 
 
@@ -250,7 +258,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param appiumBrowsers            which browser(s( should be used for appium
      * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
      * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
-     * @param credentialId
+     * @param credentialId              Which credential a build should use
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
@@ -291,6 +299,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.nativeAppPackage = nativeAppPackage;
 //        this.useChromeForAndroid = useChromeForAndroid;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
+        this.credentialId = credentialId;
     }
 
 
@@ -591,10 +600,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
-    public void setCredentialId(String credentialId) {
-        this.credentialId = credentialId;
-    }
-
     private static class GetAvailablePort implements Callable<Integer,RuntimeException> {
         public Integer call() {
             int foundPort = -1;
@@ -689,10 +694,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         List<SauceCredentialsImpl> all = CredentialsProvider.lookupCredentials(SauceCredentialsImpl.class, (Item) this, ACL.SYSTEM, SauceCredentialsImpl.DOMAIN_REQUIREMENT);
         SauceCredentialsImpl cred = CredentialsMatchers.firstOrNull(all, CredentialsMatchers.withId(credentialId));
         return new Credentials(cred.getUsername(), cred.getPassword().getPlainText()); // FIXME
-    }
-
-    public void setCredentials(Credentials credentials) {
-        this.credentials = credentials;
     }
 
     public SeleniumInformation getSeleniumInformation() {
@@ -790,6 +791,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public void setUseChromeForAndroid(boolean useChromeForAndroid) {
         this.useChromeForAndroid = useChromeForAndroid;
     }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) { this.credentialId = credentialId; }
 
     /**
      * {@inheritDoc}
@@ -930,12 +937,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     @Extension
     public static class DescriptorImpl extends Descriptor<BuildWrapper> {
-
-        /**
-         * Handles retrieving details for supported browsers.
-         */
-        private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
-
         /**
          * @return text to be displayed within Jenkins job configuration
          */
@@ -944,13 +945,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return "Sauce Labs Support";
         }
 
-
         /**
          * @return the list of supported Appium browsers
          */
         public List<Browser> getAppiumBrowsers() {
             try {
-                return BROWSER_FACTORY.getAppiumBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getAppiumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -964,7 +964,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public List<Browser> getSeleniumBrowsers() {
             try {
-                return BROWSER_FACTORY.getSeleniumBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getSeleniumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -978,7 +978,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public List<Browser> getWebDriverBrowsers() {
             try {
-                return BROWSER_FACTORY.getWebDriverBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -993,7 +993,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public Map<String, List<Browser>> getWebDriverMap() {
             try {
                 Map<String, List<Browser>> map = new HashMap<String, List<Browser>>();
-                for (Browser browser : BROWSER_FACTORY.getWebDriverBrowsers()) {
+                for (Browser browser : PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers()) {
                     List<Browser> browsers = map.get(browser.getOs());
                     if (browsers == null) {
                         browsers = new ArrayList<Browser>();
@@ -1009,6 +1009,22 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
             return Collections.emptyMap();
         }
+
+        /**
+         * @return the list of supported credentials
+         */
+        public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
+            /* FIXME - refactor into shared function so it doesn't repeat above */
+            final List<SauceCredentialsImpl> credentials = CredentialsProvider.lookupCredentials(
+                SauceCredentialsImpl.class,
+                context,
+                ACL.SYSTEM,
+                SauceCredentialsImpl.DOMAIN_REQUIREMENT
+            );
+
+            return new SauceCredentialsListBoxModel().withEmptySelection().withAll(credentials);
+        }
+
     }
 
 
@@ -1090,6 +1106,4 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
         }
     }
-
-
 }
