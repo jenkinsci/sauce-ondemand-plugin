@@ -8,11 +8,8 @@
             <f:entry field="sendUsageData">
                 <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
             </f:entry>
-            <f:entry title="${%Username}" field="username">
-                <f:textbox id="userBox"/>
-            </f:entry>
-            <f:entry title="${%API Access Key}" field="apiKey">
-                <f:password id="apiKeyBox"/>
+            <f:entry title="${%Credentials}" field="credentialId">
+                <c:select xmlns:c="/lib/credentials" />
             </f:entry>
             <f:entry title="${%Sauce Connect Working Directory}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>

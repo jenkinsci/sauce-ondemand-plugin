@@ -26,27 +26,24 @@ package hudson.plugins.sauce_ondemand;
 import com.google.common.base.Strings;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceLibraryManager;
-import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import hudson.Extension;
 import hudson.Plugin;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Items;
+import hudson.model.*;
 import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
-import hudson.util.FormValidation;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsListBoxModel;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.codec.binary.Hex;
-import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -106,7 +103,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private boolean sendUsageData;
 
-    private String globalCredentialId;
+    private String credentialId;
 
     public String calcHMAC(String id) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         throw new RuntimeException("UNIMPLEMENTED");
@@ -190,12 +187,16 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         this.environmentVariablePrefix = environmentVariablePrefix;
     }
 
-    public String getGlobalCredentialId() {
-        return globalCredentialId;
+    public String getCredentialId() {
+        return credentialId;
     }
 
-    public void setGlobalCredentialId(String globalCredentialId) {
-        this.globalCredentialId = globalCredentialId;
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
+    public SauceCredentialsImpl getCredentials() {
+        return SauceCredentialsImpl.getCredentialsById((Item) null, getCredentialId());
     }
 
     @Extension
@@ -205,21 +206,12 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return "Sauce OnDemand";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean disableStatusColumn) {
-            try {
-                SauceOnDemandAuthentication credential = new SauceOnDemandAuthentication(username, Secret.toString(Secret.fromString(apiKey)));
-                //we aren't interested in the results of the REST API call - just the fact that we executed without an error is enough to verify the connection
-
-                String response = new JenkinsSauceREST(credential.getUsername(), credential.getAccessKey()).retrieveResults("activity");
-                if (response != null && !response.equals("")) {
-                    return FormValidation.ok("Success");
-                } else {
-                    return FormValidation.error("Failed to connect to Sauce OnDemand");
-                }
-
-            } catch (Exception e) {
-                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
-            }
+        /**
+         * @return the list of supported credentials
+         */
+        public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
+            return new SauceCredentialsListBoxModel()
+                .withAll(SauceCredentialsImpl.all(context));
         }
     }
 
@@ -284,14 +276,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     protected void migrateCredentials() {
-        if (Strings.isNullOrEmpty(this.globalCredentialId) && !Strings.isNullOrEmpty(this.username) && this.apiKey != null) {
+        if (Strings.isNullOrEmpty(this.credentialId) && !Strings.isNullOrEmpty(this.username) && this.apiKey != null) {
             try {
                 String credentialId = SauceCredentialsImpl.migrateToCredentials(
                     this.username,
                     this.apiKey.getPlainText(),
                     "Global"
                 );
-                this.globalCredentialId = credentialId;
+                this.credentialId = credentialId;
                 this.username = null;
                 this.apiKey = null;
             } catch (InterruptedException e) {

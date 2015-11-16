@@ -668,7 +668,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @return the Sauce access key to be used
      */
-    public String getApiKey() { return getCredentials().getApiKey(); }
+    public String getApiKey() { return getCredentials().getPassword().getPlainText(); }
 
     public boolean isUseLatestVersion() {
         return useLatestVersion;
@@ -690,10 +690,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.seleniumPort = seleniumPort;
     }
 
-    public Credentials getCredentials() {
-        List<SauceCredentialsImpl> all = CredentialsProvider.lookupCredentials(SauceCredentialsImpl.class, (Item) this, ACL.SYSTEM, SauceCredentialsImpl.DOMAIN_REQUIREMENT);
-        SauceCredentialsImpl cred = CredentialsMatchers.firstOrNull(all, CredentialsMatchers.withId(credentialId));
-        return new Credentials(cred.getUsername(), cred.getPassword().getPlainText()); // FIXME
+    public SauceCredentialsImpl getCredentials() {
+        if (Strings.isNullOrEmpty(this.getCredentialId())) {
+            return PluginImpl.get().getCredentials();
+        }
+
+        return SauceCredentialsImpl.getCredentialsById((Item) this, getCredentialId());
     }
 
     public SeleniumInformation getSeleniumInformation() {
@@ -1014,15 +1016,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          * @return the list of supported credentials
          */
         public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
-            /* FIXME - refactor into shared function so it doesn't repeat above */
-            final List<SauceCredentialsImpl> credentials = CredentialsProvider.lookupCredentials(
-                SauceCredentialsImpl.class,
-                context,
-                ACL.SYSTEM,
-                SauceCredentialsImpl.DOMAIN_REQUIREMENT
-            );
-
-            return new SauceCredentialsListBoxModel().withEmptySelection().withAll(credentials);
+            return new SauceCredentialsListBoxModel()
+                .withEmptySelection().withAll(SauceCredentialsImpl.all(context));
         }
 
     }

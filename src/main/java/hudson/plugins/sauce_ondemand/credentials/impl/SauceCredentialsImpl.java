@@ -9,12 +9,17 @@ import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.base.Strings;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
 import java.io.IOException;
@@ -76,17 +81,26 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
         public String getDisplayName() {
             return "Sauce Labs";
         }
+
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String password) {
+            try {
+                String response = new JenkinsSauceREST(username, password).retrieveResults("activity");
+                if (response != null && !response.equals("")) {
+                    return FormValidation.ok("Success");
+                } else {
+                    return FormValidation.error("Failed to connect to Sauce OnDemand");
+                }
+
+            } catch (Exception e) {
+                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
+            }
+        }
     }
 
     public final static DomainRequirement DOMAIN_REQUIREMENT = new HostnamePortRequirement("saucelabs.com", 80);
 
     public static String migrateToCredentials(String username, String accessKey, String migratedFrom) throws InterruptedException, IOException {
-        final List<SauceCredentialsImpl> credentialsForDomain = CredentialsProvider.lookupCredentials(
-            SauceCredentialsImpl.class,
-            (Item) null,
-            ACL.SYSTEM,
-            DOMAIN_REQUIREMENT
-        );
+        final List<SauceCredentialsImpl> credentialsForDomain = SauceCredentialsImpl.all((Item) null);
         final StandardUsernameCredentials existingCredentials = CredentialsMatchers.firstOrNull(
             credentialsForDomain,
             CredentialsMatchers.withUsername(username)
@@ -127,5 +141,30 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
         }
 
         return credentialId;
+    }
+
+    public static List<SauceCredentialsImpl> all(ItemGroup context) {
+        return CredentialsProvider.lookupCredentials(
+            SauceCredentialsImpl.class,
+            context,
+            ACL.SYSTEM,
+            SauceCredentialsImpl.DOMAIN_REQUIREMENT
+        );
+    }
+
+    public static List<SauceCredentialsImpl> all(Item context) {
+        return CredentialsProvider.lookupCredentials(
+            SauceCredentialsImpl.class,
+            context,
+            ACL.SYSTEM,
+            SauceCredentialsImpl.DOMAIN_REQUIREMENT
+        );
+    }
+
+    public static SauceCredentialsImpl getCredentialsById(Item context, String id) {
+        return CredentialsMatchers.firstOrNull(
+            SauceCredentialsImpl.all((Item) context),
+            CredentialsMatchers.withId(id)
+        );
     }
 }
