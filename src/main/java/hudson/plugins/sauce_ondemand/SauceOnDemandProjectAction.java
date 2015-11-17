@@ -3,20 +3,24 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import hudson.FilePath;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import org.codehaus.plexus.archiver.zip.ZipArchiver;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.io.FileUtils;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Backing logic for the Sauce UI component displayed on the Jenkins project page.
@@ -127,43 +131,53 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         return Collections.emptyList();
     }
 
-    /**
-     * Generates a zip file containing:
-     * <ul>
-     * <li>Sauce Connect log file</li>
-     * <li>Jenkins console output</li>
-     * </ul>
-     *
-     * @return HTML to be displayed to the user when the generation has been completed
-     */
-    @JavaScriptMethod
-    public String generateSupportZip() {
-
-        try {
-            SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
-            SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
-            ZipArchiver archiver = new ZipArchiver();
-            File sauceConnectLogFile = null;
-            if (sauceBuildWrapper.isEnableSauceConnect()) {
-                sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
-                if (sauceConnectLogFile != null) {
-                    archiver.addFile(sauceConnectLogFile, "sc.log");
-                }
-            }
-            //add Jenkins build output to zip
-            archiver.addFile(getProject().getLastBuild().getLogFile(), "jenkins_build_output.log");
-
-            File destinationDirectory = sauceConnectLogFile == null ? new File(System.getProperty("user.home")) : sauceConnectLogFile.getParentFile();
-            File destFile = new File(destinationDirectory, "sauce_support.zip");
-            archiver.setDestFile(destFile);
-            archiver.createArchive();
-            return "Generation of Sauce support zip file was successful, file is located at: " + destFile.getAbsolutePath();
-
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Unable to create zip file", e);
-        }
-
-        return "Error creating Sauce support zip";
+    private static void addFileToZipStream(ZipOutputStream zipOutputStream, byte[] bytes, String filename) throws IOException {
+        ZipArchiveEntry zipEntry = new ZipArchiveEntry(filename);
+        zipOutputStream.putNextEntry(zipEntry);
+        zipOutputStream.write(bytes);
+        zipOutputStream.flush();
+        zipOutputStream.closeEntry();
     }
 
+    public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+        SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
+        AbstractBuild build = getProject().getLastBuild();
+
+        //jenkins.checkPermission(Jenkins.READ);
+
+        rsp.setContentType("application/zip");
+        rsp.addHeader("Content-Disposition", "attachment; filename=\"sauce_support.zip\"");
+        rsp.addHeader("Content-Transfer-Encoding", "binary");
+
+        ZipOutputStream zipOutputStream = new ZipOutputStream(rsp.getOutputStream());
+        zipOutputStream.setLevel(ZipOutputStream.STORED);
+
+        addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
+
+        if (sauceBuildWrapper.isEnableSauceConnect()) {
+            File sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
+            if (sauceBuildWrapper.isLaunchSauceConnectOnSlave()) {
+                FilePath fp = new FilePath(build.getBuiltOn().getChannel(), sauceConnectLogFile.getPath());
+                addFileToZipStream(zipOutputStream, fp.readToString().getBytes("UTF-8"), "sc.log");
+            } else if (sauceConnectLogFile != null) {
+                addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(sauceConnectLogFile), "sc.log");
+            }
+        }
+
+        StringBuilder buildWrapperSB = new StringBuilder();
+        Iterator buildWrapperIterator = BeanUtils.describe(sauceBuildWrapper).entrySet().iterator();
+        while (buildWrapperIterator.hasNext())
+        {
+            Map.Entry entry = (Map.Entry) buildWrapperIterator.next();
+            buildWrapperSB.append(entry.getKey() + "=" + entry.getValue() + "\r\n");
+        }
+        addFileToZipStream(zipOutputStream, buildWrapperSB.toString().getBytes("UTF-8"), "build_wrapper_config.txt");
+
+        zipOutputStream.finish();
+        zipOutputStream.flush();
+
+        rsp.getOutputStream().flush();
+
+    }
 }
