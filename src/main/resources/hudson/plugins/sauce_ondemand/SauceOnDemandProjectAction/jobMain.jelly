@@ -41,20 +41,7 @@
         </div>
         <hr />
         <div >
-            <a id="generateSauceReport" href="#">Generate Sauce Support Zip</a>
-            <div id="msg"></div>
-            <script>
-                var plugin =
-                <st:bind value="${from}"/>
-
-                var onclickFunction = function() {
-                plugin.generateSupportZip(function(t) {
-                document.getElementById('msg').innerHTML = t.responseObject();
-                });
-                };
-                document.getElementById('generateSauceReport').onclick = onclickFunction;
-
-            </script>
+            <a id="generateSauceReport" href="${from.urlName}/generateSupportZip">Generate Sauce Support Zip</a>
         </div>
     </j:if>
 
