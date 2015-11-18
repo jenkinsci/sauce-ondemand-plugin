@@ -11,6 +11,7 @@ import hudson.model.AbstractProject;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -139,18 +140,15 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         zipOutputStream.closeEntry();
     }
 
-    public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
         SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
         AbstractBuild build = getProject().getLastBuild();
 
         //jenkins.checkPermission(Jenkins.READ);
 
-        rsp.setContentType("application/zip");
-        rsp.addHeader("Content-Disposition", "attachment; filename=\"sauce_support.zip\"");
-        rsp.addHeader("Content-Transfer-Encoding", "binary");
-
-        ZipOutputStream zipOutputStream = new ZipOutputStream(rsp.getOutputStream());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
         zipOutputStream.setLevel(ZipOutputStream.STORED);
 
         addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
@@ -174,9 +172,22 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         }
         addFileToZipStream(zipOutputStream, buildWrapperSB.toString().getBytes("UTF-8"), "build_wrapper_config.txt");
 
+        StringBuilder pluginImplSB = new StringBuilder();
+        Iterator bpluginImplIterator = BeanUtils.describe(PluginImpl.get()).entrySet().iterator();
+        while (bpluginImplIterator.hasNext())
+        {
+            Map.Entry entry = (Map.Entry) bpluginImplIterator.next();
+            buildWrapperSB.append(entry.getKey() + "=" + entry.getValue() + "\r\n");
+        }
+        addFileToZipStream(zipOutputStream, buildWrapperSB.toString().getBytes("UTF-8"), "global_sauce_config.txt");
+
         zipOutputStream.finish();
         zipOutputStream.flush();
 
+        rsp.setContentType("application/zip");
+        rsp.addHeader("Content-Disposition", "attachment; filename=\"sauce_support.zip\"");
+        rsp.addHeader("Content-Transfer-Encoding", "binary");
+        rsp.getOutputStream().write(baos.toByteArray());
         rsp.getOutputStream().flush();
 
     }
