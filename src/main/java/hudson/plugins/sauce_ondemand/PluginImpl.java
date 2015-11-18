@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  * @author Ross Rowe
  */
-@Extension(ordinal = 1000)
+@Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     /**
