@@ -74,6 +74,14 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
     @NonNull
     public String getUsername() { return this.username; }
 
+    @Override
+    public String toString() {
+        return "SauceCredentialsImpl{" +
+            "apiKey=" + apiKey +
+            ", username='" + username + '\'' +
+            '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends CredentialsDescriptor
     {
