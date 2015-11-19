@@ -6,13 +6,6 @@
 
     <f:block>
         <f:section title="Sauce Labs Options">
-            <f:entry title="${%Credentials}" field="credentialId">
-                <c:select xmlns:c="/lib/credentials"
-                          checkMethod="post"
-                          checkUrl="'${rootURL}/descriptor/SSHBuildWrapper/loginCheck?credentialId='+escape(Form.findMatchingInput(this,'credentialId').value)"
-                />
-            </f:entry>
-
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect}" default="checked"/>
             </f:entry>
@@ -62,17 +55,10 @@
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
             </f:entry>
 
-            <f:optionalBlock field="credentials" checked="${instance.credentials != null}"
-                             title="${%Override default authentication}">
-                <j:set var="credentials" value="${instance.credentials}"/>
-                <f:entry title="${%Username}" field="username">
-                    <f:textbox value="${credentials.username}"/>
-                </f:entry>
-                <f:entry title="${%API Access Key}" field="apiKey">
-                    <f:password value="${credentials.apiKey}"/>
-                </f:entry>
-            </f:optionalBlock>
 
+            <f:entry title="${%Credentials}" field="credentialId">
+                <c:select xmlns:c="/lib/credentials"/>
+            </f:entry>
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>

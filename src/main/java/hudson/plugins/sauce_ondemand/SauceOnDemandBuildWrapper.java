@@ -23,7 +23,6 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.google.common.base.Strings;
 import com.saucelabs.ci.Browser;
@@ -37,7 +36,6 @@ import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsListBoxModel;
 import hudson.remoting.Callable;
-import hudson.security.ACL;
 import hudson.tasks.BuildWrapper;
 import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
@@ -278,7 +276,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         String nativeAppPackage,
 //            boolean useChromeForAndroid,
         boolean useGeneratedTunnelIdentifier,
-        String credentialId) {
+        String credentialId
+    ) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -315,6 +314,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         listener.getLogger().println("Starting pre-build for Sauce Labs plugin");
         logger.fine("Setting up Sauce Build Wrapper");
 
+        SauceCredentialsImpl credentials = SauceCredentialsImpl.getSauceCredentials(build, this);
+        final String apiKey = credentials.getApiKey().getPlainText();
+        final String username = credentials.getUsername();
+
         final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
         final SauceConnectHandler sauceConnectStarter;
         if (isEnableSauceConnect()) {
@@ -349,7 +352,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             if (canRun) {
-                sauceConnectStarter = new SauceConnectHandler(this, env, listener, workingDirectory, resolvedOptions);
+                sauceConnectStarter = new SauceConnectHandler(
+                    this, env, listener,
+                    workingDirectory, resolvedOptions,
+                    null,
+                    username, apiKey
+                );
 
                 if (launchSauceConnectOnSlave) {
                     listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
@@ -371,7 +379,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
         if (PluginImpl.get().isSendUsageData()) {
-            JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
+            JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, apiKey);
             try {
                 logger.fine("Reporting usage data");
                 sauceREST.recordCI("jenkins", Jenkins.VERSION.toString());
@@ -405,7 +413,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         browsers.add(PluginImpl.BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
                     }
                 }
-                SauceEnvironmentUtil.outputVariables(env, browsers, getUserName(), getApiKey(), verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputVariables(env, browsers, username, apiKey, verboseLogging, listener.getLogger());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
@@ -419,14 +427,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 }
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, sanitiseBuildNumber(build.toString()), true, verboseLogging, listener.getLogger());
                 /* Legacy Env name */
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USER_NAME, getUserName(), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USER_NAME, username, true, verboseLogging, listener.getLogger());
                 /* New standard env name */
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USERNAME, getUserName(), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USERNAME, username, true, verboseLogging, listener.getLogger());
 
                 /* Legacy Env name */
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_API_KEY, getApiKey(), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_API_KEY, apiKey, true, verboseLogging, listener.getLogger());
                 /* New standard env name */
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_ACCESS_KEY, getApiKey(), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_ACCESS_KEY, apiKey, true, verboseLogging, listener.getLogger());
 
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_HOST, getHostName(), true, verboseLogging, listener.getLogger());
                 if (StringUtils.isNotBlank(getNativeAppPackage())) {
@@ -497,9 +505,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         }
 
                         if (launchSauceConnectOnSlave) {
-                            Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, getUserName(), resolvedOptions));
+                            Computer.currentComputer().getChannel().call(new SauceConnectCloser(listener, username, resolvedOptions));
                         } else {
-                            SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, getUserName(), resolvedOptions);
+                            SauceConnectCloser tunnelCloser = new SauceConnectCloser(listener, username, resolvedOptions);
                             tunnelCloser.call();
                         }
                     }
@@ -564,11 +572,15 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param build the build in progress
      */
     private void processBuildOutput(AbstractBuild build) {
+        SauceCredentialsImpl credentials = SauceCredentialsImpl.getSauceCredentials(build, this);
+        final String apiKey = credentials.getApiKey().getPlainText();
+        final String username = credentials.getUsername();
+
         if (logParserMap != null) {
             logger.fine("Adding build action to " + build.toString());
             SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
             if (logParser != null) {
-                SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, logParser, getUserName(), getApiKey());
+                SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, logParser, username, apiKey);
                 build.addAction(buildAction);
             }
         }
@@ -659,16 +671,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
         }
     }
-
-    /**
-     * @return the Sauce username to be used
-     */
-    public String getUserName() { return getCredentials().getUsername(); }
-
-    /**
-     * @return the Sauce access key to be used
-     */
-    public String getApiKey() { return getCredentials().getPassword().getPlainText(); }
 
     public boolean isUseLatestVersion() {
         return useLatestVersion;
@@ -798,7 +800,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return credentialId;
     }
 
-    public void setCredentialId(String credentialId) { this.credentialId = credentialId; }
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
 
     /**
      * {@inheritDoc}
@@ -865,30 +869,32 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         /**
          * @param sauceOnDemandBuildWrapper
-         * @param listener
-         * @param workingDirectory
-         * @param resolvedOptions
-         */
-        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, EnvVars env, BuildListener listener, String workingDirectory, String resolvedOptions) {
-            this.options = resolvedOptions;
-            this.workingDirectory = workingDirectory;
-            this.listener = listener;
-            this.username = sauceOnDemandBuildWrapper.getUserName();
-            this.port = sauceOnDemandBuildWrapper.getPort(env);
-            this.key = sauceOnDemandBuildWrapper.getApiKey();
-            this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
-            this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
-        }
-
-        /**
-         * @param sauceOnDemandBuildWrapper
+         * @param env
          * @param listener
          * @param workingDirectory
          * @param resolvedOptions
          * @param sauceConnectJar
+         * @param username
+         * @param apiKey
          */
-        public SauceConnectHandler(SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper, EnvVars env, BuildListener listener, String workingDirectory, String resolvedOptions, File sauceConnectJar) {
-            this(sauceOnDemandBuildWrapper, env, listener, workingDirectory, resolvedOptions);
+        public SauceConnectHandler(
+            SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper,
+            EnvVars env,
+            BuildListener listener,
+            String workingDirectory,
+            String resolvedOptions,
+            File sauceConnectJar,
+            String username,
+            String apiKey
+        ) {
+            this.options = resolvedOptions;
+            this.workingDirectory = workingDirectory;
+            this.listener = listener;
+            this.username = username;
+            this.key = apiKey;
+            this.port = sauceOnDemandBuildWrapper.getPort(env);
+            this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
+            this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
             this.sauceConnectJar = sauceConnectJar;
         }
 

@@ -3,11 +3,17 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
+import hudson.model.Project;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.junit.CaseResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -49,12 +55,15 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     private List<JobInformation> jobInformation;
     private String accessKey;
     private String username;
+    transient private SauceCredentialsImpl credentials;
 
+    @DataBoundConstructor
     public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser, String username, String accessKey) {
         this.build = build;
         this.logParser = logParser;
         this.username = username;
         this.accessKey = accessKey;
+        this.credentials = new SauceCredentialsImpl(null, null, this.username, this.accessKey, "");
     }
 
     public String getAccessKey() {
@@ -125,7 +134,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
-                JobInformation information = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
+                JobInformation information = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
                 information.populateFromJson(jobData);
                 jobInformation.add(information);
             }
@@ -136,8 +145,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-    public ById getById(String id) {
-        return new ById(id);
+
+    public SauceTestResultsById getById(String jobId) {
+        Project<?, ?> project = (Project) this.getBuild().getProject();
+        return new SauceTestResultsById(jobId, credentials);
     }
 
     private JobInformation jobInformationForBuild(String jobId) {
@@ -180,7 +191,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     continue;
                 }
                 try {
-                    jobInfo = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
+                    jobInfo = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
                     //retrieve data from session id to see if build number and/or job name has been stored
                     String jsonResponse = sauceREST.getJobInfo(jobId);
                     if (!jsonResponse.equals("")) {
@@ -204,4 +215,23 @@ public class SauceOnDemandBuildAction extends AbstractAction {
             }
         }
     }
+
+    /**
+     *
+     * @param req Standard Request Object
+     * @param rsp Standard Response Object
+     * @throws IOException Unable to load index.jelly template
+     */
+    @SuppressWarnings("unused") // used by stapler
+    public void doJobReport(StaplerRequest req, StaplerResponse rsp)
+        throws IOException {
+        SauceTestResultsById byId = getById(req.getParameter("jobId"));
+        try {
+            req.getView(byId, "index.jelly").forward(req, rsp);
+        } catch (ServletException e) {
+            throw new IOException(e);
+        }
+    }
+
+
 }

@@ -26,6 +26,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import hudson.matrix.Axis;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.util.Secret;
 
 import java.util.List;
@@ -59,12 +60,10 @@ public abstract class BrowserAxis extends Axis {
      */
     public void addBuildVariable(String value, Map<String, String> map) {
         PluginImpl p = PluginImpl.get();
+        SauceCredentialsImpl credentials = SauceCredentialsImpl.getCredentialsById(null, p.getCredentialId()); // FIXME - this never will allow build level credentials
 
-        throw new RuntimeException("FIXME");
-        /*
-        String username = p.getUsername();
-        String accessKey = Secret.toString(p.getApiKey());
-
+        String username = credentials.getUsername();
+        String accessKey = credentials.getApiKey().getPlainText();
 
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
@@ -85,7 +84,6 @@ public abstract class BrowserAxis extends Axis {
             }
             map.put("arguments", "-D" + getName() + "=" + browserInstance.getUri(username, accessKey));
         }
-        */
     }
 
     /**

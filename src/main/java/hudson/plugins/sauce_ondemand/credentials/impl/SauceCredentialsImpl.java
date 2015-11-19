@@ -7,26 +7,33 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
-import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.base.Strings;
-import com.saucelabs.common.SauceOnDemandAuthentication;
+import com.saucelabs.saucerest.SauceREST;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.AbstractBuild;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
+import hudson.plugins.sauce_ondemand.PluginImpl;
+import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import org.apache.commons.codec.binary.Hex;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 
 /**
  * Created by gavinmogan on 10/17/15.
@@ -82,6 +89,11 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
             '}';
     }
 
+    public static SauceCredentialsImpl getSauceCredentials(AbstractBuild build, SauceOnDemandBuildWrapper wrapper) {
+        String credentialId = !Strings.isNullOrEmpty(wrapper.getCredentialId()) ? wrapper.getCredentialId() : PluginImpl.get().getCredentialId();
+        return getCredentialsById(build.getProject(), credentialId);
+    }
+
     @Extension
     public static class DescriptorImpl extends CredentialsDescriptor
     {
@@ -90,18 +102,24 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
             return "Sauce Labs";
         }
 
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String password) {
-            try {
-                String response = new JenkinsSauceREST(username, password).retrieveResults("activity");
-                if (response != null && !response.equals("")) {
-                    return FormValidation.ok("Success");
-                } else {
-                    return FormValidation.error("Failed to connect to Sauce OnDemand");
-                }
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username) {
+            return doValidate(username, value);
+        }
 
-            } catch (Exception e) {
-                return FormValidation.error(e, "Failed to connect to Sauce OnDemand");
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
+            if (actualValidate(username, apiKey))
+                return FormValidation.ok();
+            return FormValidation.error("Bad username or api key");
+        }
+
+        public boolean actualValidate(@QueryParameter String username, @QueryParameter String apiKey) {
+            SauceREST rest = new JenkinsSauceREST(username, apiKey);
+            if ("".equals(rest.getUser())) {
+                return false;
             }
+            return true;
         }
     }
 
@@ -121,7 +139,7 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
             final StandardUsernameCredentials credentialsToCreate;
             if (!Strings.isNullOrEmpty(accessKey)) {
                 credentialsToCreate = new SauceCredentialsImpl(
-                    CredentialsScope.SYSTEM,
+                    CredentialsScope.GLOBAL,
                     createdCredentialId,
                     username,
                     accessKey,
@@ -174,5 +192,41 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
             SauceCredentialsImpl.all((Item) context),
             CredentialsMatchers.withId(id)
         );
+    }
+
+
+    /**
+     *
+     */
+    private static final String HMAC_KEY = "HMACMD5";
+    /**
+     * Format for the date component of the HMAC.
+     */
+    private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
+
+
+    /**
+     * Creates a HMAC token which is used as part of the Javascript inclusion that embeds the Sauce results
+     *
+     * @param jobId     the Sauce job id
+     * @return the HMAC token
+     * @throws java.security.NoSuchAlgorithmException FIXME
+     * @throws java.security.InvalidKeyException FIXME
+     * @throws java.io.UnsupportedEncodingException FIXME
+     *
+     */
+    public String getHMAC(String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        Calendar calendar = Calendar.getInstance();
+
+        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String key = username + ":" + this.getApiKey().getPlainText() + ":" + format.format(calendar.getTime());
+        byte[] keyBytes = key.getBytes();
+        SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
+        Mac mac = Mac.getInstance(sks.getAlgorithm());
+        mac.init(sks);
+        byte[] hmacBytes = mac.doFinal(jobId.getBytes());
+        byte[] hexBytes = new Hex().encode(hmacBytes);
+        return new String(hexBytes, "ISO-8859-1");
     }
 }

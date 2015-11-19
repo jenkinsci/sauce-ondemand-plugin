@@ -37,21 +37,14 @@ import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.codec.binary.Hex;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,15 +56,6 @@ import java.util.logging.Logger;
  */
 @Extension
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
-
-    /**
-     *
-     */
-    private static final String HMAC_KEY = "HMACMD5";
-    /**
-     * Format for the date component of the HMAC.
-     */
-    private static final String DATE_FORMAT = "yyyy-MM-dd-HH";
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
     /**
@@ -104,37 +88,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     private boolean sendUsageData;
 
     private String credentialId;
-
-    public String calcHMAC(String id) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        throw new RuntimeException("UNIMPLEMENTED");
-    }
-
-    /**
-     * Creates a HMAC token which is used as part of the Javascript inclusion that embeds the Sauce results
-     *
-     * @param username  the Sauce user id
-     * @param accessKey the Sauce access key
-     * @param jobId     the Sauce job id
-     * @return the HMAC token
-     * @throws java.security.NoSuchAlgorithmException FIXME
-     * @throws java.security.InvalidKeyException FIXME
-     * @throws java.io.UnsupportedEncodingException FIXME
-     *
-     */
-    public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String key = username + ":" + accessKey + ":" + format.format(calendar.getTime());
-        byte[] keyBytes = key.getBytes();
-        SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
-        Mac mac = Mac.getInstance(sks.getAlgorithm());
-        mac.init(sks);
-        byte[] hmacBytes = mac.doFinal(jobId.getBytes());
-        byte[] hexBytes = new Hex().encode(hmacBytes);
-        return new String(hexBytes, "ISO-8859-1");
-    }
 
     @Override
     public void start() throws Exception {
