@@ -48,8 +48,6 @@ public class SauceOnDemandReport extends TestAction {
      */
     private final List<String[]> sessionIds;
 
-    private static final String HMAC_KEY = "HMACMD5";
-
     public SauceOnDemandReport(CaseResult parent, List<String[]> ids) {
         this.parent = parent;
         this.sessionIds = ids;
@@ -73,41 +71,18 @@ public class SauceOnDemandReport extends TestAction {
         return getIDs().get(0);
     }
 
-    public String getAuth() throws IOException {
-        return getById(getId()).getAuth();
-    }
-
+    @Override
     public String getIconFileName() {
-        return "/plugin/sauce-ondemand/images/24x24/video.gif";
+        return null;
     }
 
+    @Override
     public String getDisplayName() {
-        return "Sauce OnDemand report";
+        return null;
     }
 
+    @Override
     public String getUrlName() {
-        return "sauce-ondemand-report";
-    }
-
-    public ById getById(String id) {
-        return new ById(id);
-    }
-
-    public class ById {
-        public final String id;
-
-        public ById(String id) {
-            this.id = id;
-        }
-
-        public String getAuth() throws IOException {
-
-            try {
-                return PluginImpl.get().calcHMAC(id);
-            } catch (Exception e) {
-                throw new IOException("Could not generate Sauce Labs access code", e);
-            }
-        }
-
+        return null;
     }
 }
