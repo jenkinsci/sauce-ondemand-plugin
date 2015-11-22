@@ -57,10 +57,12 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         this.accessKey = accessKey;
     }
 
+    @Override
     public String getAccessKey() {
         return accessKey;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -97,7 +99,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-
     /**
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
@@ -125,7 +126,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
-                JobInformation information = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
+                JobInformation information = new JenkinsJobInformation(jobId, PluginImpl.calcHMAC(username, accessKey, jobId));
                 information.populateFromJson(jobData);
                 jobInformation.add(information);
             }
@@ -136,8 +137,8 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-    public ById getById(String id) {
-        return new ById(id);
+    public SauceTestResultsById getById(String id) {
+        return new SauceTestResultsById(id, this.getUsername(), this.getAccessKey());
     }
 
     private JobInformation jobInformationForBuild(String jobId) {
@@ -180,7 +181,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     continue;
                 }
                 try {
-                    jobInfo = new JenkinsJobInformation(jobId, PluginImpl.get().calcHMAC(username, accessKey, jobId));
+                    jobInfo = new JenkinsJobInformation(jobId, PluginImpl.calcHMAC(username, accessKey, jobId));
                     //retrieve data from session id to see if build number and/or job name has been stored
                     String jsonResponse = sauceREST.getJobInfo(jobId);
                     if (!jsonResponse.equals("")) {

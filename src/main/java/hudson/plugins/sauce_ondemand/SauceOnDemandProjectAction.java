@@ -20,6 +20,8 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
@@ -144,6 +146,9 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
         zipOutputStream.setLevel(ZipOutputStream.STORED);
 
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_kk-mm");
+        BuildSupportZipUtils.addFileToZipStream(zipOutputStream, "".getBytes("UTF-8"), "generated_" + df.format(Calendar.getInstance().getTime()));
+
         BuildSupportZipUtils.addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
 
         BuildSupportZipUtils.buildSauceConnectLog(zipOutputStream, manager, build, sauceBuildWrapper);
@@ -161,8 +166,18 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
     }
 
+    @Override
+    public String getUsername() {
+        return this.getBuildWrapper().getUserName();
+    }
+
+    @Override
+    public String getAccessKey() {
+        return this.getBuildWrapper().getApiKey();
+    }
+
     public static class BuildSupportZipUtils {
-        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectFourManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException {
+        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectFourManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException, InterruptedException {
             if (sauceBuildWrapper.isEnableSauceConnect()) {
                 File sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
                 if (sauceBuildWrapper.isLaunchSauceConnectOnSlave()) {

@@ -3,8 +3,15 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.570</version>
+        <version>1.580.1</version>
     </parent>
+    <properties>
+        <plugins.credentials.version>1.24</plugins.credentials.version>
+        <plugins.matrix-project.version>1.4</plugins.matrix-project.version>
+        <plugins.run-condition.version>1.0</plugins.run-condition.version>
+        <plugins.junit.version>1.9</plugins.junit.version>
+    </properties>
+
 
     <artifactId>sauce-ondemand</artifactId>
     <version>1.145-SNAPSHOT</version>
@@ -15,7 +22,7 @@
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
-      <tag>HEAD</tag>
+        <tag>HEAD</tag>
   </scm>
 
     <developers>
@@ -106,7 +113,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>jenkins-test-harness</artifactId>
-            <version>1.570</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -128,49 +135,29 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-project</artifactId>
-            <version>1.4</version>
+            <version>${plugins.matrix-project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>run-condition</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>token-macro</artifactId>
-            <version>1.5.1</version>
+            <version>${plugins.run-condition.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>conditional-buildstep</artifactId>
-            <version>1.3.3</version>
+            <artifactId>junit</artifactId>
+            <version>${plugins.junit.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>1.467</version>
+            <version>${plugins.matrix-project.version}67</version>
             <scope>compile</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>copy-to-slave</artifactId>
-            <version>1.4</version>
-        </dependency>
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>1.4</version>
         </dependency>
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-api</artifactId>
-            <version>2.45.0</version>
-        </dependency>
-
         <dependency>
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-inject-plexus</artifactId>
@@ -205,34 +192,6 @@
             <version>20080701</version>
             <scope>compile</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.5.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>1.8.1</version>
-            <scope>test</scope>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-launcher</artifactId>
-            <version>1.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.seleniumhq.selenium.client-drivers</groupId>
-            <artifactId>selenium-java-client-driver</artifactId>
-            <version>1.0.1</version>
-            <scope>test</scope>
-        </dependency>
-
 
         <dependency>
             <groupId>org.hamcrest</groupId>

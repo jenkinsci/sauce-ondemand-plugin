@@ -125,7 +125,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      * @throws java.io.UnsupportedEncodingException FIXME
      *
      */
-    public String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    public static String calcHMAC(String username, String accessKey, String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         Calendar calendar = Calendar.getInstance();
 
         SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);

@@ -39,6 +39,7 @@ import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
@@ -587,7 +588,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
-    private static class GetAvailablePort implements Callable<Integer,RuntimeException> {
+    private static class GetAvailablePort extends MasterToSlaveCallable<Integer,RuntimeException> {
         public Integer call() {
             int foundPort = -1;
             java.net.ServerSocket socket = null;
@@ -813,7 +814,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles terminating any running Sauce Connect processes.
      */
-    private static final class SauceConnectCloser implements Callable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectCloser extends MasterToSlaveCallable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
 
         private final BuildListener listener;
         private final String username;
@@ -846,7 +847,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles starting Sauce Connect.
      */
-    private static final class SauceConnectHandler implements Callable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectHandler extends MasterToSlaveCallable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
         private final String options;
         private final String workingDirectory;
         private final String username;

@@ -393,7 +393,9 @@ public class SauceBuildWrapperTest {
         };
         DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(freeStyleProject);
         testDataPublishers.add(publisher);
-        JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml", false, testDataPublishers);
+        JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml");
+        resultArchiver.setKeepLongStdio(false);
+//        JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml", false, testDataPublishers);
 //        freeStyleProject.getPublishersList().add(resultArchiver);
         QueueTaskFuture<FreeStyleBuild> future = freeStyleProject.scheduleBuild2(0);
 

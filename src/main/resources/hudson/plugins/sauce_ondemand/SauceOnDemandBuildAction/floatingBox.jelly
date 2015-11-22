@@ -10,7 +10,7 @@
                     <th align="left">Pass/Fail</th>
                     <th align="left">Job Links</th>
                 </tr>
-                <j:forEach var="job" items="${it.getJobs()}" indexVar="indexA">
+                <j:forEach var="job" items="${it.getJobsWithAuth()}" indexVar="indexA">
                     <tr>
                         <td>
                             <a href="${it.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
