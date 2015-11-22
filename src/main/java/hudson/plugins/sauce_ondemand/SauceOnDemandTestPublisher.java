@@ -39,7 +39,7 @@ public class SauceOnDemandTestPublisher extends Recorder {
 
 
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.STEP;
+        return BuildStepMonitor.NONE;
     }
 
     @Override
