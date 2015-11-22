@@ -71,6 +71,8 @@ public class SauceOnDemandReportFactory extends Data {
             List<String[]> ids = new ArrayList<String[]>();
 
             AbstractBuild<?, ?> build = cr.getOwner();
+            SauceOnDemandBuildWrapper bw = SauceEnvironmentUtil.getBuildWrapper(build.getProject());
+
             SauceOnDemandBuildAction buildAction = getBuildAction(build);
             if (buildAction != null) {
                 List<JobInformation> jobs = buildAction.getJobs();
@@ -98,7 +100,7 @@ public class SauceOnDemandReportFactory extends Data {
             }
 
             if (!ids.isEmpty()) {
-                return Collections.singletonList(new SauceOnDemandReport(cr, ids));
+                return Collections.singletonList(new SauceOnDemandReport(cr, ids, bw.getUserName(), bw.getApiKey()));
             }
 
         } else {

@@ -47,16 +47,19 @@ public class SauceOnDemandReport extends TestAction {
      * Session IDs.
      */
     private final List<String[]> sessionIds;
+    private final String userName;
+    private final String apiKey;
 
-    public SauceOnDemandReport(CaseResult parent, List<String[]> ids) {
+    public SauceOnDemandReport(CaseResult parent, List<String[]> ids, String userName, String apiKey) {
         this.parent = parent;
         this.sessionIds = ids;
+        this.userName = userName;
+        this.apiKey = apiKey;
     }
 
     public AbstractBuild<?, ?> getBuild() {
         return parent.getOwner();
     }
-
 
     public List<String> getIDs() {
         logger.fine("Retrieving Sauce job ids");
@@ -69,6 +72,10 @@ public class SauceOnDemandReport extends TestAction {
 
     public String getId() {
         return getIDs().get(0);
+    }
+
+    public String getAuth() throws IOException {
+        return new SauceTestResultsById(getId(), userName, apiKey).getAuth();
     }
 
     @Override
