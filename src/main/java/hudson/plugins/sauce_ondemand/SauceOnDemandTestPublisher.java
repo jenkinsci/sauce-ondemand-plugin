@@ -84,7 +84,7 @@ public class SauceOnDemandTestPublisher extends Recorder {
                     }
                 }
             }
-            SauceOnDemandReportPublisher saucePublisher = new SauceOnDemandReportPublisher();
+            SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
             TestResultAction.Data d = saucePublisher.getTestData(build, launcher, listener, report.getResult());
             data.add(d);
 
@@ -92,9 +92,13 @@ public class SauceOnDemandTestPublisher extends Recorder {
             build.save();
         } else {
             //no test publisher defined, process stdout only
-            SauceOnDemandReportPublisher saucePublisher = new SauceOnDemandReportPublisher();
+            SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
             saucePublisher.getTestData(build, launcher, listener, null);
         }
+    }
+
+    protected SauceOnDemandReportPublisher createReportPublisher() {
+        return new SauceOnDemandReportPublisher();
     }
 
     public DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> getTestDataPublishers() {

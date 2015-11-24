@@ -28,6 +28,7 @@ import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.saucerest.SauceREST;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -358,7 +359,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
-        if (PluginImpl.get().isSendUsageData()) {
+        if (shouldSendUsageData()) {
             JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
             try {
                 logger.fine("Reporting usage data");
@@ -499,6 +500,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return true;
             }
         };
+    }
+
+    public boolean shouldSendUsageData() {
+        return PluginImpl.get().isSendUsageData();
     }
 
     /**

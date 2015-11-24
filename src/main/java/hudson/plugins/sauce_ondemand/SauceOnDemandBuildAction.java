@@ -112,10 +112,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
-        SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+        JenkinsSauceREST sauceREST = getSauceREST();
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build));
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
-        String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
+        String jsonResponse = sauceREST.getBuildJobs(buildNumber, true);
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
         if (jobResults == null) {
@@ -135,6 +135,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         }
 
         return jobInformation;
+    }
+
+    protected JenkinsSauceREST getSauceREST() {
+        return new JenkinsSauceREST(username, accessKey);
     }
 
     public SauceTestResultsById getById(String id) {
@@ -164,7 +168,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     public void processSessionIds(CaseResult caseResult, String... output) {
 
         logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
-        SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+        SauceREST sauceREST = getSauceREST();
 
         for (String text : output) {
             if (text == null) continue;
