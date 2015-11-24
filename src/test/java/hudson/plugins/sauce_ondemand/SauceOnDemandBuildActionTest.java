@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -76,7 +77,9 @@ public class SauceOnDemandBuildActionTest {
         HtmlPage page = webClient.getPage(build, "sauce-ondemand-report/jobReport?jobId=1234");
         jenkins.assertGoodStatus(page);
         HtmlElement scriptTag = getEmbedTag(page.getElementsByTagName("script"));
-        assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("/job-embed/1234.js?auth="));
+
+        assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234.js"));
+        assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("auth="));
     }
 
     private HtmlElement getEmbedTag(DomNodeList<HtmlElement> scripts) {
