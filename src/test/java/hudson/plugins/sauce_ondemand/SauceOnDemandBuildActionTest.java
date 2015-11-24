@@ -1,40 +1,23 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.gargoylesoftware.htmlunit.AjaxController;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.saucelabs.saucerest.SauceREST;
-import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.Build;
+import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
-import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestDataPublisher;
-import hudson.util.DescribableList;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.TestBuilder;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import javax.annotation.Nullable;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URL;
-import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by gavinmogan on 2015-11-22.
