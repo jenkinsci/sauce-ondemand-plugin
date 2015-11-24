@@ -940,12 +940,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     @Extension
     public static class DescriptorImpl extends Descriptor<BuildWrapper> {
-
-        /**
-         * Handles retrieving details for supported browsers.
-         */
-        private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
-
         /**
          * @return text to be displayed within Jenkins job configuration
          */
@@ -960,7 +954,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public List<Browser> getAppiumBrowsers() {
             try {
-                return BROWSER_FACTORY.getAppiumBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getAppiumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -974,7 +968,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public List<Browser> getSeleniumBrowsers() {
             try {
-                return BROWSER_FACTORY.getSeleniumBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getSeleniumBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -988,7 +982,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public List<Browser> getWebDriverBrowsers() {
             try {
-                return BROWSER_FACTORY.getWebDriverBrowsers();
+                return PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers();
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
@@ -1003,7 +997,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public Map<String, List<Browser>> getWebDriverMap() {
             try {
                 Map<String, List<Browser>> map = new HashMap<String, List<Browser>>();
-                for (Browser browser : BROWSER_FACTORY.getWebDriverBrowsers()) {
+                for (Browser browser : PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers()) {
                     List<Browser> browsers = map.get(browser.getOs());
                     if (browsers == null) {
                         browsers = new ArrayList<Browser>();
