@@ -24,18 +24,15 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import com.saucelabs.saucerest.SauceREST;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
-import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.util.Secret;
 import hudson.util.VariableResolver;
