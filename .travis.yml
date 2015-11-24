@@ -1,9 +1,10 @@
 language: java
+sudo: false
 jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
 before_install:
-  - pip install codecov
+  - pip install --user codecov
 after_success:
-  - codecov
+  - $HOME/.local/bin/codecov
