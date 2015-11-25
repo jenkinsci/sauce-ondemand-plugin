@@ -1,4 +1,5 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <j:if test="${from.isSauceEnabled()}">
         <h2>Sauce Labs results</h2>
 
@@ -40,10 +41,10 @@
 
         </div>
         <hr />
-        <div >
-            <a id="generateSauceReport" href="${from.urlName}/generateSupportZip">Generate Sauce Support Zip</a>
-        </div>
+        <j:if test="${h.hasPermission(from.project, from.project.CONFIGURE)}">
+            <div >
+                <a id="generateSauceReport" href="${from.urlName}/generateSupportZip">Generate Sauce Support Zip</a>
+            </div>
+        </j:if>
     </j:if>
-
-
 </j:jelly>

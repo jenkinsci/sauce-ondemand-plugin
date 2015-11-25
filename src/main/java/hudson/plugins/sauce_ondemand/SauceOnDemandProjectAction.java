@@ -8,6 +8,9 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Project;
+import hudson.security.AccessControlled;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -136,11 +139,13 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
+        AccessControlled ac = this.getProject();
+        Permission p = Project.CONFIGURE;
+        ac.checkPermission(p);
+
         SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
         AbstractBuild build = getProject().getLastBuild();
-
-        //jenkins.checkPermission(Jenkins.READ);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
