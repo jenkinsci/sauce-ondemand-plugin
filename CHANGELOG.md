@@ -7,3 +7,4 @@ CURRENT (1.145-SNAPSHOT)
 * Update the video and log file links to include auth tokens
 * Don't worry about synchronization of the build step. Confirmed by - https://groups.google.com/forum/#!msg/jenkinsci-dev/nahS2YqEapQ/zR_pSOvyDAAJ
   * Should remove some blocking and consuming resources while waiting for large maven builds to finish
+* Add option to report publisher to choose job visibility
