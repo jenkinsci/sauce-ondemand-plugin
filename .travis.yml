@@ -12,4 +12,5 @@ before_install:
   - pip install --user codecov
 after_success:
   - $HOME/.local/bin/codecov
-  - bash .utility/push-to-jenkins-repo.sh
+  - chmod +x .utility/push-to-jenkins-repo.sh
+  - .utility/push-to-jenkins-repo.sh
