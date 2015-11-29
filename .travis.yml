@@ -1,4 +1,8 @@
 language: java
+secure: "bHZfyB28Gu5y1zBKYM84HtslmqaKiVWhYIR9F2U6qMRuysKlaTvvp0pIURFsW8x6C8cxBV6QTVzz4ymNiSCjCvWtKMXtHQMHh7ZSf1bjRLQOQCtLPn8bSoURxG3hMcwFQHH04qx9978DNmn/gqXFP2kABjpcccIIWbFvE/TZb1n5Yrb+WyimxQZKlTEWj75f/asTtBTi2Z+kgzRKVyAK156Am9Eukqpa1rLPQsJHy+l/6rbr9Vrt53VvE8ic8eRsOtGwZNl8J0xRMvnuxGrHz0ncwaLH6cdDsNOTE+jpcpcmDrxgKkI++36VD4KbkQ2i5aOPPcYB1jLPjq6ZrluUC+pcvU47KqDBH1ThKhK3kTcmJdpvGXVQjGfqhiux6q3DubrYeaS466s7zQ7e9hOyESV++RE9C1ID8ksyhyfTjE7V7OSVdoTcQfcFxCwjyPRajOro6SPiieH9bT+cJlmr2NYcEpAfJh9r2qja+ViAhkSo3ZwV+Zhl0EG2kU9tOEyf3rIHoli9nG/ouT2BWInzG3l657J882rUmJS3QcvI4CMtxnL3gITj79GzezbZ5kKcEk40ZEE8ySwBwsNGMXurDo1wRoiKqsaiv+sZ7+wKeGeMBY1oag9fZVrpeq/wAknwsQjTtthBsKeC9hZaAMwtw9GSC/3SMDdnWfXsv/vazxQ="
+cache:
+  directories:
+    - '$HOME/.m2/repository'
 sudo: false
 jdk:
   - oraclejdk8
@@ -8,3 +12,4 @@ before_install:
   - pip install --user codecov
 after_success:
   - $HOME/.local/bin/codecov
+  - .utility/push-to-jenkins-repo.sh
