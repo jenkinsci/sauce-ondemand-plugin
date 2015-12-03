@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.saucelabs.ci.JobInformation;
 import hudson.model.Build;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
@@ -14,10 +15,12 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
+import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * Created by gavinmogan on 2015-11-22.
@@ -73,5 +76,67 @@ public class SauceOnDemandBuildActionTest {
             }
         }
         return null;
+    }
+
+    private SauceOnDemandBuildAction createFakeAction() {
+        SauceOnDemandBuildAction sauceOnDemandBuildAction;
+        sauceOnDemandBuildAction = new SauceOnDemandBuildAction(null, null, "fakeuser", null) {
+            @Override
+            protected JenkinsSauceREST getSauceREST() {
+                return new JenkinsSauceREST("fakeuser","") {
+                    @Override
+                    public String getJobInfo(String jobId) {
+                        try {
+                            return IOUtils.toString(getClass().getResourceAsStream("/job_info.json"), "UTF-8");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
+            }
+        };
+        return sauceOnDemandBuildAction;
+    }
+
+    @Test
+    public void testProcessSessionIds_none() {
+        SauceOnDemandBuildAction sauceOnDemandBuildAction;
+
+        sauceOnDemandBuildAction = createFakeAction();
+        sauceOnDemandBuildAction.processSessionIds(null, new String[]{});
+        assertFalse(sauceOnDemandBuildAction.hasSauceOnDemandResults());
+    }
+
+    @Test
+    public void testProcessSessionIds_one() {
+        SauceOnDemandBuildAction sauceOnDemandBuildAction;
+        List<JobInformation> jobs;
+
+        sauceOnDemandBuildAction = createFakeAction();
+        sauceOnDemandBuildAction.processSessionIds(null, new String[]{
+            "SauceOnDemandSessionID=abc123 job-name=gavin"
+        });
+        assertTrue(sauceOnDemandBuildAction.hasSauceOnDemandResults());
+        jobs = sauceOnDemandBuildAction.getJobs();
+        assertEquals(1, jobs.size());
+        assertEquals("abc123", jobs.get(0).getJobId());
+    }
+
+    @Test
+    public void testProcessSessionIds_two() {
+        SauceOnDemandBuildAction sauceOnDemandBuildAction;
+        List<JobInformation> jobs;
+
+        sauceOnDemandBuildAction = createFakeAction();
+        sauceOnDemandBuildAction.processSessionIds(null, new String[] {
+            "SauceOnDemandSessionID=abc123 job-name=gavin\n[firefox 32 OS X 10.10 #1-5] SauceOnDemandSessionID=941b498c5ad544dba92fe73fabfa9eb6 job-name=Insert Job Name Here"
+        });
+        assertTrue(sauceOnDemandBuildAction.hasSauceOnDemandResults());
+        jobs = sauceOnDemandBuildAction.getJobs();
+        assertEquals(2, jobs.size());
+        assertEquals("abc123", jobs.get(0).getJobId());
+        assertEquals("941b498c5ad544dba92fe73fabfa9eb6", jobs.get(1).getJobId());
+
     }
 }

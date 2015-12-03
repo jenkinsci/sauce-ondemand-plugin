@@ -145,7 +145,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return new SauceTestResultsById(id, this.getUsername(), this.getAccessKey());
     }
 
-    private JobInformation jobInformationForBuild(String jobId) {
+    protected JobInformation jobInformationForBuild(String jobId) {
         for (JobInformation jobInfo : getJobs()) {
             if (jobId.equals(jobInfo.getJobId())) {
                 return jobInfo;
