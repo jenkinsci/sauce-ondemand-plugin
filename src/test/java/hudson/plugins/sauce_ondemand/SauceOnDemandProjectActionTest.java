@@ -2,9 +2,12 @@ package hudson.plugins.sauce_ondemand;
 
 import com.gargoylesoftware.htmlunit.Page;
 import hudson.model.FreeStyleProject;
+import hudson.security.AuthorizationStrategy;
+import hudson.security.SecurityRealm;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.PresetData;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +17,16 @@ import static org.junit.Assert.assertNotNull;
  * Created by gavinmogan on 2015-11-17.
  */
 public class SauceOnDemandProjectActionTest {
+
+    private SecurityRealm securityRealm;
+    private AuthorizationStrategy authStrategy;
+
+    private SecurityRealm getSecurityRealm() {
+        if (null == securityRealm) {
+            securityRealm = jenkins.createDummySecurityRealm();
+        }
+        return securityRealm;
+    }
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -48,5 +61,46 @@ public class SauceOnDemandProjectActionTest {
             project.getUrl() + pa.getUrlName() + "/generateSupportZip",
             "application/zip"
         );
+    }
+
+    @Test
+    public void testDoGenerateSupportZip_not_authorized() throws Exception {
+        jenkins.getInstance().setSecurityRealm(jenkins.createDummySecurityRealm());
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
+        project.getBuildWrappersList().add(sauceBuildWrapper);
+        /* make a build so we can get the build log */
+        project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+
+        Page generateSupportZip = jenkins.createWebClient().goTo(
+            project.getUrl() + pa.getUrlName() + "/generateSupportZip",
+            "application/zip"
+        );
+        assertNotNull(generateSupportZip);
+        jenkins.assertGoodStatus(generateSupportZip);
+    }
+
+
+    @PresetData(PresetData.DataSet.ANONYMOUS_READONLY)
+    @Test
+    public void testDoGenerateSupportZip_authorized() throws Exception {
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
+        project.getBuildWrappersList().add(sauceBuildWrapper);
+        /* make a build so we can get the build log */
+        project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+
+        jenkins.getInstance().setSecurityRealm(jenkins.createDummySecurityRealm());
+
+        Page generateSupportZip = jenkins.createWebClient().login("admin", "admin").goTo(
+            project.getUrl() + pa.getUrlName() + "/generateSupportZip",
+            "application/zip"
+        );
+        assertNotNull(generateSupportZip);
+        jenkins.assertGoodStatus(generateSupportZip);
     }
 }
