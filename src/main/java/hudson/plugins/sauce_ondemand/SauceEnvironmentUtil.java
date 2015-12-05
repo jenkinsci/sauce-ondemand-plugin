@@ -183,7 +183,7 @@ public final class SauceEnvironmentUtil {
             env.put(environmentVariablePrefix + key, value);
             if (verboseLogging)
             {
-                printStream.println(key + ": " + value);
+                printStream.println(environmentVariablePrefix + key + ": " + value);
             }
         }
     }
