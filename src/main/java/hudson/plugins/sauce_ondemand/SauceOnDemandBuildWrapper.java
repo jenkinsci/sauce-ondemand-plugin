@@ -378,8 +378,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
-        if (PluginImpl.get().isSendUsageData()) {
-            JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, apiKey);
+        if (shouldSendUsageData()) {
+            JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUserName(), getApiKey());
             try {
                 logger.fine("Reporting usage data");
                 sauceREST.recordCI("jenkins", Jenkins.VERSION.toString());
@@ -521,6 +521,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
+    public boolean shouldSendUsageData() {
+        return PluginImpl.get().isSendUsageData();
+    }
+
     /**
      * Returns the command line options to be used as part of Sauce Connect.  Any variable references contained in the
      * options specified within the Jenkins job configuration are resolved, and if common options are specified then these are appended to the list of options.
@@ -612,7 +616,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
-    private static class GetAvailablePort implements Callable<Integer,RuntimeException> {
+    private static class GetAvailablePort extends MasterToSlaveCallable<Integer,RuntimeException> {
         public Integer call() {
             int foundPort = -1;
             java.net.ServerSocket socket = null;
@@ -822,7 +826,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles terminating any running Sauce Connect processes.
      */
-    private static final class SauceConnectCloser implements Callable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectCloser extends MasterToSlaveCallable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
 
         private final BuildListener listener;
         private final String username;
@@ -855,7 +859,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Handles starting Sauce Connect.
      */
-    private static final class SauceConnectHandler implements Callable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceConnectHandler extends MasterToSlaveCallable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
         private final String options;
         private final String workingDirectory;
         private final String username;

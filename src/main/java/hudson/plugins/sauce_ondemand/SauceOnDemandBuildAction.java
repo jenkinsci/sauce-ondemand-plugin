@@ -66,10 +66,12 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         this.credentials = new SauceCredentialsImpl(null, null, this.username, this.accessKey, "");
     }
 
+    @Override
     public String getAccessKey() {
         return accessKey;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -106,7 +108,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-
     /**
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
@@ -120,10 +121,10 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
-        SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+        JenkinsSauceREST sauceREST = getSauceREST();
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build));
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
-        String jsonResponse = sauceREST.retrieveResults(new URL(String.format(JOB_DETAILS_URL, username, buildNumber)));
+        String jsonResponse = sauceREST.getBuildJobs(buildNumber, true);
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
         if (jobResults == null) {
@@ -145,13 +146,15 @@ public class SauceOnDemandBuildAction extends AbstractAction {
         return jobInformation;
     }
 
-
-    public SauceTestResultsById getById(String jobId) {
-        Project<?, ?> project = (Project) this.getBuild().getProject();
-        return new SauceTestResultsById(jobId, credentials);
+    protected JenkinsSauceREST getSauceREST() {
+        return new JenkinsSauceREST(username, accessKey);
     }
 
-    private JobInformation jobInformationForBuild(String jobId) {
+    public SauceTestResultsById getById(String id) {
+        return new SauceTestResultsById(id, this.getUsername(), this.getAccessKey());
+    }
+
+    protected JobInformation jobInformationForBuild(String jobId) {
         for (JobInformation jobInfo : getJobs()) {
             if (jobId.equals(jobInfo.getJobId())) {
                 return jobInfo;
@@ -174,7 +177,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     public void processSessionIds(CaseResult caseResult, String... output) {
 
         logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
-        SauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+        SauceREST sauceREST = getSauceREST();
 
         for (String text : output) {
             if (text == null) continue;

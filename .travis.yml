@@ -1,5 +1,18 @@
 language: java
+cache:
+  directories:
+  - $HOME/.m2/repository
+sudo: false
 jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk7
+- oraclejdk8
+- oraclejdk7
+- openjdk7
+before_install:
+- pip install --user codecov
+after_success:
+- $HOME/.local/bin/codecov
+- chmod +x .utility/push-to-jenkins-repo.sh
+- .utility/push-to-jenkins-repo.sh
+env:
+  global:
+    secure: HkqSKknvulSJGjpU1Am2W6cPd/9Qh0H4YWkuNGKSgPDO/TMx8wM5PqTjLboYF3aGYG+JmCye0FT5kkyYX2fpWutP3WpzjcL04ag87zE4bya+vo+X7uJ5mZQMDLllmFD3koQf5jDXNqOAz4QxNF2mQ9+imRLookhxRG1gaNLG5meUGEUmq8QaNPoxUIxwSIuBZxIp03s1kq8yHK22i2NQmh/K8KF9USGGqt0F5nXCWBWADus8J5rqIDNmJlFDyad6XjfQYaqkzg8dlhAgoovPefqhczjVLE9zznIcORd40xNtZDfXc4Iz5tSlKIVPWXxu2pd734BYXncYHdpmP3qhA8cvTEsATQC+FZKsrfstoW29JJQbm7peXA1r7H708pfYuNpL/bA9QsJRwlMON1nBB/ATbUyx/BJVrDMfLUzNePOx7YqFdoMiymSNyAGmwcdoxnZHqE63gdRIVhZ6aBgcmGSa36W9VCawlPFNkoAHrOUgXmNW6nqZ+X01oGbPP1hhatfOONZhu24AoaJ2m3lCQqD5Da7FD7BgGnmYu5x4gjq6KNQTc9UU/D6UezmPtHo9YeojHfsgnK16gZkt4XOKEAgxJN0f4jVDYY2OxBE4LVPXr4HGz4LC85OBLB4Zk704zC0NEqI+y6+oVr0yjdnIneIMa73dSaB2+D60PbM1LQM=

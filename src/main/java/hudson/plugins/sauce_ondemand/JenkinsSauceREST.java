@@ -8,7 +8,9 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
 
 /**
  * Jenkins-specific subclass which will open a URL connection using {@link hudson.ProxyConfiguration}.
@@ -41,4 +43,13 @@ public class JenkinsSauceREST extends SauceREST {
         HttpURLConnection hc = (HttpURLConnection) ProxyConfiguration.open(url);
         return hc;
     }
+
+    /* Just until saucerest api gets updated
+    FIXME
+     */
+    public String getBuildJobs(String build, boolean full) {
+        URL restEndpoint = this.buildURL("v1/" + this.username + "/build/" + build + "/jobs" + (full ? "?full=1" : ""));
+        return retrieveResults(restEndpoint);
+    }
+
 }

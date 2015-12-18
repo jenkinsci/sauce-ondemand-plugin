@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.google.common.base.Strings;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
@@ -35,7 +36,9 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
+import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -65,10 +68,26 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
 
     /**
+     * What job security level we should set jobs to
+     */
+    private String jobVisibility = "";
+
+
+    /**
      * Constructs a new instance.
      */
     @DataBoundConstructor
     public SauceOnDemandReportPublisher() {
+    }
+
+
+    public String getJobVisibility() {
+        return jobVisibility;
+    }
+
+    @DataBoundSetter
+    public void setJobVisibility(String jobVisibility) {
+        this.jobVisibility = jobVisibility;
     }
 
     /**
@@ -149,7 +168,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (!jobInformation.isHasBuildNumber()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
-            updates.put("public", "share");
+            if (!Strings.isNullOrEmpty(getJobVisibility())) {
+                updates.put("public", getJobVisibility());
+            }
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
@@ -235,6 +256,16 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         @Override
         public String getDisplayName() {
             return "Embed Sauce Labs reports";
+        }
+
+        public ListBoxModel doFillJobVisibilityItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add("- default -", "");
+            items.add("Public", "public");
+            items.add("Public Restricted", "public restricted");
+            items.add("Private", "private");
+            items.add("Team", "team");
+            return items;
         }
     }
 }

@@ -183,7 +183,7 @@ public final class SauceEnvironmentUtil {
             env.put(environmentVariablePrefix + key, value);
             if (verboseLogging)
             {
-                printStream.println(key + ": " + value);
+                printStream.println(environmentVariablePrefix + key + ": " + value);
             }
         }
     }
@@ -195,13 +195,7 @@ public final class SauceEnvironmentUtil {
     public static SauceOnDemandBuildWrapper getBuildWrapper(AbstractProject<?, ?> project) {
         SauceOnDemandBuildWrapper buildWrapper = null;
         if (project instanceof BuildableItemWithBuildWrappers) {
-            DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappers = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList();
-            for (BuildWrapper describable : buildWrappers) {
-                if (describable instanceof SauceOnDemandBuildWrapper) {
-                    buildWrapper = (SauceOnDemandBuildWrapper) describable;
-                    break;
-                }
-            }
+            buildWrapper = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
         } else {
             logger.fine("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
         }

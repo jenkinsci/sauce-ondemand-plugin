@@ -8,6 +8,9 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Project;
+import hudson.security.AccessControlled;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -20,6 +23,8 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
@@ -134,15 +139,20 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
+        AccessControlled ac = this.getProject();
+        Permission p = Project.CONFIGURE;
+        ac.checkPermission(p);
+
         SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
         AbstractBuild build = getProject().getLastBuild();
 
-        //jenkins.checkPermission(Jenkins.READ);
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
         zipOutputStream.setLevel(ZipOutputStream.STORED);
+
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_kk-mm");
+        BuildSupportZipUtils.addFileToZipStream(zipOutputStream, "".getBytes("UTF-8"), "generated_" + df.format(Calendar.getInstance().getTime()));
 
         BuildSupportZipUtils.addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
 
@@ -161,8 +171,18 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
     }
 
+    @Override
+    public String getUsername() {
+        return this.getBuildWrapper().getUserName();
+    }
+
+    @Override
+    public String getAccessKey() {
+        return this.getBuildWrapper().getApiKey();
+    }
+
     public static class BuildSupportZipUtils {
-        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectFourManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException {
+        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectFourManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException, InterruptedException {
             if (sauceBuildWrapper.isEnableSauceConnect()) {
                 File sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
                 if (sauceBuildWrapper.isLaunchSauceConnectOnSlave()) {
