@@ -583,10 +583,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param build the build in progress
      */
     private void processBuildOutput(AbstractBuild build) {
-        SauceCredentialsImpl credentials = SauceCredentialsImpl.getSauceCredentials(build, this);
-        final String apiKey = credentials.getApiKey().getPlainText();
-        final String username = credentials.getUsername();
-
         if (logParserMap != null) {
             logger.fine("Adding build action to " + build.toString());
             SauceOnDemandLogParser logParser = logParserMap.get(build.toString());

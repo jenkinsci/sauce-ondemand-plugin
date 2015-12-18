@@ -61,9 +61,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     /**
      * Handles the retrieval of browsers from Sauce Labs.
      */
-    static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+    static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
-    private SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
+    private transient SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
      * User name to access Sauce OnDemand.
      */
@@ -146,10 +146,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setCredentialId(String credentialId) {
         this.credentialId = credentialId;
-    }
-
-    public SauceCredentialsImpl getCredentials() {
-        return SauceCredentialsImpl.getCredentialsById((Item) null, getCredentialId());
     }
 
     @Extension
