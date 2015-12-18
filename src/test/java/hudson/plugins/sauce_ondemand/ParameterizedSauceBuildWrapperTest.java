@@ -5,6 +5,7 @@ import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,11 +42,6 @@ public class ParameterizedSauceBuildWrapperTest {
     public transient JenkinsRule jenkinsRule = new JenkinsRule();
 
     /**
-     * Dummy credentials to be used by the test.
-     */
-    private Credentials sauceCredentials = new Credentials("username", "access key");
-
-    /**
      * Build Wrapper with all the parameters set right
      */
     private SauceOnDemandBuildWrapper sauceBuildWrapper;
@@ -58,9 +54,9 @@ public class ParameterizedSauceBuildWrapperTest {
             boolean useLatestVersion,
             String seleniumPort,
             String seleniumHost
-    ) {
+    ) throws Exception {
         super();
-        sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(null);
         sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
         sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
@@ -101,6 +97,8 @@ public class ParameterizedSauceBuildWrapperTest {
 
     @Before
     public void setUp() throws Exception {
+        String credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
@@ -120,7 +118,10 @@ public class ParameterizedSauceBuildWrapperTest {
         pluginConfig.put("environmentVariablePrefix", "");
         pluginConfig.put("sendUsageData", true);
 
+        sauceBuildWrapper.setCredentialId(credentialsId);
+
         jenkinsRule.getPluginManager().getPlugin("sauce-ondemand").getPlugin().configure(null, pluginConfig);
+
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -182,10 +183,10 @@ public class ParameterizedSauceBuildWrapperTest {
         Map<String, String> envVars = (Map<String, String>)holder.get("env");
         assertNotNull(envVars);
         if (envVars != null) {
-            assertEquals("legacy SAUCE_USER_NAME is set to API username", "username", envVars.get("SAUCE_USER_NAME"));
-            assertEquals("proper SAUCE_USERNAME is set to API username", "username", envVars.get("SAUCE_USERNAME"));
-            assertEquals("legacy SAUCE_API_KEY is set to API username", "access key", envVars.get("SAUCE_API_KEY"));
-            assertEquals("proper SAUCE_ACCESS_KEY is set to API username", "access key", envVars.get("SAUCE_ACCESS_KEY"));
+            assertEquals("legacy SAUCE_USER_NAME is set to API username", "fakeuser", envVars.get("SAUCE_USER_NAME"));
+            assertEquals("proper SAUCE_USERNAME is set to API username", "fakeuser", envVars.get("SAUCE_USERNAME"));
+            assertEquals("legacy SAUCE_API_KEY is set to API username", "fakekey", envVars.get("SAUCE_API_KEY"));
+            assertEquals("proper SAUCE_ACCESS_KEY is set to API username", "fakekey", envVars.get("SAUCE_ACCESS_KEY"));
             assertThat("SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(isEmptyOrNullString()));
             assertThat("SELENIUM_PORT equals something", envVars.get("SELENIUM_PORT"), not(isEmptyOrNullString()));
             assertThat("JENKINS_BUILD_NUMBER equals something", envVars.get("JENKINS_BUILD_NUMBER"), not(isEmptyOrNullString()));

@@ -1,9 +1,12 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.gargoylesoftware.htmlunit.Page;
+import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -20,6 +23,7 @@ public class SauceOnDemandProjectActionTest {
 
     private SecurityRealm securityRealm;
     private AuthorizationStrategy authStrategy;
+    private String credentialsId;
 
     private SecurityRealm getSecurityRealm() {
         if (null == securityRealm) {
@@ -31,27 +35,37 @@ public class SauceOnDemandProjectActionTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
+    @Before
+    public void setUp() throws Exception {
+        credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+    }
+
     @Test
     public void testDoGenerateSupportZip() throws Exception {
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
         project.getBuildWrappersList().add(sauceBuildWrapper);
         /* make a build so we can get the build log */
-        project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        AbstractBuild b = project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
 
-        Page generateSupportZip = jenkins.createWebClient().goTo(
-            project.getUrl() + pa.getUrlName() + "/generateSupportZip",
-            "application/zip"
-        );
+        Page generateSupportZip;
+        try {
+            generateSupportZip = jenkins.createWebClient().goTo(
+                project.getUrl() + pa.getUrlName() + "/generateSupportZip",
+                "application/zip"
+            );
+        } catch (Exception e) {
+            throw e;
+        }
         assertNotNull(generateSupportZip);
         jenkins.assertGoodStatus(generateSupportZip);
     }
 
     @Test(expected = com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException.class)
     public void testDoGenerateSupportZip_NoBuildLog() throws Exception {
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
@@ -66,7 +80,7 @@ public class SauceOnDemandProjectActionTest {
     @Test
     public void testDoGenerateSupportZip_not_authorized() throws Exception {
         jenkins.getInstance().setSecurityRealm(jenkins.createDummySecurityRealm());
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
@@ -86,7 +100,7 @@ public class SauceOnDemandProjectActionTest {
     @PresetData(PresetData.DataSet.ANONYMOUS_READONLY)
     @Test
     public void testDoGenerateSupportZip_authorized() throws Exception {
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(new Credentials("fake","fake"));
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);

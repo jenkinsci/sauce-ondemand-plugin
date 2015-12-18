@@ -10,11 +10,11 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
     public static class DescriptorImpl extends SauceOnDemandBuildWrapper.DescriptorImpl {
     }
 
-    public TestSauceOnDemandBuildWrapper(Credentials sauceCredentials) {
+    public TestSauceOnDemandBuildWrapper(String credentialId) {
         super(
                 true,
                 null,
-                sauceCredentials,
+                credentialId,
                 new SeleniumInformation(null, null),
                 null,
                 null,
@@ -27,6 +27,6 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
                 null,
                 null,
 //                false,
-                false, null);
+                false);
     }
 }

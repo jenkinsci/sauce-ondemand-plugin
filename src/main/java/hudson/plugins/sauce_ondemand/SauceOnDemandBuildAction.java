@@ -3,7 +3,6 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
-import hudson.model.Project;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.junit.CaseResult;
 import org.json.JSONArray;
@@ -16,7 +15,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -53,27 +51,15 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
     private AbstractBuild<?, ?> build;
     private List<JobInformation> jobInformation;
+    @Deprecated
     private String accessKey;
+    @Deprecated
     private String username;
-    transient private SauceCredentialsImpl credentials;
 
     @DataBoundConstructor
-    public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser, String username, String accessKey) {
+    public SauceOnDemandBuildAction(AbstractBuild<?, ?> build, SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser) {
         this.build = build;
         this.logParser = logParser;
-        this.username = username;
-        this.accessKey = accessKey;
-        this.credentials = new SauceCredentialsImpl(null, null, this.username, this.accessKey, "");
-    }
-
-    @Override
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 
     public AbstractBuild<?, ?> getBuild() {
@@ -94,18 +80,17 @@ public class SauceOnDemandBuildAction extends AbstractAction {
             try {
                 jobInformation = new ArrayList<JobInformation>();
                 jobInformation.addAll(retrieveJobIdsFromSauce());
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
             } catch (JSONException e) {
-                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-            } catch (InvalidKeyException e) {
-                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-            } catch (NoSuchAlgorithmException e) {
                 logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
             }
         }
 
         return jobInformation;
+    }
+
+    @Override
+    protected SauceCredentialsImpl getCredentials() {
+        return SauceOnDemandBuildWrapper.getCredentials(getBuild());
     }
 
     /**
@@ -117,7 +102,9 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * @throws InvalidKeyException Bad keys
      * @throws NoSuchAlgorithmException Should never be returned but can't do encoding
      */
-    public List<JobInformation> retrieveJobIdsFromSauce() throws IOException, JSONException, InvalidKeyException, NoSuchAlgorithmException {
+    public List<JobInformation> retrieveJobIdsFromSauce() throws JSONException {
+        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
 
@@ -151,7 +138,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     }
 
     public SauceTestResultsById getById(String id) {
-        return new SauceTestResultsById(id, this.getUsername(), this.getAccessKey());
+        return new SauceTestResultsById(id, getCredentials());
     }
 
     protected JobInformation jobInformationForBuild(String jobId) {
@@ -175,6 +162,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * @param output     lines of output to be processed, not null
      */
     public void processSessionIds(CaseResult caseResult, String... output) {
+        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
 
         logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
         SauceREST sauceREST = getSauceREST();
@@ -206,12 +194,6 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                     }
                     jobInformation.add(jobInfo);
                 } catch (JSONException e) {
-                    logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-                } catch (NoSuchAlgorithmException e) {
-                    logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-                } catch (InvalidKeyException e) {
-                    logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-                } catch (UnsupportedEncodingException e) {
                     logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
                 }
 

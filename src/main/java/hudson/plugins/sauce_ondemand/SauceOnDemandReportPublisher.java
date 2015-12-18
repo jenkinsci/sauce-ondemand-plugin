@@ -32,6 +32,7 @@ import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
@@ -131,7 +132,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param testResult  Contains the test results for the build.
      */
     private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
-        SauceREST sauceREST = getSauceREST(buildAction);
+        SauceREST sauceREST = getSauceREST(build);
         SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser = buildAction.getLogParser();
         if (logParser == null) {
             logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
@@ -178,8 +179,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
     }
 
-    protected SauceREST getSauceREST(SauceOnDemandBuildAction buildAction) {
-        return new JenkinsSauceREST(buildAction.getUsername(), buildAction.getAccessKey());
+    protected SauceREST getSauceREST(AbstractBuild build) {
+        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+        return new JenkinsSauceREST(credentials.getUsername(), credentials.getApiKey().getPlainText());
     }
 
     /**

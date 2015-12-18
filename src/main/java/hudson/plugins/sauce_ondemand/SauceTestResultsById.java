@@ -1,5 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -10,13 +12,11 @@ import java.security.NoSuchAlgorithmException;
  */
 public class SauceTestResultsById {
     private final String id;
-    private final String username;
-    private final String apiKey;
+    private final SauceCredentialsImpl credentials;
 
-    public SauceTestResultsById(String id, String username, String apiKey) {
+    public SauceTestResultsById(String id, SauceCredentialsImpl credentials) {
         this.id = id;
-        this.username = username;
-        this.apiKey = apiKey;
+        this.credentials = credentials;
     }
 
     public String getId() {
@@ -24,16 +24,7 @@ public class SauceTestResultsById {
     }
 
     public String getAuth() throws IOException {
-        try {
-            return PluginImpl.calcHMAC(this.username, this.apiKey, this.id);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IOException("Could not generate Sauce-OnDemand access code", e);
-        } catch (InvalidKeyException e) {
-            throw new IOException("Could not generate Sauce-OnDemand access code", e);
-        } catch (UnsupportedEncodingException e) {
-            throw new IOException("Could not generate Sauce-OnDemand access code", e);
-        }
-
+        return credentials.getHMAC(this.id);
     }
 
 }

@@ -24,6 +24,8 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.model.AbstractBuild;
+import hudson.model.BuildableItemWithBuildWrappers;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
 
@@ -47,14 +49,14 @@ public class SauceOnDemandReport extends TestAction {
      * Session IDs.
      */
     private final List<String[]> sessionIds;
-    private final String userName;
-    private final String apiKey;
+    @Deprecated
+    private final String userName = null;
+    @Deprecated
+    private final String apiKey = null;
 
-    public SauceOnDemandReport(CaseResult parent, List<String[]> ids, String userName, String apiKey) {
+    public SauceOnDemandReport(CaseResult parent, List<String[]> ids) {
         this.parent = parent;
         this.sessionIds = ids;
-        this.userName = userName;
-        this.apiKey = apiKey;
     }
 
     public AbstractBuild<?, ?> getBuild() {
@@ -75,7 +77,7 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public String getAuth() throws IOException {
-        return new SauceTestResultsById(getId(), userName, apiKey).getAuth();
+        return new SauceTestResultsById(getId(), SauceOnDemandBuildWrapper.getCredentials(getBuild())).getAuth();
     }
 
     @Override

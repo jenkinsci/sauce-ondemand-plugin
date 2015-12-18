@@ -9,6 +9,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Project;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.security.AccessControlled;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -138,6 +139,11 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         return Collections.emptyList();
     }
 
+    @Override
+    protected SauceCredentialsImpl getCredentials() {
+        return SauceOnDemandBuildWrapper.getCredentials(getProject());
+    }
+
     public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
         AccessControlled ac = this.getProject();
         Permission p = Project.CONFIGURE;
@@ -169,16 +175,6 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         rsp.getOutputStream().write(baos.toByteArray());
         rsp.getOutputStream().flush();
 
-    }
-
-    @Override
-    public String getUsername() {
-        return this.getBuildWrapper().getUserName();
-    }
-
-    @Override
-    public String getAccessKey() {
-        return this.getBuildWrapper().getApiKey();
     }
 
     public static class BuildSupportZipUtils {

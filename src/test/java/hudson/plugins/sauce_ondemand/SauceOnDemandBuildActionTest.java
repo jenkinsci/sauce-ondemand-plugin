@@ -5,7 +5,9 @@ import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.saucelabs.ci.JobInformation;
 import hudson.model.Build;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -16,6 +18,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.Matchers.containsString;
@@ -49,8 +52,11 @@ public class SauceOnDemandBuildActionTest {
         };
 
         FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
+        freeStyleProject.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(
+            SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest")
+        ));
         Build build = freeStyleProject.scheduleBuild2(0).get();
-        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, null, "fake", "fake") {
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, null) {
             @Override
             protected JenkinsSauceREST getSauceREST() {
                 return mockSauceREST;
@@ -78,9 +84,14 @@ public class SauceOnDemandBuildActionTest {
         return null;
     }
 
-    private SauceOnDemandBuildAction createFakeAction() {
+    private SauceOnDemandBuildAction createFakeAction() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
-        sauceOnDemandBuildAction = new SauceOnDemandBuildAction(null, null, "fakeuser", null) {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        String credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        project.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(credentialsId));
+        FreeStyleBuild build = project.scheduleBuild2(0).get(1, TimeUnit.SECONDS);
+
+        sauceOnDemandBuildAction = new SauceOnDemandBuildAction(build, null) {
             @Override
             protected JenkinsSauceREST getSauceREST() {
                 return new JenkinsSauceREST("fakeuser","") {
@@ -100,7 +111,7 @@ public class SauceOnDemandBuildActionTest {
     }
 
     @Test
-    public void testProcessSessionIds_none() {
+    public void testProcessSessionIds_none() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
 
         sauceOnDemandBuildAction = createFakeAction();
@@ -109,7 +120,7 @@ public class SauceOnDemandBuildActionTest {
     }
 
     @Test
-    public void testProcessSessionIds_one() {
+    public void testProcessSessionIds_one() throws Exception{
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         List<JobInformation> jobs;
 
@@ -124,7 +135,7 @@ public class SauceOnDemandBuildActionTest {
     }
 
     @Test
-    public void testProcessSessionIds_two() {
+    public void testProcessSessionIds_two() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         List<JobInformation> jobs;
 

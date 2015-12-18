@@ -9,6 +9,7 @@ import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import com.google.common.base.Strings;
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.SecurityUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
@@ -92,6 +93,10 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
     public static SauceCredentialsImpl getSauceCredentials(AbstractBuild build, SauceOnDemandBuildWrapper wrapper) {
         String credentialId = !Strings.isNullOrEmpty(wrapper.getCredentialId()) ? wrapper.getCredentialId() : PluginImpl.get().getCredentialId();
         return getCredentialsById(build.getProject(), credentialId);
+    }
+
+    public JenkinsSauceREST getSauceREST() {
+        return new JenkinsSauceREST(getUsername(), getApiKey().getPlainText());
     }
 
     @Extension
@@ -215,18 +220,8 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
      * @throws java.io.UnsupportedEncodingException FIXME
      *
      */
-    public String getHMAC(String jobId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String key = username + ":" + this.getApiKey().getPlainText() + ":" + format.format(calendar.getTime());
-        byte[] keyBytes = key.getBytes();
-        SecretKeySpec sks = new SecretKeySpec(keyBytes, HMAC_KEY);
-        Mac mac = Mac.getInstance(sks.getAlgorithm());
-        mac.init(sks);
-        byte[] hmacBytes = mac.doFinal(jobId.getBytes());
-        byte[] hexBytes = new Hex().encode(hmacBytes);
-        return new String(hexBytes, "ISO-8859-1");
+    public String getHMAC(String jobId) {
+        String key = username + ":" + getPassword().getPlainText();
+        return SecurityUtils.hmacEncode("HmacMD5", jobId, key);
     }
 }

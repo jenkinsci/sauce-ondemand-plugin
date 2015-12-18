@@ -1,5 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
@@ -8,6 +9,7 @@ import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.junit.JUnitResultArchiver;
@@ -55,11 +57,6 @@ public class SauceBuildWrapperTest {
     public transient JenkinsRule jenkinsRule = new JenkinsRule();
 
     /**
-     * Dummy credentials to be used by the test.
-     */
-    private Credentials sauceCredentials = new Credentials("username", "access key");
-
-    /**
      * Mockito spy of the Sauce REST instance, used to capture REST requests without sending them to Sauce Labs.
      */
     private JenkinsSauceREST spySauceRest;
@@ -76,9 +73,12 @@ public class SauceBuildWrapperTest {
     private String currentSessionId = DEFAULT_SESSION_ID;
 
     private String currentTestResultFile = DEFAULT_TEST_XML;
+    private String credentialsId;
 
     @Before
     public void setUp() throws Exception {
+        SystemCredentialsProvider.getInstance().save();
+        this.credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
         JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key");
         // Reset connection string every run
@@ -150,8 +150,7 @@ public class SauceBuildWrapperTest {
             }
         };
         storeDummyManager(sauceConnectFourManager);
-        Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
 
         Build build = runFreestyleBuild(sauceBuildWrapper);
@@ -179,8 +178,7 @@ public class SauceBuildWrapperTest {
             }
         };
         storeDummyManager(sauceConnectFourManager);
-        Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         sauceBuildWrapper.setOptions("");
 
@@ -208,8 +206,7 @@ public class SauceBuildWrapperTest {
             }
         };
         storeDummyManager(sauceConnectFourManager);
-        Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
         jenkinsRule.assertBuildStatus(Result.FAILURE, build);
@@ -222,8 +219,7 @@ public class SauceBuildWrapperTest {
      */
     @Test
     public void runSauceConnectVersion4() throws Exception {
-        Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         Build build = runFreestyleBuild(sauceBuildWrapper);
         jenkinsRule.assertBuildStatusSuccess(build);
@@ -243,8 +239,7 @@ public class SauceBuildWrapperTest {
     /*@Test
     @Ignore("sauceBuildWrapper looses stubs on the slave")
     public void runSlaveBuild() throws Exception {
-        Credentials sauceCredentials = new Credentials("username", "access key");
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
         DumbSlave s = jenkinsRule.createOnlineSlave();
         sauceBuildWrapper.setLaunchSauceConnectOnSlave(true);
@@ -259,7 +254,7 @@ public class SauceBuildWrapperTest {
     @Test
     public void multipleBrowsers() throws Exception {
 
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("", ""));  /// THIS Actually crashes the buld but things are not properly checked
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
@@ -287,7 +282,7 @@ public class SauceBuildWrapperTest {
     @Test
     public void newPortIsGeneratedWhenManagingSauceConnect() throws Exception {
 
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setEnableSauceConnect(true);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
 
@@ -332,7 +327,7 @@ public class SauceBuildWrapperTest {
 
         String port = "4321";
 
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(sauceCredentials);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setEnableSauceConnect(true);
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
         sauceBuildWrapper.setSeleniumPort("$TEST_PORT_VARIABLE_4321");
@@ -387,7 +382,7 @@ public class SauceBuildWrapperTest {
         freeStyleProject.getBuildersList().add(builder);
         SauceOnDemandReportPublisher publisher = new SauceOnDemandReportPublisher() {
             @Override
-            protected SauceREST getSauceREST(SauceOnDemandBuildAction buildAction) {
+            protected SauceREST getSauceREST(AbstractBuild build) {
                 return spySauceRest;
             }
         };
@@ -415,12 +410,13 @@ public class SauceBuildWrapperTest {
 
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
             //assert that mock SC started
 
             Map<String, String> envVars = build.getEnvironment(listener);
 
-            assertEquals("Environment variable not found", sauceCredentials.getUsername(), envVars.get("SAUCE_USER_NAME"));
-            assertEquals("Environment variable not found", sauceCredentials.getApiKey(), envVars.get("SAUCE_API_KEY"));
+            assertEquals("Environment variable not found", credentials.getUsername(), envVars.get("SAUCE_USER_NAME"));
+            assertEquals("Environment variable not found", credentials.getApiKey().getPlainText(), envVars.get("SAUCE_API_KEY"));
 
             File destination = new File(build.getWorkspace().getRemote(), "test.xml");
             FileUtils.copyURLToFile(getClass().getResource(currentTestResultFile), destination);

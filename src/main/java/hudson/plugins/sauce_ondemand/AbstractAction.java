@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
 import hudson.model.Action;
+import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -10,17 +11,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Ross Rowe
  */
 public abstract class AbstractAction implements Action {
-    abstract public String getUsername();
-    abstract public String getAccessKey();
-
     @Override
     public String getIconFileName() {
         return null;
@@ -36,16 +32,13 @@ public abstract class AbstractAction implements Action {
 
     public abstract List<JobInformation> getJobs();
 
+    abstract protected SauceCredentialsImpl getCredentials();
+
     @SuppressWarnings("unused") // used by stapler
     public List<JobInformation> getJobsWithAuth() {
         List<JobInformation> allJobs = this.getJobs();
         for(JobInformation j: allJobs) {
-            try {
-                j.setHmac(PluginImpl.calcHMAC(this.getUsername(), this.getAccessKey(), j.getJobId()));
-            } catch (NoSuchAlgorithmException e) {
-            } catch (InvalidKeyException e) {
-            } catch (UnsupportedEncodingException e) {
-            }
+            j.setHmac(getCredentials().getHMAC(j.getJobId()));
         }
         return allJobs;
     }
@@ -61,8 +54,7 @@ public abstract class AbstractAction implements Action {
 
         SauceTestResultsById byId = new SauceTestResultsById(
             req.getParameter("jobId"),
-            this.getUsername(),
-            this.getAccessKey()
+            this.getCredentials()
         );
         try {
             req.getView(byId, "index.jelly").forward(req, rsp);
