@@ -9,6 +9,9 @@
             <f:entry field="enableSauceConnect">
                 <f:checkbox title="${%Enable Sauce Connect}" default="checked"/>
             </f:entry>
+            <f:entry title="${%Credentials}" field="credentialId">
+                <c:select xmlns:c="/lib/credentials"/>
+            </f:entry>
 
             <f:entry field="webDriverBrowsers" name="seleniumInformation" value="webDriver" title="${%WebDriver}">
                 <select id="webDriverBrowsers" name="webDriverBrowsers" multiple="multiple"
@@ -53,11 +56,6 @@
 
             <f:entry field="useLatestVersion">
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
-            </f:entry>
-
-
-            <f:entry title="${%Credentials}" field="credentialId">
-                <c:select xmlns:c="/lib/credentials"/>
             </f:entry>
         </f:section>
         <f:section title="Sauce Connect Advanced Options">

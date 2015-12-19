@@ -36,6 +36,8 @@ import hudson.model.*;
 import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.BuildWrapper;
+import hudson.tasks.BuildWrapperDescriptor;
+import hudson.tasks.BuildWrappers;
 import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
 import jenkins.model.Jenkins;
@@ -70,6 +72,13 @@ import java.util.regex.Pattern;
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
 
+    @Override
+    public void makeSensitiveBuildVariables(AbstractBuild build, Set<String> sensitiveVariables) {
+        super.makeSensitiveBuildVariables(build, sensitiveVariables);
+        sensitiveVariables.add(SAUCE_ACCESS_KEY);
+        sensitiveVariables.add(SAUCE_API_KEY);
+    }
+
     /**
      * Logger instance.
      */
@@ -94,7 +103,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Environment variable key which contains the Sauce user name.
      */
-    private static final String SAUCE_USERNAME = "SAUCE_USERNAME";
+    public static final String SAUCE_USERNAME = "SAUCE_USERNAME";
     /**
      * Environment variable key which contains the Sauce user name.
      * @deprecated  As of release 1.142, please use the standard SAUCE_USERNAME instead
@@ -110,7 +119,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Environment variable key which contains the Sauce access key.
      */
-    private static final String SAUCE_ACCESS_KEY = "SAUCE_ACCESS_KEY";
+    public static final String SAUCE_ACCESS_KEY = "SAUCE_ACCESS_KEY";
     /**
      * Environment variable key which contains the device value for the selected browser.
      */
@@ -200,7 +209,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @deprecated use credentialsId instead
      */
     @Deprecated
-    private Credentials credentials;
+    private transient Credentials credentials;
     /**
      * The browser information that is to be used for the build.
      */
@@ -1076,32 +1085,55 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
-    protected void migrateCredentials(Project project) {
-        if (Strings.isNullOrEmpty(this.credentialId) && this.credentials != null) {
+    protected boolean migrateCredentials(AbstractProject project) {
+        if (Strings.isNullOrEmpty(this.credentialId)) {
+            if (this.credentials != null) {
+                try {
+                    String credentialId = SauceCredentialsImpl.migrateToCredentials(
+                        this.credentials.getUsername(),
+                        this.credentials.getApiKey(),
+                        project == null ? "Unknown" : project.getDisplayName()
+                    );
+                    this.credentialId = credentialId;
+                    this.credentials = null;
+                    return true;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             try {
-                String credentialId = SauceCredentialsImpl.migrateToCredentials(
-                    this.credentials.getUsername(),
-                    this.credentials.getApiKey(),
-                    project == null ? "Unknown" : project.getDisplayName()
+                this.credentialId = SauceCredentialsImpl.migrateToCredentials(
+                    PluginImpl.get().getUsername(),
+                    PluginImpl.get().getApiKey().getPlainText(),
+                    "Global"
                 );
-                this.credentialId = credentialId;
-                this.credentials = null;
+                return true;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        return false;
     }
 
     @Extension
     static final public class ItemListenerImpl extends ItemListener {
         public void onLoaded() {
-            for (Project p : Jenkins.getInstance().getItems(Project.class))
+            for (BuildableItemWithBuildWrappers item : Jenkins.getInstance().getItems(BuildableItemWithBuildWrappers.class))
             {
-                for (SauceOnDemandBuildWrapper bw : (List<SauceOnDemandBuildWrapper>) p.getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
+                AbstractProject p = item.asProject();
+                for (SauceOnDemandBuildWrapper bw : (List<SauceOnDemandBuildWrapper>) ((BuildableItemWithBuildWrappers)p).getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
                 {
-                    bw.migrateCredentials(p);
+                    if (bw.migrateCredentials(p) == true) {
+                        try {
+                            p.save();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }

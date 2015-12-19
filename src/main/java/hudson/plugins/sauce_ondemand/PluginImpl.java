@@ -140,12 +140,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         this.environmentVariablePrefix = environmentVariablePrefix;
     }
 
-    public String getCredentialId() {
-        return credentialId;
+    @Deprecated
+    public String getUsername() {
+        return username;
     }
 
-    public void setCredentialId(String credentialId) {
-        this.credentialId = credentialId;
+    @Deprecated
+    public Secret getApiKey() {
+        return apiKey;
     }
 
     @Extension
@@ -242,14 +244,5 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             }
         }
     }
-
-    @Extension
-    static final public class ItemListenerImpl extends ItemListener {
-        public void onLoaded() {
-            PluginImpl.get().migrateCredentials();
-        }
-    }
-
-
 
 }

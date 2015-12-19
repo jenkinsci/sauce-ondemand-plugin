@@ -99,26 +99,23 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param buildListener Can be used to send any message.
      * @param testResult    Contains the test results for the build.
      * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
-     * @throws IOException FIXME - pretty sure this can't be thrown in this function
-     * @throws InterruptedException FIXME - pretty sure this can't be thrown in this function
      */
     @Override
-    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
-
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) {
         try
         {
-        buildListener.getLogger().println("Starting Sauce Labs test publisher");
-        SauceOnDemandBuildAction buildAction = getBuildAction(build);
-        if (buildAction != null) {
-            processBuildOutput(build, buildAction, testResult);
-            if (buildAction.hasSauceOnDemandResults()) {
-                return SauceOnDemandReportFactory.INSTANCE;
-            } else {
-                buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
-                return null;
+            buildListener.getLogger().println("Starting Sauce Labs test publisher");
+            SauceOnDemandBuildAction buildAction = getBuildAction(build);
+            if (buildAction != null) {
+                processBuildOutput(build, buildAction, testResult);
+                if (buildAction.hasSauceOnDemandResults()) {
+                    return SauceOnDemandReportFactory.INSTANCE;
+                } else {
+                    buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
+                    return null;
+                }
             }
-        }
-        return null;
+            return null;
         } finally {
             buildListener.getLogger().println("Finished Sauce Labs test publisher");
         }

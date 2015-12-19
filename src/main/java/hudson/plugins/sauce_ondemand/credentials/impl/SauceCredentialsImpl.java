@@ -91,7 +91,7 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
     }
 
     public static SauceCredentialsImpl getSauceCredentials(AbstractBuild build, SauceOnDemandBuildWrapper wrapper) {
-        String credentialId = !Strings.isNullOrEmpty(wrapper.getCredentialId()) ? wrapper.getCredentialId() : PluginImpl.get().getCredentialId();
+        String credentialId = wrapper.getCredentialId();
         return getCredentialsById(build.getProject(), credentialId);
     }
 

@@ -59,11 +59,8 @@ public abstract class BrowserAxis extends Axis {
      * @param map FIXME ??
      */
     public void addBuildVariable(String value, Map<String, String> map) {
-        PluginImpl p = PluginImpl.get();
-        SauceCredentialsImpl credentials = SauceCredentialsImpl.getCredentialsById(null, p.getCredentialId()); // FIXME - this never will allow build level credentials
-
-        String username = credentials.getUsername();
-        String accessKey = credentials.getApiKey().getPlainText();
+        final String username = map.get(SauceOnDemandBuildWrapper.SAUCE_USERNAME);
+        final String accessKey = map.get(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY);
 
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
