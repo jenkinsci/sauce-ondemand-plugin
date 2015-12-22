@@ -14,8 +14,6 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -96,10 +94,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * Invokes the Sauce REST API to retrieve the details for the jobs the user has access to.  Iterates over the jobs
      * and attempts to find the job that has a 'build' field matching the build key/number.
      * @return List of processed job information
-     * @throws IOException Unable to contact server
      * @throws JSONException Not json returned properly
-     * @throws InvalidKeyException Bad keys
-     * @throws NoSuchAlgorithmException Should never be returned but can't do encoding
      */
     public List<JobInformation> retrieveJobIdsFromSauce() throws JSONException {
         SauceCredentials credentials = SauceCredentials.getCredentials(build);
@@ -133,6 +128,9 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     }
 
     protected JenkinsSauceREST getSauceREST() {
+        SauceCredentials creds = SauceCredentials.getCredentials(this.getBuild().getProject());
+        String username = creds != null ? creds.getUsername() : null;
+        String accessKey = creds != null ? creds.getPassword().getPlainText() : null;
         return new JenkinsSauceREST(username, accessKey);
     }
 
