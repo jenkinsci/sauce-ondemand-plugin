@@ -5,7 +5,7 @@ import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,10 +29,6 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
-
-/**
- * Created by gavinmogan on 10/14/15.
- */
 @RunWith(Parameterized.class)
 public class ParameterizedSauceBuildWrapperTest {
     /**
@@ -97,7 +93,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
     @Before
     public void setUp() throws Exception {
-        String credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override

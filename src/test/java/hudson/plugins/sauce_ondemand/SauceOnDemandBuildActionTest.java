@@ -7,7 +7,7 @@ import com.saucelabs.ci.JobInformation;
 import hudson.model.Build;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -25,9 +25,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.*;
 
-/**
- * Created by gavinmogan on 2015-11-22.
- */
 public class SauceOnDemandBuildActionTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -53,7 +50,7 @@ public class SauceOnDemandBuildActionTest {
 
         FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
         freeStyleProject.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(
-            SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest")
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
         ));
         Build build = freeStyleProject.scheduleBuild2(0).get();
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, null) {
@@ -87,7 +84,7 @@ public class SauceOnDemandBuildActionTest {
     private SauceOnDemandBuildAction createFakeAction() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        String credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
         project.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(credentialsId));
         FreeStyleBuild build = project.scheduleBuild2(0).get(1, TimeUnit.SECONDS);
 

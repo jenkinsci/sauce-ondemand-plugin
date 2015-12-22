@@ -5,8 +5,7 @@ import com.saucelabs.ci.BrowserFactory;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.ParameterValue;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
-import hudson.util.Secret;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import net.sf.json.JSONArray;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -32,7 +31,7 @@ public class SauceParameterValue extends ParameterValue {
      */
     @Override
     public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+        SauceCredentials credentials = SauceCredentials.getCredentials(build);
         String userName = credentials.getUsername();
         String apiKey = credentials.getApiKey().getPlainText();
 

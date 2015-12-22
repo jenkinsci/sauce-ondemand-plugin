@@ -34,10 +34,8 @@ import hudson.*;
 import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
 import hudson.model.listeners.ItemListener;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.BuildWrapper;
-import hudson.tasks.BuildWrapperDescriptor;
-import hudson.tasks.BuildWrappers;
 import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
 import jenkins.model.Jenkins;
@@ -308,16 +306,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
 
-    public static SauceCredentialsImpl getCredentials(AbstractProject project) {
-        BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) project;
-        String credentialsId = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class).getCredentialId();
-        return SauceCredentialsImpl.getCredentialsById((Item) p, credentialsId);
-    }
-
-    public static SauceCredentialsImpl getCredentials(AbstractBuild build) {
-        return getCredentials(build.getProject());
-    }
-
     /**
      * {@inheritDoc}
      *
@@ -330,7 +318,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         listener.getLogger().println("Starting pre-build for Sauce Labs plugin");
         logger.fine("Setting up Sauce Build Wrapper");
 
-        SauceCredentialsImpl credentials = SauceCredentialsImpl.getSauceCredentials(build, this);
+        SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, this);
+
+        final PluginImpl p = PluginImpl.get();
         final String apiKey = credentials.getApiKey().getPlainText();
         final String username = credentials.getUsername();
 
@@ -339,7 +329,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         if (isEnableSauceConnect()) {
 
             boolean canRun = true;
-            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+            String workingDirectory = p != null ? p.getSauceConnectDirectory() : null;
             String resolvedOptions = getCommandLineOptions(build, listener);
 
             if (isUseGeneratedTunnelIdentifier()) {
@@ -538,7 +528,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     public boolean shouldSendUsageData() {
-        return PluginImpl.get().isSendUsageData();
+        PluginImpl plugin = PluginImpl.get();
+        if (plugin == null) { return false; }
+        return plugin.isSendUsageData();
     }
 
     /**
@@ -553,10 +545,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @throws InterruptedException
      */
     private String getCommandLineOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+        PluginImpl p = PluginImpl.get();
 
         StringBuilder resolvedOptions = new StringBuilder();
         resolvedOptions.append(getResolvedOptions(build, listener, options));
-        String resolvedCommonOptions = getResolvedOptions(build, listener, PluginImpl.get().getSauceConnectOptions());
+        String resolvedCommonOptions = getResolvedOptions(build, listener, p != null ? p.getSauceConnectOptions() : null);
         if (resolvedCommonOptions != null && !resolvedCommonOptions.equals("")) {
             if (!resolvedOptions.toString().equals("")) {
                 resolvedOptions.append(' ');
@@ -1031,7 +1024,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
             return new StandardUsernameListBoxModel()
-                .withAll(SauceCredentialsImpl.all(context));
+                .withAll(SauceCredentials.all(context));
         }
 
     }
@@ -1089,7 +1082,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         if (Strings.isNullOrEmpty(this.credentialId)) {
             if (this.credentials != null) {
                 try {
-                    String credentialId = SauceCredentialsImpl.migrateToCredentials(
+                    String credentialId = SauceCredentials.migrateToCredentials(
                         this.credentials.getUsername(),
                         this.credentials.getApiKey(),
                         project == null ? "Unknown" : project.getDisplayName()
@@ -1103,7 +1096,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 }
             }
             try {
-                this.credentialId = SauceCredentialsImpl.migrateToCredentials(
+                this.credentialId = SauceCredentials.migrateToCredentials(
                     PluginImpl.get().getUsername(),
                     PluginImpl.get().getApiKey().getPlainText(),
                     "Global"

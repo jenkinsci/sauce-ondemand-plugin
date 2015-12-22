@@ -3,7 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.gargoylesoftware.htmlunit.Page;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import org.junit.Before;
@@ -16,9 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertNotNull;
 
-/**
- * Created by gavinmogan on 2015-11-17.
- */
 public class SauceOnDemandProjectActionTest {
 
     private SecurityRealm securityRealm;
@@ -37,7 +34,7 @@ public class SauceOnDemandProjectActionTest {
 
     @Before
     public void setUp() throws Exception {
-        credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
     }
 
     @Test

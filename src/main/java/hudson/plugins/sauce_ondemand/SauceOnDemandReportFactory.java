@@ -26,7 +26,6 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;

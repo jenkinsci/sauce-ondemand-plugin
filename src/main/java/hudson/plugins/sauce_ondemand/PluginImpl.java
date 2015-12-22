@@ -24,15 +24,13 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.google.common.base.Strings;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceLibraryManager;
 import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.*;
-import hudson.model.listeners.ItemListener;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
@@ -161,7 +159,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
          */
         public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
             return new StandardUsernameListBoxModel()
-                .withAll(SauceCredentialsImpl.all(context));
+                .withAll(SauceCredentials.all(context));
         }
     }
 

@@ -24,8 +24,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.model.AbstractBuild;
-import hudson.model.BuildableItemWithBuildWrappers;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
 
@@ -77,7 +76,7 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public String getAuth() throws IOException {
-        return new SauceTestResultsById(getId(), SauceOnDemandBuildWrapper.getCredentials(getBuild())).getAuth();
+        return new SauceTestResultsById(getId(), SauceCredentials.getCredentials(getBuild())).getAuth();
     }
 
     @Override

@@ -2,26 +2,27 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.EnvVars;
 import hudson.Launcher;
+import hudson.maven.MavenModuleSet;
+import hudson.maven.MavenModuleSetBuild;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
-import hudson.slaves.DumbSlave;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.tasks.Maven;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -78,11 +79,16 @@ public class SauceBuildWrapperTest {
     @Before
     public void setUp() throws Exception {
         SystemCredentialsProvider.getInstance().save();
-        this.credentialsId = SauceCredentialsImpl.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        jenkinsRule.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
+
+        this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
         JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key");
-        // Reset connection string every run
-        PluginImpl.get().setSauceConnectOptions("");
+        PluginImpl p = PluginImpl.get();
+        if (p != null) {
+            // Reset connection string every run
+            p.setSauceConnectOptions("");
+        }
 
         //create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
         spySauceRest = spy(sauceRest);
@@ -153,7 +159,7 @@ public class SauceBuildWrapperTest {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
 
-        Build build = runFreestyleBuild(sauceBuildWrapper);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
         jenkinsRule.assertBuildStatusSuccess(build);
 
 
@@ -182,7 +188,7 @@ public class SauceBuildWrapperTest {
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         sauceBuildWrapper.setOptions("");
 
-        Build build = runFreestyleBuild(sauceBuildWrapper);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
         jenkinsRule.assertBuildStatusSuccess(build);
 
 
@@ -208,29 +214,8 @@ public class SauceBuildWrapperTest {
         storeDummyManager(sauceConnectFourManager);
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, null);
         jenkinsRule.assertBuildStatus(Result.FAILURE, build);
-    }
-
-    /**
-     * Simulates the running of a build with Sauce Connect v4.
-     *
-     * @throws Exception thrown if an unexpected error occurs
-     */
-    @Test
-    public void runSauceConnectVersion4() throws Exception {
-        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-
-        Build build = runFreestyleBuild(sauceBuildWrapper);
-        jenkinsRule.assertBuildStatusSuccess(build);
-
-        //assert that the Sauce REST API was invoked for the Sauce job id
-//        assertNotNull(restUpdates.get(currentSessionId));
-        //TODO verify that test results of build include Sauce results
-        //assert that mock SC stopped
-//        verify(sauceConnectFourManager.closeTunnelsForPlan(anyString(), anyString(), any(PrintStream.class)));
-
-
     }
 
     /**
@@ -267,7 +252,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
         //jenkinsRule.assertBuildStatusSuccess(build);
 
         //assert that the Sauce REST API was invoked for the Sauce job id
@@ -306,7 +291,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
         jenkinsRule.assertBuildStatusSuccess(build);
 
         assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
@@ -351,7 +336,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
         jenkinsRule.assertBuildStatusSuccess(build);
         assertEquals("Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
         Map<String, String> envVars = (Map<String, String>)holder.get("env");
@@ -359,13 +344,24 @@ public class SauceBuildWrapperTest {
         assertEquals("Port Provided as ENV equals SELENIUM_PORT", port, envVars.get("SELENIUM_PORT"));
     }
 
-    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper) throws Exception {
-        return runFreestyleBuild(sauceBuildWrapper, null);
-    }
 
-    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder) throws Exception {
-        return runFreestyleBuild(sauceBuildWrapper, builder, null);
+    /**
+     * Verifies that common options are set when the build is run.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void mavenBuild() throws Exception {
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
+        MavenModuleSet project = jenkinsRule.createMavenProject();
+        project.getBuildWrappersList().add(sauceBuildWrapper);
+        project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
+        project.setGoals("clean");
+
+        MavenModuleSetBuild build =  project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        assertNotNull(build);
+        jenkinsRule.assertBuildStatusSuccess(build);
     }
 
     /* FIXME - move to setup() */
@@ -399,8 +395,6 @@ public class SauceBuildWrapperTest {
         assertNotNull(build);
 
         return build;
-
-
     }
 
     /**
@@ -410,7 +404,7 @@ public class SauceBuildWrapperTest {
 
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-            SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+            SauceCredentials credentials = SauceCredentials.getCredentials(build);
             //assert that mock SC started
 
             Map<String, String> envVars = build.getEnvironment(listener);

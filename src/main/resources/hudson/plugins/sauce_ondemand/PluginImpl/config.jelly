@@ -4,7 +4,7 @@
     <f:section title="Sauce Support">
         <j:scope>
             <j:set var="instance" value="${it}"/>
-            <j:set var="descriptor" value="${instance.descriptor}"/>
+            <j:set var="descriptor" value="${it.descriptor}"/>
             <f:entry field="sendUsageData">
                 <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
             </f:entry>

@@ -8,6 +8,7 @@
     <properties>
         <plugins.credentials.version>1.24</plugins.credentials.version>
         <plugins.matrix-project.version>1.4</plugins.matrix-project.version>
+        <plugins.maven-project.version>2.11</plugins.maven-project.version>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
         <plugins.junit.version>1.9</plugins.junit.version>
     </properties>
@@ -135,7 +136,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>credentials</artifactId>
-            <version>1.24</version>
+            <version>${plugins.credentials.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -155,7 +156,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>${plugins.matrix-project.version}67</version>
+            <version>${plugins.maven-project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -163,15 +164,15 @@
             <artifactId>commons-io</artifactId>
             <version>1.4</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-inject-plexus</artifactId>
             <version>2.2.0</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.28</version>
+            <version>1.0.29</version>
         </dependency>
 
         <dependency>

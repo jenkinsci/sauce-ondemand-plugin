@@ -3,7 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,7 +14,6 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -89,8 +88,8 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     }
 
     @Override
-    protected SauceCredentialsImpl getCredentials() {
-        return SauceOnDemandBuildWrapper.getCredentials(getBuild());
+    protected SauceCredentials getCredentials() {
+        return SauceCredentials.getCredentials(getBuild());
     }
 
     /**
@@ -103,7 +102,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * @throws NoSuchAlgorithmException Should never be returned but can't do encoding
      */
     public List<JobInformation> retrieveJobIdsFromSauce() throws JSONException {
-        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+        SauceCredentials credentials = SauceCredentials.getCredentials(build);
 
         //invoke Sauce Rest API to find plan results with those values
         List<JobInformation> jobInformation = new ArrayList<JobInformation>();
@@ -162,7 +161,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
      * @param output     lines of output to be processed, not null
      */
     public void processSessionIds(CaseResult caseResult, String... output) {
-        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+        SauceCredentials credentials = SauceCredentials.getCredentials(build);
 
         logger.log(Level.FINE, caseResult == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
         SauceREST sauceREST = getSauceREST();

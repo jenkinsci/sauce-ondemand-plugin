@@ -9,7 +9,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Project;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.security.AccessControlled;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -24,7 +24,6 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
@@ -140,8 +139,8 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     @Override
-    protected SauceCredentialsImpl getCredentials() {
-        return SauceOnDemandBuildWrapper.getCredentials(getProject());
+    protected SauceCredentials getCredentials() {
+        return SauceCredentials.getCredentials(getProject());
     }
 
     public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {

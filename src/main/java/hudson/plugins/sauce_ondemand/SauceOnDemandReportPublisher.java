@@ -32,7 +32,7 @@ import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
@@ -41,7 +41,6 @@ import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -177,7 +176,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     protected SauceREST getSauceREST(AbstractBuild build) {
-        SauceCredentialsImpl credentials = SauceOnDemandBuildWrapper.getCredentials(build);
+        SauceCredentials credentials = SauceCredentials.getCredentials(build);
         return new JenkinsSauceREST(credentials.getUsername(), credentials.getApiKey().getPlainText());
     }
 

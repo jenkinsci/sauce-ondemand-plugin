@@ -2,15 +2,12 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
 import hudson.model.Action;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 /**
@@ -32,7 +29,7 @@ public abstract class AbstractAction implements Action {
 
     public abstract List<JobInformation> getJobs();
 
-    abstract protected SauceCredentialsImpl getCredentials();
+    abstract protected SauceCredentials getCredentials();
 
     @SuppressWarnings("unused") // used by stapler
     public List<JobInformation> getJobsWithAuth() {

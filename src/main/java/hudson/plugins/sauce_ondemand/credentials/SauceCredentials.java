@@ -1,6 +1,11 @@
-package hudson.plugins.sauce_ondemand.credentials.impl;
+package hudson.plugins.sauce_ondemand.credentials;
 
-import com.cloudbees.plugins.credentials.*;
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsDescriptor;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
@@ -13,38 +18,26 @@ import com.saucelabs.saucerest.SecurityUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
-import hudson.plugins.sauce_ondemand.PluginImpl;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import org.apache.commons.codec.binary.Hex;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-
-/**
- * Created by gavinmogan on 10/17/15.
- */
-public class SauceCredentialsImpl extends BaseStandardCredentials implements StandardUsernamePasswordCredentials {
-    /**
-     * Ensure consistent serialization.
-     */
-    private static final long serialVersionUID = 1L;
-
+public class SauceCredentials extends BaseStandardCredentials implements StandardUsernamePasswordCredentials {
     /**
      * The username.
      */
@@ -64,11 +57,26 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
      * @param description
      */
     @DataBoundConstructor
-    public SauceCredentialsImpl(@CheckForNull CredentialsScope scope, @CheckForNull String id,
+    public SauceCredentials(@CheckForNull CredentialsScope scope, @CheckForNull String id,
                             @NonNull String username, @NonNull String apiKey, @CheckForNull String description) {
         super(scope, id, description);
         this.apiKey = Secret.fromString(apiKey);
         this.username = username;
+    }
+
+    public static SauceCredentials getCredentials(AbstractProject project) {
+        if (project == null) { return null; }
+
+        if (!(project instanceof BuildableItemWithBuildWrappers)) {
+            return getCredentials((AbstractProject) project.getParent());
+        }
+        BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) project;
+        String credentialsId = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class).getCredentialId();
+        return getCredentialsById((Item) p, credentialsId);
+    }
+
+    public static SauceCredentials getCredentials(AbstractBuild build) {
+        return getCredentials(build.getProject());
     }
 
     @NonNull
@@ -84,13 +92,13 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
 
     @Override
     public String toString() {
-        return "SauceCredentialsImpl{" +
+        return "SauceCredentials{" +
             "apiKey=" + apiKey +
             ", username='" + username + '\'' +
             '}';
     }
 
-    public static SauceCredentialsImpl getSauceCredentials(AbstractBuild build, SauceOnDemandBuildWrapper wrapper) {
+    public static SauceCredentials getSauceCredentials(AbstractBuild build, SauceOnDemandBuildWrapper wrapper) {
         String credentialId = wrapper.getCredentialId();
         return getCredentialsById(build.getProject(), credentialId);
     }
@@ -131,7 +139,7 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
     public final static DomainRequirement DOMAIN_REQUIREMENT = new HostnamePortRequirement("saucelabs.com", 80);
 
     public static String migrateToCredentials(String username, String accessKey, String migratedFrom) throws InterruptedException, IOException {
-        final List<SauceCredentialsImpl> credentialsForDomain = SauceCredentialsImpl.all((Item) null);
+        final List<SauceCredentials> credentialsForDomain = SauceCredentials.all((Item) null);
         final StandardUsernameCredentials existingCredentials = CredentialsMatchers.firstOrNull(
             credentialsForDomain,
             CredentialsMatchers.withUsername(username)
@@ -143,7 +151,7 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
 
             final StandardUsernameCredentials credentialsToCreate;
             if (!Strings.isNullOrEmpty(accessKey)) {
-                credentialsToCreate = new SauceCredentialsImpl(
+                credentialsToCreate = new SauceCredentials(
                     CredentialsScope.GLOBAL,
                     createdCredentialId,
                     username,
@@ -174,27 +182,27 @@ public class SauceCredentialsImpl extends BaseStandardCredentials implements Sta
         return credentialId;
     }
 
-    public static List<SauceCredentialsImpl> all(ItemGroup context) {
+    public static List<SauceCredentials> all(ItemGroup context) {
         return CredentialsProvider.lookupCredentials(
-            SauceCredentialsImpl.class,
+            SauceCredentials.class,
             context,
             ACL.SYSTEM,
-            SauceCredentialsImpl.DOMAIN_REQUIREMENT
+            SauceCredentials.DOMAIN_REQUIREMENT
         );
     }
 
-    public static List<SauceCredentialsImpl> all(Item context) {
+    public static List<SauceCredentials> all(Item context) {
         return CredentialsProvider.lookupCredentials(
-            SauceCredentialsImpl.class,
+            SauceCredentials.class,
             context,
             ACL.SYSTEM,
-            SauceCredentialsImpl.DOMAIN_REQUIREMENT
+            SauceCredentials.DOMAIN_REQUIREMENT
         );
     }
 
-    public static SauceCredentialsImpl getCredentialsById(Item context, String id) {
+    public static SauceCredentials getCredentialsById(Item context, String id) {
         return CredentialsMatchers.firstOrNull(
-            SauceCredentialsImpl.all((Item) context),
+            SauceCredentials.all((Item) context),
             CredentialsMatchers.withId(id)
         );
     }

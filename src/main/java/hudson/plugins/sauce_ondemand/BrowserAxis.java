@@ -26,8 +26,6 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import hudson.matrix.Axis;
-import hudson.plugins.sauce_ondemand.credentials.impl.SauceCredentialsImpl;
-import hudson.util.Secret;
 
 import java.util.List;
 import java.util.Map;
