@@ -26,6 +26,9 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import hudson.matrix.Axis;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +43,7 @@ public abstract class BrowserAxis extends Axis {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
     protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+    private MatrixProject project;
 
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
@@ -50,6 +54,12 @@ public abstract class BrowserAxis extends Axis {
         return getValues().contains(key);
     }
 
+    @Override
+    public List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
+        this.project = context.getProject();
+        return super.rebuild(context);
+    }
+
     /**
      * Adds the browser URI to the environment map.  Will override any values set in {@link SauceOnDemandBuildWrapper#setUp(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)}
      *
@@ -57,8 +67,9 @@ public abstract class BrowserAxis extends Axis {
      * @param map FIXME ??
      */
     public void addBuildVariable(String value, Map<String, String> map) {
-        final String username = map.get(SauceOnDemandBuildWrapper.SAUCE_USERNAME);
-        final String accessKey = map.get(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY);
+        SauceCredentials creds = SauceCredentials.getCredentials(project);
+        final String username = creds != null ? creds.getUsername() : map.get(SauceOnDemandBuildWrapper.SAUCE_USERNAME);
+        final String accessKey = creds != null ? creds.getPassword().getPlainText() : map.get(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY);
 
         Browser browserInstance = getBrowserForKey(value);
         if (browserInstance != null) {   // should never be null, but let's be defensive in case of downgrade.
