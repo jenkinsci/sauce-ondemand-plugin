@@ -17,23 +17,7 @@
             <f:entry title="${%Selenium Environment Variable Prefix}" field="environmentVariablePrefix">
                 <f:textbox id="environmentVariablePrefixBox"/>
             </f:entry>
-            <f:entry field="disableStatusColumn">
-                <f:checkbox id="disableStatusColumnCheckBox" title="${%Disable Sauce Status Column?}"/>
-            </f:entry>
 
-            <!--<f:entry help="/descriptor/hudson.plugins.sauce_ondemand.PluginImpl/help/updates">-->
-                <!--<div id="progress" style="display:none;">-->
-                    <!--<img src="${imagesURL}/spinner.gif"/>-->
-                <!--</div>-->
-                <!--<div id="msg"></div>-->
-                <!--<script>-->
-                    <!--var plugin =-->
-                    <!--<st:bind value="${it}"/>-->
-                    <!--plugin.checkForUpdates(function(t) {-->
-                    <!--document.getElementById('msg').innerHTML = t.responseObject();-->
-                    <!--})-->
-                <!--</script>-->
-            <!--</f:entry>-->
             <f:block>
                 <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn"
                                   method="validate"/>
