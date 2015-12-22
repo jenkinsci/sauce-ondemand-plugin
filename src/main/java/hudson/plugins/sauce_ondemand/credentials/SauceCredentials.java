@@ -48,14 +48,6 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      */
     protected final Secret apiKey;
 
-    /**
-     *
-     * @param scope
-     * @param id
-     * @param username
-     * @param apiKey
-     * @param description
-     */
     @DataBoundConstructor
     public SauceCredentials(@CheckForNull CredentialsScope scope, @CheckForNull String id,
                             @NonNull String username, @NonNull String apiKey, @CheckForNull String description) {
@@ -129,10 +121,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         public boolean actualValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             SauceREST rest = new JenkinsSauceREST(username, apiKey);
-            if ("".equals(rest.getUser())) {
-                return false;
-            }
-            return true;
+            return "".equals(rest.getUser());
         }
     }
 
@@ -223,9 +212,6 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      *
      * @param jobId     the Sauce job id
      * @return the HMAC token
-     * @throws java.security.NoSuchAlgorithmException FIXME
-     * @throws java.security.InvalidKeyException FIXME
-     * @throws java.io.UnsupportedEncodingException FIXME
      *
      */
     public String getHMAC(String jobId) {

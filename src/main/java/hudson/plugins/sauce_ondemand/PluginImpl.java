@@ -39,7 +39,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
-;
 import javax.servlet.ServletException;
 import java.io.IOException;
 

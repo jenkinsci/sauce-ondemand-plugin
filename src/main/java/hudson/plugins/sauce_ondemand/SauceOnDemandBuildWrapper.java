@@ -868,16 +868,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private File sauceConnectJar;
         private int port;
 
-        /**
-         * @param sauceOnDemandBuildWrapper
-         * @param env
-         * @param listener
-         * @param workingDirectory
-         * @param resolvedOptions
-         * @param sauceConnectJar
-         * @param username
-         * @param apiKey
-         */
         public SauceConnectHandler(
             SauceOnDemandBuildWrapper sauceOnDemandBuildWrapper,
             EnvVars env,
@@ -1082,12 +1072,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         if (Strings.isNullOrEmpty(this.credentialId)) {
             if (this.credentials != null) {
                 try {
-                    String credentialId = SauceCredentials.migrateToCredentials(
+                    this.credentialId = SauceCredentials.migrateToCredentials(
                         this.credentials.getUsername(),
                         this.credentials.getApiKey(),
                         project == null ? "Unknown" : project.getDisplayName()
                     );
-                    this.credentialId = credentialId;
                     return true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
