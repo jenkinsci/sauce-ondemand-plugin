@@ -81,7 +81,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String sauceConnectOptions;
 
-    private boolean disableStatusColumn;
+    @Deprecated
+    private transient boolean disableStatusColumn;
 
     private String environmentVariablePrefix;
 
@@ -104,8 +105,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Override
     public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, Descriptor.FormException {
-
-        disableStatusColumn = formData.getBoolean("disableStatusColumn");;
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
@@ -200,14 +199,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             logger.log(Level.WARNING, "Error Reloading plugin", e);
         }
         return "Failed to apply updates, please see application logs";
-    }
-
-    public boolean isDisableStatusColumn() {
-        return disableStatusColumn;
-    }
-
-    public void setDisableStatusColumn(boolean disableStatusColumn) {
-        this.disableStatusColumn = disableStatusColumn;
     }
 
     public String getSauceConnectOptions() {
