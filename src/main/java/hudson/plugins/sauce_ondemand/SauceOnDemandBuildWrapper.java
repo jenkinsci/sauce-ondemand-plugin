@@ -1095,7 +1095,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         project == null ? "Unknown" : project.getDisplayName()
                     );
                     this.credentialId = credentialId;
-                    this.credentials = null;
                     return true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();

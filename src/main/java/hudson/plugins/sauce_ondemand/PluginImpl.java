@@ -225,24 +225,4 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     public boolean isSendUsageData() {
         return sendUsageData;
     }
-
-    protected void migrateCredentials() {
-        if (Strings.isNullOrEmpty(this.credentialId) && !Strings.isNullOrEmpty(this.username) && this.apiKey != null) {
-            try {
-                String credentialId = SauceCredentialsImpl.migrateToCredentials(
-                    this.username,
-                    this.apiKey.getPlainText(),
-                    "Global"
-                );
-                this.credentialId = credentialId;
-                this.username = null;
-                this.apiKey = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
 }

@@ -17,11 +17,6 @@
             <f:entry title="${%Selenium Environment Variable Prefix}" field="environmentVariablePrefix">
                 <f:textbox id="environmentVariablePrefixBox"/>
             </f:entry>
-
-            <f:block>
-                <f:validateButton title="${%Test Connection}" with="username,apiKey,disableStatusColumn"
-                                  method="validate"/>
-            </f:block>
         </j:scope>
     </f:section>
 </j:jelly>
