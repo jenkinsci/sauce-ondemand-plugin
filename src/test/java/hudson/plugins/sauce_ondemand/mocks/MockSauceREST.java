@@ -13,6 +13,6 @@ public class MockSauceREST extends JenkinsSauceREST {
 
     @Override
     public String retrieveResults(URL restEndpoint) {
-        return super.retrieveResults(restEndpoint);
+        throw new RuntimeException("Shouldn't actually hit server when testing");
     }
 }

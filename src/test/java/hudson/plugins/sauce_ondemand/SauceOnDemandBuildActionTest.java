@@ -24,6 +24,12 @@ import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class SauceOnDemandBuildActionTest {
     @Rule
@@ -36,22 +42,18 @@ public class SauceOnDemandBuildActionTest {
 
     @Test
     public void doJobReportTest() throws Exception {
-        final JenkinsSauceREST mockSauceREST = new MockSauceREST() {
-            @Override
-            public String getBuildJobs(String build, boolean full) {
-                try {
-                    return IOUtils.toString(getClass().getResourceAsStream("build_jobs.json"), "UTF-8");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return "";
-                }
-            }
-        };
+        final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
+        when(mockSauceREST.getBuildJobs(anyString(), anyBoolean())).thenReturn(
+            IOUtils.toString(getClass().getResourceAsStream("/build_jobs.json"), "UTF-8")
+        );
+        when(mockSauceREST.getTunnels()).thenReturn("[]");
 
         FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
-        freeStyleProject.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(
+        TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
             SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
-        ));
+        );
+        bw.setEnableSauceConnect(false);
+        freeStyleProject.getBuildWrappersList().add(bw);
         Build build = freeStyleProject.scheduleBuild2(0).get();
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, null) {
             @Override
@@ -69,6 +71,8 @@ public class SauceOnDemandBuildActionTest {
 
         assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234.js"));
         assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("auth="));
+
+        verifyNoMoreInteractions(mockSauceREST);
     }
 
     private HtmlElement getEmbedTag(DomNodeList<HtmlElement> scripts) {
@@ -85,7 +89,9 @@ public class SauceOnDemandBuildActionTest {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         FreeStyleProject project = jenkins.createFreeStyleProject();
         String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
-        project.getBuildWrappersList().add(new TestSauceOnDemandBuildWrapper(credentialsId));
+        TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(credentialsId);
+        bw.setEnableSauceConnect(false);
+        project.getBuildWrappersList().add(bw);
         FreeStyleBuild build = project.scheduleBuild2(0).get(1, TimeUnit.SECONDS);
 
         sauceOnDemandBuildAction = new SauceOnDemandBuildAction(build, null) {
