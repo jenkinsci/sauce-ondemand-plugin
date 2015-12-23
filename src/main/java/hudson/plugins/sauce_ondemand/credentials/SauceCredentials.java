@@ -63,7 +63,9 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             return getCredentials((AbstractProject) project.getParent());
         }
         BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) project;
-        String credentialsId = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class).getCredentialId();
+        SauceOnDemandBuildWrapper bw = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
+        if (bw == null) { return null; }
+        String credentialsId = bw.getCredentialId();
         return getCredentialsById((Item) p, credentialsId);
     }
 
