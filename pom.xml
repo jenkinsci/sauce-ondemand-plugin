@@ -11,6 +11,8 @@
         <plugins.maven-project.version>2.11</plugins.maven-project.version>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
         <plugins.junit.version>1.9</plugins.junit.version>
+        <ci-sauce.version>1.111</ci-sauce.version>
+        <sauce.rest.version>1.0.32</sauce.rest.version>
     </properties>
 
 
@@ -46,13 +48,31 @@
     </distributionManagement>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
         <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <tasks>
+                                <filterset id="filters">
+                                    <filter token="VERSION" value="${project.version}" />
+                                </filterset>
+                                <copy preservelastmodified="true"
+                                    file="./src/main/resources/hudson/plugins/sauce_ondemand/BuildUtils.template"
+                                    tofile="./src/main/java/hudson/plugins/sauce_ondemand/BuildUtils.java"
+                                    overwrite="true">
+                                    <filterset refid="filters" />
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.3</version>
@@ -171,13 +191,13 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.29</version>
+            <version>${sauce.rest.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.110</version>
+            <version>${ci-sauce.version}</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>

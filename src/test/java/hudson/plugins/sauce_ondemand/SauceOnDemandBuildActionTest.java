@@ -43,7 +43,7 @@ public class SauceOnDemandBuildActionTest {
     @Test
     public void doJobReportTest() throws Exception {
         final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
-        when(mockSauceREST.getBuildJobs(anyString(), anyBoolean())).thenReturn(
+        when(mockSauceREST.getBuildFullJobs(anyString())).thenReturn(
             IOUtils.toString(getClass().getResourceAsStream("/build_jobs.json"), "UTF-8")
         );
         when(mockSauceREST.getTunnels()).thenReturn("[]");
