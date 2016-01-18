@@ -1,6 +1,5 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.bamboo.sod.BuildUtils;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
