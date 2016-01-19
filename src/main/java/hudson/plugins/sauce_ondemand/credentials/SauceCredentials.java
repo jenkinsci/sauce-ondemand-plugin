@@ -123,7 +123,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         public boolean actualValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             SauceREST rest = new JenkinsSauceREST(username, apiKey);
-            return "".equals(rest.getUser());
+            return !"".equals(rest.getUser());
         }
     }
 
