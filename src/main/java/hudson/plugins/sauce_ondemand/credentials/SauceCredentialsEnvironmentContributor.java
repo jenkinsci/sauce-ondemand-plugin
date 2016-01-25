@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.EnvironmentContributor;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
@@ -17,10 +18,13 @@ public class SauceCredentialsEnvironmentContributor extends EnvironmentContribut
     public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) throws IOException, InterruptedException {
         super.buildEnvironmentFor(r, envs, listener);
 
-        SauceCredentials creds = SauceCredentials.getCredentials((AbstractProject) r.getParent());
-        if (creds != null) {
-            envs.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, creds.getUsername());
-            envs.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, creds.getPassword().getPlainText());
+        Job parent = r.getParent();
+        if (parent instanceof AbstractProject) {
+            SauceCredentials creds = SauceCredentials.getCredentials((AbstractProject)parent);
+            if (creds != null) {
+                envs.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, creds.getUsername());
+                envs.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, creds.getPassword().getPlainText());
+            }
         }
     }
 }
