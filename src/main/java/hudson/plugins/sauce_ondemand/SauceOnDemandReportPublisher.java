@@ -149,7 +149,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
 
         for (JobInformation jobInformation : buildAction.getJobs()) {
-            Map<String, Object> updates = new HashMap<String, Object>();
+            Map<String, Object> updates = jobInformation.getChanges();
             //only store passed/name values if they haven't already been set
             if (jobInformation.getStatus() == null) {
                 Boolean buildResult = hasTestPassed(testResult, jobInformation);
@@ -158,9 +158,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
                     updates.put("passed", buildResult);
                 }
-            }
-            if (!jobInformation.isHasJobName() && jobInformation.getName() != null) {
-                updates.put("name", jobInformation.getName());
             }
             if (!jobInformation.isHasBuildNumber()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
