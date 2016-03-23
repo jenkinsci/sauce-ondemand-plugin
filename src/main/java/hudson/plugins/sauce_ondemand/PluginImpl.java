@@ -25,8 +25,6 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.BrowserFactory;
-import com.saucelabs.ci.SauceLibraryManager;
-import com.saucelabs.hudson.HudsonSauceLibraryManager;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.*;
@@ -60,7 +58,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      */
     static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
-    private transient SauceLibraryManager libraryManager = new HudsonSauceLibraryManager();
     /**
      * User name to access Sauce OnDemand.
      */
@@ -159,42 +156,6 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
             return new StandardUsernameListBoxModel()
                 .withAll(SauceCredentials.all(context));
         }
-    }
-
-    /**
-     * @return String to show to the user on screen
-     */
-    @JavaScriptMethod
-    public String checkForUpdates() {
-        try {
-            boolean updateAvailable = libraryManager.checkForLaterVersion();
-            return updateAvailable ? "<div>Updates to Sauce Connect are available</div>" +
-                    "<a href=\"#\" onclick=\"var progress = document.getElementById('progress');" +
-                    "progress.style.display = 'block';" +
-                    "plugin.applyUpdates(function(t) {" +
-                    "document.getElementById('msg').innerHTML = t.responseObject();" +
-                    "var progress = document.getElementById('progress');" +
-                    "progress.style.display = 'none';" +
-                    "})\">Update Sauce Connect<\\a>" :
-                    "No update required, Sauce Connect is up to date";
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error checking for later version", e);
-        }
-        return "Failed to connect to Sauce OnDemand";
-    }
-
-    /**
-     * @return Results of applying update
-     */
-    @JavaScriptMethod
-    public String applyUpdates() {
-        try {
-            libraryManager.triggerReload();
-            return "Update of the Sauce Connect library was successful";
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error Reloading plugin", e);
-        }
-        return "Failed to apply updates, please see application logs";
     }
 
     public String getSauceConnectOptions() {
