@@ -150,6 +150,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         }
 
         /**
+         * @param context    Ancestor/what project
          * @return the list of supported credentials
          */
         public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {

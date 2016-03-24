@@ -1010,6 +1010,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         /**
+         * @param context    Project/parent
          * @return the list of supported credentials
          */
         public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
