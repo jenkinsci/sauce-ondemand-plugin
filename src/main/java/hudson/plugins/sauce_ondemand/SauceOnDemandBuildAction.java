@@ -186,7 +186,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
                         JSONObject job = new JSONObject(jsonResponse);
                         jobInfo.populateFromJson(job);
                     }
-                    if (!jobInfo.isHasJobName() && jobName != null) {
+                    if (!jobInfo.hasJobName() && jobName != null) {
                         jobInfo.setName(jobName);
                     }
                     jobInformation.add(jobInfo);

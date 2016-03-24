@@ -159,7 +159,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     updates.put("passed", buildResult);
                 }
             }
-            if (!jobInformation.isHasBuildNumber()) {
+            if (!jobInformation.hasBuild()) {
                 updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
             }
             if (!Strings.isNullOrEmpty(getJobVisibility())) {
