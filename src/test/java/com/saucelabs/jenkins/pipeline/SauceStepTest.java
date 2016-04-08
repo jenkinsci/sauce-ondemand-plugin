@@ -18,8 +18,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.*;
-
 public class SauceStepTest {
 
     @Rule
@@ -59,7 +57,6 @@ public class SauceStepTest {
     public void sauceConnectTest() throws Exception {
         String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
-        //SauceConnectFourManager sauceConnectFourManager = Mockito.spy(new SauceConnectFourManager());
         SauceConnectFourManager sauceConnectFourManager = Mockito.mock(SauceConnectFourManager.class);
 
         storeDummyManager(sauceConnectFourManager);
@@ -88,8 +85,6 @@ public class SauceStepTest {
 
     @Test
     public void sauceConnectWithoutSauceTest() throws Exception {
-        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
-
         DumbSlave s = r.createSlave();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
