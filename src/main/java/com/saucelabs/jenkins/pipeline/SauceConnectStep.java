@@ -2,6 +2,7 @@ package com.saucelabs.jenkins.pipeline;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.google.inject.Inject;
+import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.EnvVars;
@@ -18,6 +19,7 @@ import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
@@ -34,6 +36,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
 import java.util.HashMap;
+
+import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepExecution.getSauceTunnelManager;
 
 public class SauceConnectStep extends AbstractStepImpl {
     private final Boolean verboseLogging;
@@ -89,6 +93,41 @@ public class SauceConnectStep extends AbstractStepImpl {
 
     }
 
+    private static final class SauceConnectHandler extends MasterToSlaveCallable<Void, AbstractSauceTunnelManager.SauceConnectException> {
+        private final SauceCredentials sauceCredentials;
+        private final int port;
+        private final String options;
+        private final TaskListener listener;
+        private final Boolean verboseLogging;
+        private final String sauceConnectPath;
+
+        SauceConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath) {
+            this.sauceCredentials = sauceCredentials;
+            this.port = port;
+            this.options = options;
+            this.listener = listener;
+            this.verboseLogging = verboseLogging;
+            this.sauceConnectPath = sauceConnectPath;
+        }
+
+        @Override
+        public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
+            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
+            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+            sauceTunnelManager.openConnection(
+                sauceCredentials.getUsername(),
+                sauceCredentials.getPassword().getPlainText(),
+                port,
+                null, /*sauceConnectJar,*/
+                options,
+                listener.getLogger(),
+                verboseLogging,
+                sauceConnectPath
+            );
+            return null;
+        }
+    }
+
     public static class SauceConnectStepExecution extends AbstractStepExecutionImpl {
         @Inject(optional=true) private transient SauceConnectStep step;
         @StepContextParameter private transient SauceCredentials sauceCredentials;
@@ -110,14 +149,12 @@ public class SauceConnectStep extends AbstractStepImpl {
             if (node == null) {
                 throw new Exception("computer does not correspond to a live node");
             }
-            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
-            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
-
-            String options = step.getOptions();
-            HashMap<String,String> overrides = new HashMap<String,String>();
             int port = computer.getChannel().call(
                 new SauceOnDemandBuildWrapper.GetAvailablePort()
             );
+
+            String options = step.getOptions();
+            HashMap<String,String> overrides = new HashMap<String,String>();
 
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_PORT, String.valueOf(port));
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_HOST, "localhost");
@@ -131,17 +168,15 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             listener.getLogger().println("Starting sauce connect");
 
-            sauceTunnelManager.openConnection(
-                sauceCredentials.getUsername(),
-                sauceCredentials.getPassword().getPlainText(),
+            SauceConnectHandler handler = new SauceConnectHandler(
+                sauceCredentials,
                 port,
-                null, /*sauceConnectJar,*/
                 options,
-                listener.getLogger(),
+                listener,
                 step.getVerboseLogging(),
                 step.getSauceConnectPath()
             );
-
+            computer.getChannel().call(handler);
 
             body = getContext().newBodyInvoker()
                 .withContext(EnvironmentExpander.merge(getContext().get(EnvironmentExpander.class), new ExpanderImpl(overrides)))
