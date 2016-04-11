@@ -189,8 +189,9 @@ public class SauceConnectStep extends AbstractStepImpl {
 
         @Override
         public void stop(@Nonnull Throwable cause) throws Exception {
-            if (body!=null)
+            if (body!=null) {
                 body.cancel(cause);
+            }
 
         }
 
