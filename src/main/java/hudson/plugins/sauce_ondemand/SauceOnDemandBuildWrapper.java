@@ -150,7 +150,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Environment variable key which contains the Jenkins build number.
      */
     private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
-    private static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
+    public static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
 
     /**
      * Environment variable key which contains the native app path.
@@ -621,7 +621,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return "localhost";
     }
 
-    private static class GetAvailablePort extends MasterToSlaveCallable<Integer,RuntimeException> {
+    public static class GetAvailablePort extends MasterToSlaveCallable<Integer,RuntimeException> {
         public Integer call() {
             int foundPort = -1;
             java.net.ServerSocket socket = null;

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+    <f:entry field="verboseLogging">
+        <f:checkbox title="${%Enable Verbose Logging}"/>
+    </f:entry>
+    <f:entry field="options" title="${%Sauce Connect Options}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="useGeneratedTunnelIdentifier">
+        <f:checkbox title="${%Create a new unique Sauce Connect tunnel per build}"/>
+    </f:entry>
+
+    <f:entry field="sauceConnectPath"
+        title="${%Sauce Connect Binary Location}"
+        description="Leave blank to use built-in Sauce Connect binary">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>
