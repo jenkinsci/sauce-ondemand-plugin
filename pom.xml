@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.580.1</version>
+        <version>1.609.2</version>
     </parent>
     <properties>
         <plugins.credentials.version>1.24</plugins.credentials.version>
@@ -11,6 +11,7 @@
         <plugins.maven-project.version>2.11</plugins.maven-project.version>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
         <plugins.junit.version>1.9</plugins.junit.version>
+        <plugins.workflow.version>1.15</plugins.workflow.version>
         <ci-sauce.version>1.113</ci-sauce.version>
         <sauce.rest.version>1.0.32</sauce.rest.version>
     </properties>
@@ -153,7 +154,26 @@
         </dependency>
 
         <!-- Dependencies on other Jenkins plugins -->
-
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-cps</artifactId>
+            <version>${plugins.workflow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-basic-steps</artifactId>
+            <version>${plugins.workflow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-step-api</artifactId>
+            <version>${plugins.workflow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-job</artifactId>
+            <version>${plugins.workflow.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>credentials</artifactId>
@@ -225,7 +245,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.7</version>
+            <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
 
