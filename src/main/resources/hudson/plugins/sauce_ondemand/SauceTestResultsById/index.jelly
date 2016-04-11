@@ -28,7 +28,7 @@ THE SOFTWARE.
       <l:task href=".." title="${%Back To Build}" icon="images/24x24/up.gif" />
     </l:side-panel>
     <l:main-panel>
-      <h1>Sauce OnDemand Report for ${it.id}</h1>
+      <h1><a href="https://saucelabs.com/beta/tests/${it.id}">Sauce OnDemand Report for ${it.id}</a></h1>
         <l:ajax>
             <div id="sauce_results"><!-- needed because applySubtree doesn't properly apply the style to the top node -->
                 <script type="text/javascript" src="https://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
