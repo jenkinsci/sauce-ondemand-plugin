@@ -428,7 +428,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM), true, verboseLogging, listener.getLogger());
                 }
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, sanitiseBuildNumber(build.toString()), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build)), true, verboseLogging, listener.getLogger());
                 /* Legacy Env name */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USER_NAME, username, true, verboseLogging, listener.getLogger());
                 /* New standard env name */

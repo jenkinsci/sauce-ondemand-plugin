@@ -1,6 +1,5 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.google.common.collect.Lists;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.model.AbstractBuild;
@@ -15,11 +14,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +43,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
     public static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
 
     private AbstractBuild<?, ?> build;
-    private transient List<JobInformation> jobInformation;
+    private List<JobInformation> jobInformation;
     @Deprecated
     private String accessKey;
     @Deprecated
@@ -103,7 +98,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         String buildNumber = SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build));
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
-        String jsonResponse = sauceREST.getBuildFullJobs(buildNumber);
+        String jsonResponse = sauceREST.getBuildFullJobs(buildNumber, 5000);
         JSONObject job = new JSONObject(jsonResponse);
         JSONArray jobResults = job.getJSONArray("jobs");
         if (jobResults == null) {
@@ -111,7 +106,7 @@ public class SauceOnDemandBuildAction extends AbstractAction {
 
         } else {
             //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
-            for (int i = jobResults.length(); i > 0; i--) {
+            for (int i = jobResults.length() - 1; i > 0; i--) {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");

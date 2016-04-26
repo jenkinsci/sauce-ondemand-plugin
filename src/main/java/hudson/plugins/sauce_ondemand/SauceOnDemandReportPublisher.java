@@ -40,6 +40,7 @@ import hudson.tasks.junit.TestResult;
 import hudson.util.ListBoxModel;
 import org.jaxen.pantry.Test;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -108,7 +109,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
      */
     @Override
-    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException {
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) {
         try
         {
             buildListener.getLogger().println("Starting Sauce Labs test publisher");
@@ -143,7 +144,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (logString == null) continue;
             for (String text : logString.split("\n|\r")) {
                 TestIDDetails details = TestIDDetails.processString(text);
-                onDemandTests.add(details);
+                if (details != null) {
+                    onDemandTests.add(details);
+                }
             }
         }
         return onDemandTests;
@@ -156,7 +159,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param buildAction the Sauce Build Action instance for the build
      * @param testResult  Contains the test results for the build.
      */
-    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) throws IOException {
+    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
         SauceREST sauceREST = getSauceREST(build);
 
         LinkedHashMap<String, JobInformation> onDemandTests;
@@ -184,41 +187,71 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         //try the stdout for the tests
         if (testResult != null) {
             for (SuiteResult sr : testResult.getSuites()) {
-                for (CaseResult cr : sr.getCases()) {
-                    testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr(), cr.getStdout(), cr.getStderr()));
-                }
-            }
-        }
+                testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
 
-        for (TestIDDetails details : testIds)
-        {
-            if (onDemandTests.containsKey(details.getJobId())) {
-                JobInformation jobInformation = onDemandTests.get(details.getJobId());
-                Map<String, Object> updates = jobInformation.getChanges();
-                //only store passed/name values if they haven't already been set
-                if (jobInformation.getStatus() == null) {
-                    Boolean buildResult = hasTestPassed(testResult, jobInformation);
-                    if (buildResult != null) {
-                        //set the status to passed if the test was successful
-                        jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
-                        updates.put("passed", buildResult);
+                for (CaseResult cr : sr.getCases()) {
+                    if (cr.getStdout() != sr.getStdout()) {
+                        testIds.addAll(processSessionIds(false, cr.getStdout()));
+                    }
+                    if (cr.getStderr() != sr.getStderr()) {
+                        testIds.addAll(processSessionIds(false, cr.getStderr()));
                     }
                 }
-                if (!jobInformation.hasBuild()) {
-                    updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
-                }
-                if (!Strings.isNullOrEmpty(getJobVisibility())) {
-                    updates.put("public", getJobVisibility());
-                }
-                if (!updates.isEmpty()) {
-                    logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
-                    sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
-                }
             }
         }
 
-        buildAction.setJobs(new LinkedList<JobInformation>(onDemandTests.values()));
-        build.save();
+        for (TestIDDetails details : testIds) {
+            JobInformation jobInformation;
+            if (onDemandTests.containsKey(details.getJobId())) {
+                jobInformation = onDemandTests.get(details.getJobId());
+            } else {
+                jobInformation = new JobInformation(details.getJobId(), "");
+                try {
+                    jobInformation.populateFromJson(
+                        new JSONObject(sauceREST.getJobInfo(details.getJobId()))
+                    );
+                    onDemandTests.put(jobInformation.getJobId(), jobInformation);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+            Map<String, Object> updates = jobInformation.getChanges();
+            //only store passed/name values if they haven't already been set
+            if (jobInformation.getStatus() == null) {
+                Boolean buildResult = hasTestPassed(testResult, jobInformation);
+                if (buildResult != null) {
+                    //set the status to passed if the test was successful
+                    jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
+                    updates.put("passed", buildResult);
+                }
+            }
+            if (!jobInformation.hasJobName()) {
+                jobInformation.setName(details.getJobName());
+                updates.put("name", details.getJobName());
+            }
+            if (!jobInformation.hasBuild()) {
+                jobInformation.setBuild(SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build)));
+                updates.put("build", jobInformation.getBuild());
+            }
+            if (!Strings.isNullOrEmpty(getJobVisibility())) {
+                updates.put("public", getJobVisibility());
+            }
+            if (!updates.isEmpty()) {
+                logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
+                sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
+            }
+        }
+
+        if (onDemandTests.size() > 0) {
+            buildAction.setJobs(new LinkedList<JobInformation>(onDemandTests.values()));
+            try {
+                build.save();
+            } catch (IOException e) {
+                e.printStackTrace();
+                logger.warning("Unable to save build: " + e.getMessage());
+            }
+        }
     }
 
     protected SauceREST getSauceREST(AbstractBuild build) {
