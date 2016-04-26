@@ -38,11 +38,19 @@ import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.util.ListBoxModel;
+import org.jaxen.pantry.Test;
+import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,7 +108,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
      */
     @Override
-    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) {
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException {
         try
         {
             buildListener.getLogger().println("Starting Sauce Labs test publisher");
@@ -121,55 +129,96 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     /**
+     * Processes the log output, and for lines which are in the valid log format, return a list that is found
+     *
+     * @param isStdout   is this stdout?
+     * @param logStrings     lines of output to be processed, not null
+     */
+    public static LinkedList<TestIDDetails> processSessionIds(Boolean isStdout, String... logStrings) {
+        logger.log(Level.FINE, isStdout == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
+
+        LinkedList<TestIDDetails> onDemandTests = new LinkedList<TestIDDetails>();
+
+        for (String logString : logStrings) {
+            if (logString == null) continue;
+            for (String text : logString.split("\n|\r")) {
+                TestIDDetails details = TestIDDetails.processString(text);
+                onDemandTests.add(details);
+            }
+        }
+        return onDemandTests;
+    }
+
+    /**
      * Processes the build output to associate the Jenkins build with the Sauce job.
      *
      * @param build       The build in progress
      * @param buildAction the Sauce Build Action instance for the build
      * @param testResult  Contains the test results for the build.
      */
-    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
+    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) throws IOException {
         SauceREST sauceREST = getSauceREST(build);
-        SauceOnDemandBuildWrapper.SauceOnDemandLogParser logParser = buildAction.getLogParser();
-        if (logParser == null) {
-            logger.log(Level.WARNING, "Log Parser Map did not contain " + build.toString() + ", not processing build output");
-            return;
+
+        LinkedHashMap<String, JobInformation> onDemandTests;
+
+        try {
+            onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
+        } catch (JSONException e) {
+            onDemandTests = new LinkedHashMap<String, JobInformation>();
+
+            logger.severe(e.getMessage());
         }
 
-        //process the stdout for the build
-        String[] array = logParser.getLines().toArray(new String[logParser.getLines().size()]);
-        buildAction.processSessionIds(null, array);
+        LinkedList<TestIDDetails> testIds = new LinkedList<TestIDDetails>();
+
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                testIds.addAll(processSessionIds(true, line));
+            }
+        } catch (IOException e) {
+            logger.severe(e.getMessage());
+        }
 
         //try the stdout for the tests
         if (testResult != null) {
             for (SuiteResult sr : testResult.getSuites()) {
                 for (CaseResult cr : sr.getCases()) {
-                    buildAction.processSessionIds(cr, sr.getStdout(), cr.getStdout(), cr.getStdout(), cr.getStderr());
+                    testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr(), cr.getStdout(), cr.getStderr()));
                 }
             }
         }
 
-        for (JobInformation jobInformation : buildAction.getJobs()) {
-            Map<String, Object> updates = jobInformation.getChanges();
-            //only store passed/name values if they haven't already been set
-            if (jobInformation.getStatus() == null) {
-                Boolean buildResult = hasTestPassed(testResult, jobInformation);
-                if (buildResult != null) {
-                    //set the status to passed if the test was successful
-                    jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
-                    updates.put("passed", buildResult);
+        for (TestIDDetails details : testIds)
+        {
+            if (onDemandTests.containsKey(details.getJobId())) {
+                JobInformation jobInformation = onDemandTests.get(details.getJobId());
+                Map<String, Object> updates = jobInformation.getChanges();
+                //only store passed/name values if they haven't already been set
+                if (jobInformation.getStatus() == null) {
+                    Boolean buildResult = hasTestPassed(testResult, jobInformation);
+                    if (buildResult != null) {
+                        //set the status to passed if the test was successful
+                        jobInformation.setStatus(buildResult.booleanValue() ? "passed" : "failed");
+                        updates.put("passed", buildResult);
+                    }
+                }
+                if (!jobInformation.hasBuild()) {
+                    updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
+                }
+                if (!Strings.isNullOrEmpty(getJobVisibility())) {
+                    updates.put("public", getJobVisibility());
+                }
+                if (!updates.isEmpty()) {
+                    logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
+                    sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
                 }
             }
-            if (!jobInformation.hasBuild()) {
-                updates.put("build", SauceOnDemandBuildWrapper.sanitiseBuildNumber(build.toString()));
-            }
-            if (!Strings.isNullOrEmpty(getJobVisibility())) {
-                updates.put("public", getJobVisibility());
-            }
-            if (!updates.isEmpty()) {
-                logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
-                sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
-            }
         }
+
+        buildAction.setJobs(new LinkedList<JobInformation>(onDemandTests.values()));
+        build.save();
     }
 
     protected SauceREST getSauceREST(AbstractBuild build) {
@@ -227,7 +276,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     /**
      * @param build The build in progress
-     * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build via the {@link SauceOnDemandBuildWrapper#processBuildOutput(hudson.model.AbstractBuild)} method.
+     * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build
      *         Can be null
      */
     private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {

@@ -47,15 +47,16 @@ import org.json.JSONException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -190,10 +191,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * Indicates whether Sauce Connect should be started as part of the build.
      */
     private boolean enableSauceConnect;
-    /**
-     * Map of log parser instances, keyed on the Jenkins build number.
-     */
-    private Map<String, SauceOnDemandLogParser> logParserMap;
     /**
      * Host location of the selenium server.
      */
@@ -519,8 +516,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     }
                 }
 
-                processBuildOutput(build);
-                logParserMap.remove(build.toString());
+                SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+                if (buildAction == null) {
+                    buildAction = new SauceOnDemandBuildAction(build);
+                    build.addAction(buildAction);
+                }
+
                 listener.getLogger().println("Finished post-build for Sauce Labs plugin");
                 return true;
             }
@@ -575,24 +576,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         VariableResolver.ByMap<String> variableResolver = new VariableResolver.ByMap<String>(build.getEnvironment(listener));
         return Util.replaceMacro(options, variableResolver);
-    }
-
-    /**
-     * Adds a new {@link SauceOnDemandBuildAction} instance to the {@link AbstractBuild} instance. The
-     * processing of the build output will be performed by the {@link SauceOnDemandReportPublisher} instance (which
-     * is created if the 'Embed Sauce OnDemand Reports' option is selected.
-     *
-     * @param build the build in progress
-     */
-    private void processBuildOutput(AbstractBuild build) {
-        if (logParserMap != null) {
-            logger.fine("Adding build action to " + build.toString());
-            SauceOnDemandLogParser logParser = logParserMap.get(build.toString());
-            if (logParser != null) {
-                SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, logParser);
-                build.addAction(buildAction);
-            }
-        }
     }
 
     /**
@@ -806,21 +789,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * Creates a new {@link SauceOnDemandLogParser} instance, which is added to the {@link #logParserMap}.
-     */
-    @Override
-    public OutputStream decorateLogger(AbstractBuild build, OutputStream logger) throws IOException, InterruptedException, Run.RunnerAbortedException {
-        SauceOnDemandLogParser sauceOnDemandLogParser = new SauceOnDemandLogParser(logger, build.getCharset());
-        if (logParserMap == null) {
-            logParserMap = new ConcurrentHashMap<String, SauceOnDemandLogParser>();
-        }
-        logParserMap.put(build.toString(), sauceOnDemandLogParser);
-        return sauceOnDemandLogParser;
-    }
-
-    /**
      * Handles terminating any running Sauce Connect processes.
      */
     private static final class SauceConnectCloser extends MasterToSlaveCallable<SauceConnectCloser, AbstractSauceTunnelManager.SauceConnectException> {
@@ -1018,55 +986,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 .withAll(SauceCredentials.all(context));
         }
 
-    }
-
-
-    /**
-     * Captures the output of a Jenkins build, so that it can be parsed to find Sauce jobs invoked by the build.
-     *
-     * @author Ross Rowe
-     */
-    public class SauceOnDemandLogParser extends LineTransformationOutputStream implements Serializable {
-
-        private transient OutputStream outputStream;
-        private transient Charset charset;
-        private List<String> lines;
-
-        public SauceOnDemandLogParser(OutputStream outputStream, Charset charset) {
-            this.outputStream = outputStream;
-            this.charset = charset;
-            this.lines = new ArrayList<String>();
-        }
-
-        /**
-         * {@inheritDoc}
-         *
-         * Decodes the line and add it to the {@link #lines} list.
-         */
-        @Override
-        protected void eol(byte[] b, int len) throws IOException {
-            if (this.outputStream != null) {
-                this.outputStream.write(b, 0, len);
-            }
-            if (charset != null) {
-                lines.add(charset.decode(ByteBuffer.wrap(b, 0, len)).toString());
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void close() throws IOException {
-            super.close();
-            if (outputStream != null) {
-                this.outputStream.close();
-            }
-        }
-
-        public List<String> getLines() {
-            return lines;
-        }
     }
 
     protected boolean migrateCredentials(AbstractProject project) {
