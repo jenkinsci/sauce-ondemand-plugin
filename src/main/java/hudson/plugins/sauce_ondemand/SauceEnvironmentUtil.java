@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
+import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
@@ -12,6 +13,7 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nonnull;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
@@ -210,9 +212,13 @@ public final class SauceEnvironmentUtil {
      * @param build the Jenkins build
      * @return String representing the Jenkins build
      */
+    @Nonnull
     public static String getBuildName(AbstractBuild<?, ?> build) {
         if (build == null) {
             return "";
+        }
+        while (build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
+            build = ((MavenBuild) build).getParentBuild();
         }
 
         String displayName = build.getFullDisplayName();
