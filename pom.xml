@@ -12,7 +12,7 @@
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
         <plugins.junit.version>1.9</plugins.junit.version>
         <plugins.workflow.version>1.15</plugins.workflow.version>
-        <ci-sauce.version>1.113</ci-sauce.version>
+        <ci-sauce.version>1.114</ci-sauce.version>
         <sauce.rest.version>1.0.33</sauce.rest.version>
     </properties>
 
