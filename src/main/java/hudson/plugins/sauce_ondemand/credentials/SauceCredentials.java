@@ -118,7 +118,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
             if (actualValidate(username, apiKey))
                 return FormValidation.ok();
-            return FormValidation.error("Bad username or api key");
+            return FormValidation.error("Bad username or Access key");
         }
 
         public boolean actualValidate(@QueryParameter String username, @QueryParameter String apiKey) {
