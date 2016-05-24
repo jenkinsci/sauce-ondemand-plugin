@@ -111,19 +111,12 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         @SuppressWarnings("unused") // used by stapler
         public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username) {
-            return doValidate(username, value);
-        }
-
-        @SuppressWarnings("unused") // used by stapler
-        public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey) {
-            if (actualValidate(username, apiKey))
-                return FormValidation.ok();
-            return FormValidation.error("Bad username or api key");
-        }
-
-        public boolean actualValidate(@QueryParameter String username, @QueryParameter String apiKey) {
-            SauceREST rest = new JenkinsSauceREST(username, apiKey);
-            return !"".equals(rest.getUser());
+            SauceREST rest = new JenkinsSauceREST(username, value);
+            // If unauthorized getUser returns an empty string.
+            if (rest.getUser().equals("")) {
+                return FormValidation.error("Bad username or Access key");
+            }
+            return FormValidation.ok();
         }
     }
 
