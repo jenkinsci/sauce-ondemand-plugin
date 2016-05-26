@@ -91,30 +91,30 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     public void start() throws Exception {
         // Register the small (16x16) icons...
         IconSet.icons.addIcon(new Icon(
-                "icon-sauce-ondemand-credential",
-                "sauce-ondemand/images/16x16/credential.png",
+                "icon-sauce-ondemand-credential icon-sm",
+                "sauce-ondemand/images/16x16/sauce-logo-sm.png",
                 Icon.ICON_SMALL_STYLE, IconType.PLUGIN)
         );
 
         // Register the medium (24x24) icons...
         IconSet.icons.addIcon(new Icon(
-                "icon-sauce-ondemand-credential",
-                "sauce-ondemand/images/24x24/credential.png",
-                Icon.ICON_SMALL_STYLE, IconType.PLUGIN)
+                "icon-sauce-ondemand-credential icon-md",
+                "sauce-ondemand/images/24x24/sauce-logo-md.png",
+                Icon.ICON_MEDIUM_STYLE, IconType.PLUGIN)
         );
 
         // Register the large (32x32) icons...
         IconSet.icons.addIcon(new Icon(
-                "icon-sauce-ondemand-credential",
-                "sauce-ondemand/images/32x32/credential.png",
-                Icon.ICON_SMALL_STYLE, IconType.PLUGIN)
+                "icon-sauce-ondemand-credential icon-lg",
+                "sauce-ondemand/images/32x32/sauce-logo-lg.png",
+                Icon.ICON_LARGE_STYLE, IconType.PLUGIN)
         );
 
         // Register the x-large (48x48) icons...
         IconSet.icons.addIcon(new Icon(
-                "icon-sauce-ondemand-credential",
-                "sauce-ondemand/images/48x48/credential.png",
-                Icon.ICON_SMALL_STYLE, IconType.PLUGIN)
+                "icon-sauce-ondemand-credential icon-xlg",
+                "sauce-ondemand/images/48x48/sauce-logo-xlg.png",
+                Icon.ICON_XLARGE_STYLE, IconType.PLUGIN)
         );
         // backward compatibility with the legacy class name
         Items.XSTREAM.alias("hudson.plugins.sauce_ondemand.SoDBuildWrapper", SauceOnDemandBuildWrapper.class);
