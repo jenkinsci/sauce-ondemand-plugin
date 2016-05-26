@@ -118,6 +118,11 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             }
             return FormValidation.ok();
         }
+
+        @Override
+        public String getIconClassName() {
+            return "icon-sauce-ondemand-credential";
+        }
     }
 
     public final static DomainRequirement DOMAIN_REQUIREMENT = new HostnamePortRequirement("saucelabs.com", 80);
