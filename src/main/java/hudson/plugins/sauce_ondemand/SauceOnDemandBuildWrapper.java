@@ -866,9 +866,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
          */
         public SauceConnectHandler call() throws AbstractSauceTunnelManager.SauceConnectException {
 
+            AbstractSauceTunnelManager sauceTunnelManager;
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + getCurrentHostName());
-                AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager();
+                sauceTunnelManager = getSauceTunnelManager();
                 if (sauceTunnelManager instanceof HudsonSauceConnectFourManager && workingDirectory != null) {
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
                 }
@@ -878,16 +879,43 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 } else if (StringUtils.isBlank(key)) {
                     listener.getLogger().println("Access key not set, not starting Sauce Connect");
-
-                } else {
-                    Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
                 }
-                return this;
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             }
+
+            int retryCount = 0;
+            int maxRetries = 5;
+            String tempUserName = "";
+            while (retryCount < maxRetries) {
+                try {
+                    Process process = sauceTunnelManager.openConnection(tempUserName, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
+                    return this;
+                } catch (AbstractSauceTunnelManager.SauceConnectDidNotStartException e) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        throw new AbstractSauceTunnelManager.SauceConnectException(e);
+                    } else {
+                        listener.getLogger().println(String.format("Error launching Sauce Connect, trying %s time(s) more.", (maxRetries - retryCount)));
+                    }
+                    wait(5);
+                    if (maxRetries - retryCount == 1) {
+                        tempUserName = username;
+                    }
+                }
+            }
+            return this;
+        }
+
+        private void wait(int seconds) {
+            try {
+                Thread.sleep(1000 * seconds);
+            } catch (InterruptedException e) {
+                listener.getLogger().println(e);
+            }
         }
     }
+
 
     /**
      * Retrieve the {@link AbstractSauceTunnelManager} instance to be used to launch Sauce Connect.
