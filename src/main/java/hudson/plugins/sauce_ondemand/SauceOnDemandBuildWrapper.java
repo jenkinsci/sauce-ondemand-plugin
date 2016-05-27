@@ -829,6 +829,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private final String workingDirectory;
         private final String username;
         private final String key;
+        private int maxRetries;
+        private int retryWaitTime;
 
         private final BuildListener listener;
         private final boolean verboseLogging;
@@ -855,6 +857,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
             this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
             this.sauceConnectJar = sauceConnectJar;
+            this.maxRetries = 5;
+            this.retryWaitTime = 5;
         }
 
         /**
@@ -885,7 +889,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             int retryCount = 0;
-            int maxRetries = 5;
             String tempUserName = "";
             while (retryCount < maxRetries) {
                 try {
@@ -898,7 +901,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     } else {
                         listener.getLogger().println(String.format("Error launching Sauce Connect, trying %s time(s) more.", (maxRetries - retryCount)));
                     }
-                    wait(5);
+                    wait(retryWaitTime);
                     if (maxRetries - retryCount == 1) {
                         tempUserName = username;
                     }
