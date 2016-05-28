@@ -918,7 +918,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         } else {
                             listener.getLogger().println(String.format("Error launching Sauce Connect, trying %s time(s) more.", (maxRetries - retryCount)));
                         }
-                        wait(retryWaitTime);
+                        try {
+                            Thread.sleep(1000 * retryWaitTime);
+                        } catch (InterruptedException ie) {
+                            throw new AbstractSauceTunnelManager.SauceConnectException(ie);
+                        }
                     }
                 }
             } else {
@@ -927,13 +931,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             return this;
         }
 
-        private void wait(int seconds) {
-            try {
-                Thread.sleep(1000 * seconds);
-            } catch (InterruptedException e) {
-                listener.getLogger().println(e);
-            }
-        }
     }
 
 
