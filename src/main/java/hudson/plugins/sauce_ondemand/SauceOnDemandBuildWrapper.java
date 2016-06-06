@@ -31,7 +31,6 @@ import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import hudson.*;
-import hudson.console.LineTransformationOutputStream;
 import hudson.model.*;
 import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
@@ -47,14 +46,9 @@ import org.json.JSONException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -150,7 +144,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Environment variable key which contains the Jenkins build number.
      */
-    private static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
+    public static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
     public static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
 
     /**
@@ -428,7 +422,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM), true, verboseLogging, listener.getLogger());
                 }
-                SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build)), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
                 /* Legacy Env name */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USER_NAME, username, true, verboseLogging, listener.getLogger());
                 /* New standard env name */
@@ -518,7 +512,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    buildAction = new SauceOnDemandBuildAction(build);
+                    buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
                     build.addAction(buildAction);
                 }
 
@@ -576,16 +570,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         VariableResolver.ByMap<String> variableResolver = new VariableResolver.ByMap<String>(build.getEnvironment(listener));
         return Util.replaceMacro(options, variableResolver);
-    }
-
-    /**
-     * Replace all spaces and hashes with underscores.
-     *
-     * @param buildNumber the current Jenkins build number
-     * @return the build number with all non-alphanumeric characters replaced with _
-     */
-    public static String sanitiseBuildNumber(String buildNumber) {
-        return buildNumber.replaceAll("[^A-Za-z0-9]", "_");
     }
 
     /**

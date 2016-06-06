@@ -8,33 +8,15 @@ httpclient.log.zip
 
 httpclient.log
 
-atlassian-ide-plugin.xml
-
-lightweight.log
-
-sauce_connect.log
-
-sauce_connect.log.8
+lightweight.log*
 
 settings.xml
 
 jenkins.bmml
 
-lightweight.log.zip
-
-sauce_connect.log.1
-
-sauce_connect.log.2
-
-sauce_connect.log.3
-
-sauce_connect.log.4
-
-sauce_connect.log.5
-
-sauce_connect.log.6
-
-sauce_connect.log.7
+sauce_connect.log.*
 
 test.log
 .idea/
+
+src/main/java/hudson/plugins/sauce_ondemand/BuildUtils.java

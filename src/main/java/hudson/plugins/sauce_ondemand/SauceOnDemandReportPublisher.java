@@ -27,29 +27,31 @@ import com.google.common.base.Strings;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TestResultAction;
 import hudson.util.ListBoxModel;
-import org.jaxen.pantry.Test;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -99,6 +101,29 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         this.jobVisibility = jobVisibility;
     }
 
+
+    @Override
+    public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
+        try {
+            listener.getLogger().println("Starting Sauce Labs test publisher");
+            SauceOnDemandBuildAction buildAction = getBuildAction(run);
+            if (buildAction != null) {
+                processBuildOutput(run, buildAction, testResult);
+                if (buildAction.hasSauceOnDemandResults()) {
+                    return SauceOnDemandReportFactory.INSTANCE;
+                } else {
+                    listener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // FIXME - shortterm
+        } finally {
+            listener.getLogger().println("Finished Sauce Labs test publisher");
+        }
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -134,6 +159,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      *
      * @param isStdout   is this stdout?
      * @param logStrings     lines of output to be processed, not null
+     * @return list of session ids found in log strings
      */
     public static LinkedList<TestIDDetails> processSessionIds(Boolean isStdout, String... logStrings) {
         logger.log(Level.FINE, isStdout == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
@@ -159,7 +185,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param buildAction the Sauce Build Action instance for the build
      * @param testResult  Contains the test results for the build.
      */
-    private void processBuildOutput(AbstractBuild build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
+    private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
         SauceREST sauceREST = getSauceREST(build);
 
         LinkedHashMap<String, JobInformation> onDemandTests;
@@ -231,7 +257,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 updates.put("name", details.getJobName());
             }
             if (!jobInformation.hasBuild()) {
-                jobInformation.setBuild(SauceOnDemandBuildWrapper.sanitiseBuildNumber(SauceEnvironmentUtil.getBuildName(build)));
+                jobInformation.setBuild(SauceEnvironmentUtil.getSanitizedBuildNumber(build));
                 updates.put("build", jobInformation.getBuild());
             }
             if (!Strings.isNullOrEmpty(getJobVisibility())) {
@@ -254,8 +280,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
     }
 
-    protected SauceREST getSauceREST(AbstractBuild build) {
-        SauceCredentials credentials = SauceCredentials.getCredentials(build);
+    protected SauceREST getSauceREST(Run build) {
+        SauceCredentials credentials = build.getAction(SauceOnDemandBuildAction.class).getCredentials();
         return new JenkinsSauceREST(credentials.getUsername(), credentials.getApiKey().getPlainText());
     }
 
@@ -312,7 +338,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build
      *         Can be null
      */
-    private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {
+    private SauceOnDemandBuildAction getBuildAction(Run build) {
         SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
         if (buildAction == null && build instanceof MavenBuild) {
             //try the parent

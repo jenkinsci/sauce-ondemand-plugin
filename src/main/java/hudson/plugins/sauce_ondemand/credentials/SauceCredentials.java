@@ -22,6 +22,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
+import hudson.model.Run;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;

@@ -378,7 +378,7 @@ public class SauceBuildWrapperTest {
         freeStyleProject.getBuildersList().add(builder);
         SauceOnDemandReportPublisher publisher = new SauceOnDemandReportPublisher() {
             @Override
-            protected SauceREST getSauceREST(AbstractBuild build) {
+            protected SauceREST getSauceREST(Run build) {
                 return spySauceRest;
             }
         };

@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModule;
@@ -11,11 +12,15 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestDataPublisher;
+import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.util.DescribableList;
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,17 +34,48 @@ import java.util.Map;
  * @author Ross Rowe
  * @see <a href="https://issues.jenkins-ci.org/browse/JENKINS-11721">JENKINS-11721</a>
  */
-public class SauceOnDemandTestPublisher extends Recorder {
+public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildStep {
     private final DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers;
 
+    @DataBoundConstructor
     public SauceOnDemandTestPublisher(DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         super();
         this.testDataPublishers = testDataPublishers;
     }
 
-
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Created for implementing SimpleBuildStep / pipeline
+     */
+    @Override
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+        TestResultAction report = run.getAction(TestResultAction.class);
+        if (report != null) {
+            List<TestResultAction.Data> data = new ArrayList<TestResultAction.Data>();
+            if (testDataPublishers != null) {
+                for (TestDataPublisher tdp : testDataPublishers) {
+                    TestResultAction.Data d = tdp.contributeTestData(run, workspace, launcher, listener, report.getResult());
+                    if (d != null) {
+                        data.add(d);
+                    }
+                }
+            }
+            SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
+            TestResultAction.Data d = saucePublisher.contributeTestData(run, workspace, launcher, listener, report.getResult());
+            data.add(d);
+
+            report.setData(data);
+            run.save();
+        } else {
+            //no test publisher defined, process stdout only
+            SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
+            saucePublisher.contributeTestData(run, workspace, launcher, listener, null);
+        }
     }
 
     @Override

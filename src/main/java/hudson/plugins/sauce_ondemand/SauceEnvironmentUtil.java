@@ -2,12 +2,9 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import hudson.maven.MavenBuild;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
-import hudson.model.Descriptor;
-import hudson.tasks.BuildWrapper;
-import hudson.util.DescribableList;
+import hudson.model.Run;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -213,7 +210,7 @@ public final class SauceEnvironmentUtil {
      * @return String representing the Jenkins build
      */
     @Nonnull
-    public static String getBuildName(AbstractBuild<?, ?> build) {
+    public static String getBuildName(Run<?, ?> build) {
         if (build == null) {
             return "";
         }
@@ -237,4 +234,9 @@ public final class SauceEnvironmentUtil {
         String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
         return sanitizedName + "-" + System.currentTimeMillis();
     }
+
+    public static String getSanitizedBuildNumber(Run run) {
+        return SauceEnvironmentUtil.getBuildName(run).replaceAll("[^A-Za-z0-9]", "_");
+    }
+
 }

@@ -8,7 +8,9 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Project;
+import hudson.model.Run;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.security.AccessControlled;
 import hudson.security.Permission;
@@ -42,8 +44,12 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     private static final Logger logger = Logger.getLogger(SauceOnDemandProjectAction.class.getName());
 
     /**
-     * The Jenkins project that is being displayed.
+     * Project that owns this action.
+     * @since 1.153
      */
+    public final Job<?,?> job;
+
+    @Deprecated
     private AbstractProject<?, ?> project;
 
     /**
@@ -51,13 +57,24 @@ public class SauceOnDemandProjectAction extends AbstractAction {
      *
      * @param project the Jenkins project that is being displayed
      */
+    @Deprecated
     public SauceOnDemandProjectAction(AbstractProject<?, ?> project) {
-        this.project = project;
+        this((Job) project);
     }
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param job the Jenkins job that is being displayed
+     */
+    public SauceOnDemandProjectAction(Job<?, ?> job) {
+        this.job = job;
+        project = job instanceof AbstractProject ? (AbstractProject) job : null;    }
 
     /**
      * @return The Jenkins project that is being displayed
      */
+    @Deprecated
     public AbstractProject<?, ?> getProject() {
         return project;
     }
@@ -71,24 +88,21 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             logger.fine("Checking to see if project has Sauce results");
             List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
             if (sauceOnDemandBuildActions != null) {
-                boolean result = false;
                 for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
                     if (action.hasSauceOnDemandResults()) {
                         logger.fine("Found Sauce results");
-                        result = true;
-                        break;
+                        return true;
                     }
                 }
-                logger.fine("hasSauceOnDemandResults: " + result);
-                return result;
             }
         }
         logger.fine("Did not find Sauce results");
         return false;
     }
 
+    @Deprecated
     private SauceOnDemandBuildWrapper getBuildWrapper() {
-        return SauceEnvironmentUtil.getBuildWrapper(project);
+        return project != null ? SauceEnvironmentUtil.getBuildWrapper(project) : null;
     }
 
     /**
@@ -96,11 +110,12 @@ public class SauceOnDemandProjectAction extends AbstractAction {
      * @return boolean indicating whether the build is configured to include Sauce support
      */
     public boolean isSauceEnabled() {
-        return getBuildWrapper() != null;
+        return getSauceBuildActions() != null;
     }
 
     private List<SauceOnDemandBuildAction> getSauceBuildActions() {
-        AbstractBuild<?, ?> build = getProject().getLastBuild();
+        Run<?,?> build = job.getLastBuild();
+
         if (build != null) {
             if (build instanceof MatrixBuild) {
                 List<SauceOnDemandBuildAction> buildActions = new ArrayList<SauceOnDemandBuildAction>();
@@ -125,6 +140,11 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         return Collections.emptyList();
     }
 
+    @Override
+    public List<JobInformation> getJobsWithAuth() {
+        return super.getJobsWithAuth();
+    }
+
     public List<JobInformation> getJobs() {
         List<SauceOnDemandBuildAction> sauceOnDemandBuildAction = getSauceBuildActions();
         if (sauceOnDemandBuildAction != null) {
@@ -140,17 +160,19 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
     @Override
     protected SauceCredentials getCredentials() {
-        return SauceCredentials.getCredentials(getProject());
+        SauceOnDemandBuildAction sauceBuildAction = getSauceBuildActions().get(0);
+        if (sauceBuildAction == null) { return null; }
+        return sauceBuildAction.getCredentials();
     }
 
     public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
-        AccessControlled ac = this.getProject();
+        AccessControlled ac = job;
         Permission p = Project.CONFIGURE;
         ac.checkPermission(p);
 
         SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
-        AbstractBuild build = getProject().getLastBuild();
+        Run<?, ?> build = job.getLastBuild();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
@@ -158,11 +180,17 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_kk-mm");
         BuildSupportZipUtils.addFileToZipStream(zipOutputStream, "".getBytes("UTF-8"), "generated_" + df.format(Calendar.getInstance().getTime()));
-
         BuildSupportZipUtils.addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
-
-        BuildSupportZipUtils.buildSauceConnectLog(zipOutputStream, manager, build, sauceBuildWrapper);
-        BuildSupportZipUtils.buildWrapperConfigTxt(zipOutputStream, sauceBuildWrapper);
+        /* This doesn't make a huge amount of sense for pipeline builds
+         * Really need to re-think whats useful here
+         */
+        if (sauceBuildWrapper != null) {
+            if (build instanceof AbstractBuild) {
+                // UGH
+                BuildSupportZipUtils.buildSauceConnectLog(zipOutputStream, manager, (AbstractBuild) build, sauceBuildWrapper);
+            }
+            BuildSupportZipUtils.buildWrapperConfigTxt(zipOutputStream, sauceBuildWrapper);
+        }
         BuildSupportZipUtils.buildGlobalConfigTxt(zipOutputStream);
 
         zipOutputStream.finish();

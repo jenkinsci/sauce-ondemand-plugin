@@ -9,6 +9,8 @@ import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TopLevelItem;
+import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
+import hudson.plugins.sauce_ondemand.SauceOnDemandBuildAction;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
@@ -62,6 +64,13 @@ public class SauceStep extends AbstractStepImpl {
             HashMap<String,String> overrides = new HashMap<String,String>();
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, credentials.getUsername());
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, credentials.getPassword().getPlainText());
+            overrides.put(SauceOnDemandBuildWrapper.JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(run));
+
+            SauceOnDemandBuildAction buildAction = run.getAction(SauceOnDemandBuildAction.class);
+            if (buildAction == null) {
+                buildAction = new SauceOnDemandBuildAction(run, credentials.getId());
+                run.addAction(buildAction);
+            }
 
             body = getContext().newBodyInvoker()
                 .withContext(credentials)
