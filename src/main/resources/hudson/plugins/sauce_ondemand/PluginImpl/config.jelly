@@ -17,7 +17,7 @@
             <f:entry title="${%Sauce Connect Max Retries}" field="sauceConnectMaxRetries">
                 <f:textbox id="sauceConnectMaxRetriesBox"/>
             </f:entry>
-            <f:entry title="${%Sauce Connect Retry Wait Time}" field="sauceConnectRetryWaitTime">
+            <f:entry title="${%Sauce Connect Retry Wait Time in Seconds}" field="sauceConnectRetryWaitTime">
                 <f:textbox id="sauceConnectRetryWaitTimeBox"/>
             </f:entry>
             <f:entry title="${%Selenium Environment Variable Prefix}" field="environmentVariablePrefix">
