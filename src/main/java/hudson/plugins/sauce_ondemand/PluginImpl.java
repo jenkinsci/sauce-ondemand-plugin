@@ -78,6 +78,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String sauceConnectOptions;
 
+    private String sauceConnectMaxRetries;
+
+    private String sauceConnectRetryWaitTime;
+
     @Deprecated
     private transient boolean disableStatusColumn;
 
@@ -132,6 +136,8 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
         setSendUsageData(formData.getBoolean("sendUsageData"));
+        sauceConnectMaxRetries = formData.getString("sauceConnectMaxRetries");
+        sauceConnectRetryWaitTime = formData.getString("sauceConnectRetryWaitTime");
         save();
 
     }
@@ -160,6 +166,22 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     public void setEnvironmentVariablePrefix(String environmentVariablePrefix) {
         this.environmentVariablePrefix = environmentVariablePrefix;
+    }
+
+    public String getSauceConnectMaxRetries() {
+        return sauceConnectMaxRetries;
+    }
+
+    public void setSauceConnectMaxRetries(String sauceConnectMaxRetries) {
+        this.sauceConnectMaxRetries = sauceConnectMaxRetries;
+    }
+
+    public String getSauceConnectRetryWaitTime() {
+        return sauceConnectRetryWaitTime;
+    }
+
+    public void setSauceConnectRetryWaitTime(String sauceConnectRetryWaitTime) {
+        this.sauceConnectRetryWaitTime = sauceConnectRetryWaitTime;
     }
 
     @Deprecated
