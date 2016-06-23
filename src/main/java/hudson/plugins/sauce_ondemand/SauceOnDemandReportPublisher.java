@@ -281,7 +281,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     protected SauceREST getSauceREST(Run build) {
-        SauceCredentials credentials = build.getAction(SauceOnDemandBuildAction.class).getCredentials();
+        SauceCredentials credentials = getBuildAction(build).getCredentials();
         return new JenkinsSauceREST(credentials.getUsername(), credentials.getApiKey().getPlainText());
     }
 

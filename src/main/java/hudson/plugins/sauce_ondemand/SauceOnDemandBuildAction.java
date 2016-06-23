@@ -102,8 +102,22 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
      * @throws JSONException Not json returned properly
      */
     public static LinkedHashMap<String, JobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build) throws JSONException {
-        SauceCredentials credentials = build.getAction(SauceOnDemandBuildAction.class).getCredentials();
+        SauceCredentials credentials = getBuildAction(build).getCredentials();
         return retrieveJobIdsFromSauce(sauceREST, build, credentials);
+    }
+
+    /**
+     * @param build The build in progress
+     * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build
+     *         Can be null
+     */
+    private static SauceOnDemandBuildAction getBuildAction(Run build) {
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null && build instanceof hudson.maven.MavenBuild) {
+            //try the parent
+            buildAction = ((hudson.maven.MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
+        }
+        return buildAction;
     }
 
 
