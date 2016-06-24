@@ -8,6 +8,7 @@ import hudson.model.Action;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Job;
 import hudson.model.Run;
+import hudson.maven.MavenBuild;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import jenkins.tasks.SimpleBuildStep;
 import org.json.JSONArray;
@@ -102,8 +103,22 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
      * @throws JSONException Not json returned properly
      */
     public static LinkedHashMap<String, JobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build) throws JSONException {
-        SauceCredentials credentials = build.getAction(SauceOnDemandBuildAction.class).getCredentials();
+        SauceCredentials credentials = getSauceBuildAction(build).getCredentials();
         return retrieveJobIdsFromSauce(sauceREST, build, credentials);
+    }
+
+    /**
+     * @param build The build in progress
+     * @return the {@link SauceOnDemandBuildAction} instance which has been registered with the build
+     *         Can be null
+     */
+    public static SauceOnDemandBuildAction getSauceBuildAction(Run build) {
+        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+        if (buildAction == null && build instanceof MavenBuild) {
+            //try the parent
+            buildAction = ((hudson.maven.MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
+        }
+        return buildAction;
     }
 
 
