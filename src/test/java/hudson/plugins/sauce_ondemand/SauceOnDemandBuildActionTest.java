@@ -16,6 +16,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.net.URL;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
@@ -68,6 +69,22 @@ public class SauceOnDemandBuildActionTest {
 
         verifyNoMoreInteractions(mockSauceREST);
     }
+
+    @Test
+    public void testGetSauceBuildAction () throws Exception {
+        FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
+        TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+        );
+        bw.setEnableSauceConnect(false);
+        freeStyleProject.getBuildWrappersList().add(bw);
+        Build build = freeStyleProject.scheduleBuild2(0).get();
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, bw.getCredentialId());
+        build.addAction(buildAction);
+        SauceOnDemandBuildAction  sauceBuildAction= SauceOnDemandBuildAction.getSauceBuildAction(build);
+        assertEquals("fakeuser", sauceBuildAction.getCredentials().getUsername());
+    }
+
 
     private HtmlElement getEmbedTag(DomNodeList<HtmlElement> scripts) {
         for(HtmlElement htmlElement : scripts)
