@@ -89,11 +89,6 @@ public class SauceOnDemandBuildActionTest {
         assertEquals("fakeuser", sauceBuildAction.getCredentials().getUsername());
     }
 
-    /**
-     * Verifies get sauce action for maven build
-     *
-     * @throws Exception
-     */
     @Test
     public void testGetSauceBuildActionMavenBuild() throws Exception {
         hudson.maven.MavenModuleSet project = jenkins.createMavenProject();
@@ -108,7 +103,7 @@ public class SauceOnDemandBuildActionTest {
         build.addAction(buildAction);
         final MavenBuild mavenBuildMock = mock(MavenBuild.class);
         when(mavenBuildMock.getParentBuild()).thenReturn(build);
-        SauceOnDemandBuildAction  sauceBuildAction= SauceOnDemandBuildAction.getSauceBuildAction(mavenBuildMock);
+        SauceOnDemandBuildAction sauceBuildAction = SauceOnDemandBuildAction.getSauceBuildAction(mavenBuildMock);
         assertEquals("fakeuser", sauceBuildAction.getCredentials().getUsername());
 
     }
