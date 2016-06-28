@@ -7,15 +7,20 @@ import hudson.model.Build;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
+import hudson.maven.MavenModuleSetBuild;
+import hudson.maven.MavenBuild;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.SingleFileSCM;
 
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
@@ -68,6 +73,41 @@ public class SauceOnDemandBuildActionTest {
 
         verifyNoMoreInteractions(mockSauceREST);
     }
+
+    @Test
+    public void testGetSauceBuildAction () throws Exception {
+        FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
+        TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+        );
+        bw.setEnableSauceConnect(false);
+        freeStyleProject.getBuildWrappersList().add(bw);
+        Build build = freeStyleProject.scheduleBuild2(0).get();
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, bw.getCredentialId());
+        build.addAction(buildAction);
+        SauceOnDemandBuildAction  sauceBuildAction= SauceOnDemandBuildAction.getSauceBuildAction(build);
+        assertEquals("fakeuser", sauceBuildAction.getCredentials().getUsername());
+    }
+
+    @Test
+    public void testGetSauceBuildActionMavenBuild() throws Exception {
+        hudson.maven.MavenModuleSet project = jenkins.createMavenProject();
+        TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+        );
+        project.getBuildWrappersList().add(bw);
+        project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
+        project.setGoals("clean");
+        MavenModuleSetBuild build =  project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, bw.getCredentialId());
+        build.addAction(buildAction);
+        final MavenBuild mavenBuildMock = mock(MavenBuild.class);
+        when(mavenBuildMock.getParentBuild()).thenReturn(build);
+        SauceOnDemandBuildAction sauceBuildAction = SauceOnDemandBuildAction.getSauceBuildAction(mavenBuildMock);
+        assertEquals("fakeuser", sauceBuildAction.getCredentials().getUsername());
+
+    }
+
 
     private HtmlElement getEmbedTag(DomNodeList<HtmlElement> scripts) {
         for(HtmlElement htmlElement : scripts)
