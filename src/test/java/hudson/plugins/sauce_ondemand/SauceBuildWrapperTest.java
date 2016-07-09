@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.invocation.InvocationOnMock;
@@ -79,7 +80,7 @@ public class SauceBuildWrapperTest {
     @Before
     public void setUp() throws Exception {
         SystemCredentialsProvider.getInstance().save();
-        jenkinsRule.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
+        ToolInstallations.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
@@ -354,7 +355,7 @@ public class SauceBuildWrapperTest {
     public void mavenBuild() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-        MavenModuleSet project = jenkinsRule.createMavenProject();
+        MavenModuleSet project = jenkinsRule.createProject(MavenModuleSet.class, "mavenBuildProject");
         project.getBuildWrappersList().add(sauceBuildWrapper);
         project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
         project.setGoals("clean");

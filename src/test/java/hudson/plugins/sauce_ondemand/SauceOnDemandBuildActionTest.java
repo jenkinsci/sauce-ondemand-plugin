@@ -1,8 +1,10 @@
 package hudson.plugins.sauce_ondemand;
 
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.maven.MavenModuleSet;
 import hudson.model.Build;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
@@ -10,7 +12,6 @@ import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.maven.MavenBuild;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,7 +67,7 @@ public class SauceOnDemandBuildActionTest {
         webClient.setJavaScriptEnabled(false);
         HtmlPage page = webClient.getPage(build, "sauce-ondemand-report/jobReport?jobId=1234");
         jenkins.assertGoodStatus(page);
-        HtmlElement scriptTag = getEmbedTag(page.getElementsByTagName("script"));
+        DomElement scriptTag = getEmbedTag(page.getElementsByTagName("script"));
 
         assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234.js"));
         assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("auth="));
@@ -91,7 +92,7 @@ public class SauceOnDemandBuildActionTest {
 
     @Test
     public void testGetSauceBuildActionMavenBuild() throws Exception {
-        hudson.maven.MavenModuleSet project = jenkins.createMavenProject();
+        MavenModuleSet project = jenkins.createProject(MavenModuleSet.class, "testGetSauceBuildActionMavenBuild");
         TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
             SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
         );
@@ -109,8 +110,8 @@ public class SauceOnDemandBuildActionTest {
     }
 
 
-    private HtmlElement getEmbedTag(DomNodeList<HtmlElement> scripts) {
-        for(HtmlElement htmlElement : scripts)
+    private DomElement getEmbedTag(DomNodeList<DomElement> scripts) {
+        for(DomElement htmlElement : scripts)
         {
             if (htmlElement.getAttribute("src").contains("job-embed")) {
                 return htmlElement;
