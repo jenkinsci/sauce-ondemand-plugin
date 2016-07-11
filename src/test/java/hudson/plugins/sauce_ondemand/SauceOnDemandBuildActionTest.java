@@ -35,11 +35,6 @@ public class SauceOnDemandBuildActionTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
     @Test
     public void doJobReportTest() throws Exception {
         final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);

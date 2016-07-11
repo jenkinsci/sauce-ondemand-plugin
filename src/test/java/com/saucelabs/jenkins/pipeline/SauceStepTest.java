@@ -25,11 +25,6 @@ public class SauceStepTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
         HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
         Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
