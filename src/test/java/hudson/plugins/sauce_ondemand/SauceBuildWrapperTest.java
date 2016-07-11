@@ -18,6 +18,7 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -132,6 +133,11 @@ public class SauceBuildWrapperTest {
         EnvVars envVars = prop.getEnvVars();
         envVars.put("TEST_PORT_VARIABLE_4321", "4321");
         this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storeDummyManager(null);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
