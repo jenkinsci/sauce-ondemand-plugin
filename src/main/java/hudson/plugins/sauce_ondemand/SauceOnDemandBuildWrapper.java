@@ -327,7 +327,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             if (isUseGeneratedTunnelIdentifier()) {
                 build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
-                resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+                resolvedOptions = resolvedOptions + " --tunnel-identifier " + tunnelIdentifier;
             }
 
             try {
@@ -545,16 +545,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private String getCommandLineOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
         PluginImpl p = PluginImpl.get();
 
-        StringBuilder resolvedOptions = new StringBuilder();
-        resolvedOptions.append(getResolvedOptions(build, listener, options));
-        String resolvedCommonOptions = getResolvedOptions(build, listener, p != null ? p.getSauceConnectOptions() : null);
-        if (resolvedCommonOptions != null && !resolvedCommonOptions.equals("")) {
-            if (!resolvedOptions.toString().equals("")) {
-                resolvedOptions.append(' ');
-            }
-            resolvedOptions.append(resolvedCommonOptions);
-        }
-        return resolvedOptions.toString();
+        ArrayList<String> resolvedOptions = new ArrayList<String>();
+        resolvedOptions.add(getResolvedOptions(build, listener, p != null ? p.getSauceConnectOptions() : null));
+        resolvedOptions.add(getResolvedOptions(build, listener, options));
+        resolvedOptions.removeAll(Collections.singleton(""));
+        return StringUtils.join(resolvedOptions, " ");
     }
 
     /**
