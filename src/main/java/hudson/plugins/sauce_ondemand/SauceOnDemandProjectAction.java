@@ -110,7 +110,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
      * @return boolean indicating whether the build is configured to include Sauce support
      */
     public boolean isSauceEnabled() {
-        return getSauceBuildActions() != null;
+        return !getSauceBuildActions().isEmpty();
     }
 
     private List<SauceOnDemandBuildAction> getSauceBuildActions() {
