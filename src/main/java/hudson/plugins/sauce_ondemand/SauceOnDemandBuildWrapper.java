@@ -548,7 +548,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         ArrayList<String> resolvedOptions = new ArrayList<String>();
         resolvedOptions.add(getResolvedOptions(build, listener, p != null ? p.getSauceConnectOptions() : null));
         resolvedOptions.add(getResolvedOptions(build, listener, options));
-        resolvedOptions.removeAll(Collections.singleton(""));
+        resolvedOptions.removeAll(Collections.singleton("")); // remove the empty strings
         return StringUtils.join(resolvedOptions, " ");
     }
 
