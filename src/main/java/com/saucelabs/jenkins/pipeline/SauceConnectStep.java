@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Computer;
@@ -22,7 +21,6 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -134,11 +132,9 @@ public class SauceConnectStep extends AbstractStepImpl {
     public static class SauceConnectStepExecution extends AbstractStepExecutionImpl {
         @Inject(optional=true) private transient SauceConnectStep step;
         @StepContextParameter private transient SauceCredentials sauceCredentials;
-        @StepContextParameter private transient EnvVars envs;
         @StepContextParameter private transient Computer computer;
         @StepContextParameter private transient Run<?,?> run;
         @StepContextParameter private transient TaskListener listener;
-        @StepContextParameter private transient FlowNode flowNode;
 
         private BodyExecution body;
 
