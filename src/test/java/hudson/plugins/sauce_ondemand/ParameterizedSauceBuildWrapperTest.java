@@ -9,7 +9,6 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import net.sf.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
-@Ignore
 @RunWith(Parameterized.class)
 public class ParameterizedSauceBuildWrapperTest {
     /**
