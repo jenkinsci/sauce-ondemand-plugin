@@ -956,20 +956,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         /**
-         * @return the list of supported Selenium RC browsers
-         */
-        public List<Browser> getSeleniumBrowsers() {
-            try {
-                return PluginImpl.BROWSER_FACTORY.getSeleniumBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
-            } catch (JSONException e) {
-                logger.log(Level.SEVERE, "Error parsing JSON response", e);
-            }
-            return Collections.emptyList();
-        }
-
-        /**
          * @return the list of supported WebDriver browsers
          */
         public List<Browser> getWebDriverBrowsers() {
