@@ -35,6 +35,6 @@ public class SauceEnvironmentUtilTest {
         long now = System.currentTimeMillis();
         int deltaBetweenNowAndTunnelIdentifier = (int) (now - epochTimeMS);
 
-        assertThat(deltaBetweenNowAndTunnelIdentifier, is(lessThan(10)));
+        assertThat(deltaBetweenNowAndTunnelIdentifier, is(lessThan(12)));
     }
 }

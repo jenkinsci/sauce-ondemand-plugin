@@ -19,10 +19,12 @@ import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.invocation.InvocationOnMock;
@@ -80,7 +82,7 @@ public class SauceBuildWrapperTest {
     @Before
     public void setUp() throws Exception {
         SystemCredentialsProvider.getInstance().save();
-        jenkinsRule.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
+        ToolInstallations.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
@@ -132,6 +134,11 @@ public class SauceBuildWrapperTest {
         EnvVars envVars = prop.getEnvVars();
         envVars.put("TEST_PORT_VARIABLE_4321", "4321");
         this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storeDummyManager(null);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -381,7 +388,7 @@ public class SauceBuildWrapperTest {
     public void mavenBuild() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-        MavenModuleSet project = jenkinsRule.createMavenProject();
+        MavenModuleSet project = jenkinsRule.createProject(MavenModuleSet.class, "mavenBuildProject");
         project.getBuildWrappersList().add(sauceBuildWrapper);
         project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
         project.setGoals("clean");

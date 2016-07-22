@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
   This plugin integrates Sauce Labs with Jenkins.
 </div>
