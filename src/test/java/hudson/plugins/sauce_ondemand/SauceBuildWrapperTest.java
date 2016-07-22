@@ -18,6 +18,7 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -195,6 +196,32 @@ public class SauceBuildWrapperTest {
         //assert that the Sauce REST API was invoked for the Sauce job id
         //assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
+
+    }
+
+    /**
+     * Verifies that the options should be common/admin => build => generated
+     *
+     * @throws Exception
+     */
+    @Test
+    public void resolvedOptionsOrder() throws Exception {
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+                // Match that it starts with tunnel-identifier, because timestamp
+                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-identifier test0-"));
+                return null;
+            }
+        };
+        storeDummyManager(sauceConnectFourManager);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        PluginImpl.get().setSauceConnectOptions("--global");
+        sauceBuildWrapper.setOptions("--build -i 1");
+        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
     }
 
