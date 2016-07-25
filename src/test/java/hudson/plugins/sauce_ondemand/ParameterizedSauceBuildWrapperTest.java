@@ -7,6 +7,7 @@ import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import net.sf.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -120,6 +121,11 @@ public class ParameterizedSauceBuildWrapperTest {
 
         jenkinsRule.getPluginManager().getPlugin("sauce-ondemand").getPlugin().configure(null, pluginConfig);
 
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storeDummyManager(null);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {

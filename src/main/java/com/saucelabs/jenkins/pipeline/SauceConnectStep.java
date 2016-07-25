@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Computer;
@@ -15,13 +14,13 @@ import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
+import hudson.plugins.sauce_ondemand.PluginImpl;
 import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -35,6 +34,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepExecution.getSauceTunnelManager;
@@ -131,11 +132,9 @@ public class SauceConnectStep extends AbstractStepImpl {
     public static class SauceConnectStepExecution extends AbstractStepExecutionImpl {
         @Inject(optional=true) private transient SauceConnectStep step;
         @StepContextParameter private transient SauceCredentials sauceCredentials;
-        @StepContextParameter private transient EnvVars envs;
         @StepContextParameter private transient Computer computer;
         @StepContextParameter private transient Run<?,?> run;
         @StepContextParameter private transient TaskListener listener;
-        @StepContextParameter private transient FlowNode flowNode;
 
         private BodyExecution body;
 
@@ -153,16 +152,21 @@ public class SauceConnectStep extends AbstractStepImpl {
                 new SauceOnDemandBuildWrapper.GetAvailablePort()
             );
 
-            String options = step.getOptions();
-            HashMap<String,String> overrides = new HashMap<String,String>();
+            ArrayList<String> optionsArray = new ArrayList<String>();
+            optionsArray.add(PluginImpl.get().getSauceConnectOptions());
+            optionsArray.add(step.getOptions());
+            optionsArray.removeAll(Collections.singleton("")); // remove the empty strings
 
+            String options = StringUtils.join(optionsArray, " ");
+
+            HashMap<String,String> overrides = new HashMap<String,String>();
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_PORT, String.valueOf(port));
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_HOST, "localhost");
 
             if (step.getUseGeneratedTunnelIdentifier()) {
                 final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(job.getName());
                 overrides.put(SauceOnDemandBuildWrapper.TUNNEL_IDENTIFIER, tunnelIdentifier);
-                options = "--tunnel-identifier " + tunnelIdentifier + " " + options;
+                options = options + " --tunnel-identifier " + tunnelIdentifier;
 
             }
 

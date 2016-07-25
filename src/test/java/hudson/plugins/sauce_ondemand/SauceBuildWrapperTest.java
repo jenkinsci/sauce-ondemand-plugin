@@ -18,10 +18,13 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.invocation.InvocationOnMock;
@@ -79,7 +82,7 @@ public class SauceBuildWrapperTest {
     @Before
     public void setUp() throws Exception {
         SystemCredentialsProvider.getInstance().save();
-        jenkinsRule.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
+        ToolInstallations.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
 
@@ -131,6 +134,11 @@ public class SauceBuildWrapperTest {
         EnvVars envVars = prop.getEnvVars();
         envVars.put("TEST_PORT_VARIABLE_4321", "4321");
         this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storeDummyManager(null);
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -195,6 +203,32 @@ public class SauceBuildWrapperTest {
         //assert that the Sauce REST API was invoked for the Sauce job id
         //assertNotNull(restUpdates.get(currentSessionId));
         //TODO verify that test results of build include Sauce results
+
+    }
+
+    /**
+     * Verifies that the options should be common/admin => build => generated
+     *
+     * @throws Exception
+     */
+    @Test
+    public void resolvedOptionsOrder() throws Exception {
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+                // Match that it starts with tunnel-identifier, because timestamp
+                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-identifier test0-"));
+                return null;
+            }
+        };
+        storeDummyManager(sauceConnectFourManager);
+        SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        PluginImpl.get().setSauceConnectOptions("--global");
+        sauceBuildWrapper.setOptions("--build -i 1");
+        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
     }
 
@@ -354,7 +388,7 @@ public class SauceBuildWrapperTest {
     public void mavenBuild() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-        MavenModuleSet project = jenkinsRule.createMavenProject();
+        MavenModuleSet project = jenkinsRule.createProject(MavenModuleSet.class, "mavenBuildProject");
         project.getBuildWrappersList().add(sauceBuildWrapper);
         project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
         project.setGoals("clean");
