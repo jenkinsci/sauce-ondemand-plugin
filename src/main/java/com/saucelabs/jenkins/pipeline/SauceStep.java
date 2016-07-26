@@ -1,7 +1,6 @@
 package com.saucelabs.jenkins.pipeline;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
@@ -26,6 +25,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -108,10 +108,9 @@ public class SauceStep extends AbstractStepImpl {
             return true;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Set<Class<?>> getProvidedContext() {
-            return ImmutableSet.<Class<?>>of(SauceCredentials.class);
+            return Collections.<Class<?>>singleton(SauceCredentials.class);
         }
 
         @SuppressWarnings("unused")
