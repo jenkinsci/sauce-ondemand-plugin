@@ -1,4 +1,12 @@
 node('master') {
+  // Mark the code checkout 'stage'....
+  stage 'Checkout'
+  // Get some code from a GitHub repository
+  git url: 'https://github.com/saucelabs/jenkins-sauce-ondemand-plugin'
+  // Clean any locally modified files and ensure we are actually on master
+  // as a failed release could leave the local workspace ahead of master
+  sh "git clean -f && git reset --hard origin/master"
+
   stage 'Build'
   def mvnHome = tool 'Maven'
   // we want to pick up the version from the pom
