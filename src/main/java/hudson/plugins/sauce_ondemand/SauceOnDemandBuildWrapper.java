@@ -915,7 +915,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     }
                 }
             } else {
-                Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
+                sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
             }
             return this;
         }
