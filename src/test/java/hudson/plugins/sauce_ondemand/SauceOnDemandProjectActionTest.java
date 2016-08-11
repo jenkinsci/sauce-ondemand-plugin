@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 public class SauceOnDemandProjectActionTest {
 
     private SecurityRealm securityRealm;
-    private AuthorizationStrategy authStrategy;
     private String credentialsId;
 
     private SecurityRealm getSecurityRealm() {
@@ -40,12 +39,14 @@ public class SauceOnDemandProjectActionTest {
     @Test
     public void testDoGenerateSupportZip() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        sauceBuildWrapper.setEnableSauceConnect(false);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
         project.getBuildWrappersList().add(sauceBuildWrapper);
         /* make a build so we can get the build log */
         AbstractBuild b = project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        jenkins.assertBuildStatusSuccess(b);
 
         Page generateSupportZip;
         try {
@@ -63,12 +64,13 @@ public class SauceOnDemandProjectActionTest {
     @Test(expected = com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException.class)
     public void testDoGenerateSupportZip_NoBuildLog() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        sauceBuildWrapper.setEnableSauceConnect(false);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
         project.getBuildWrappersList().add(sauceBuildWrapper);
 
-        Page generateSupportZip = jenkins.createWebClient().goTo(
+        jenkins.createWebClient().goTo(
             project.getUrl() + pa.getUrlName() + "/generateSupportZip",
             "application/zip"
         );
@@ -78,6 +80,7 @@ public class SauceOnDemandProjectActionTest {
     public void testDoGenerateSupportZip_not_authorized() throws Exception {
         jenkins.getInstance().setSecurityRealm(jenkins.createDummySecurityRealm());
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        sauceBuildWrapper.setEnableSauceConnect(false);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
@@ -98,6 +101,7 @@ public class SauceOnDemandProjectActionTest {
     @Test
     public void testDoGenerateSupportZip_authorized() throws Exception {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
+        sauceBuildWrapper.setEnableSauceConnect(false);
 
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);

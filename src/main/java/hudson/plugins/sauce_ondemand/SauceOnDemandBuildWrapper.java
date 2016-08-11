@@ -339,7 +339,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 throw new IOException(e);
             }
 
-            EnvVars env = new EnvVars();
+            EnvVars env;
             try {
                 env = build.getEnvironment(listener);
             } catch (IOException e) {
@@ -405,7 +405,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 List<Browser> browsers = new ArrayList<Browser>();
                 if (webDriverBrowsers != null) {
                     for (String webDriverBrowser : webDriverBrowsers) {
-                        browsers.add(PluginImpl.BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser, useLatestVersion));
+                        Browser browser = PluginImpl.BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser);
+                        if (browser != null && useLatestVersion) {
+                            browser = new Browser(browser, true);
+                        }
+                        browsers.add(browser);
                     }
                 }
                 if (appiumBrowsers != null) {
@@ -413,6 +417,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         browsers.add(PluginImpl.BROWSER_FACTORY.appiumBrowserForKey(appiumBrowser));
                     }
                 }
+                browsers.removeAll(Collections.singleton(null));
+
                 SauceEnvironmentUtil.outputVariables(env, browsers, username, apiKey, verboseLogging, listener.getLogger());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
@@ -888,7 +894,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 int retryCount = 0;
                 while (retryCount < maxRetries) {
                     try {
-                        Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
+                        sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
                         return this;
                     } catch (AbstractSauceTunnelManager.SauceConnectDidNotStartException e) {
                         retryCount++;

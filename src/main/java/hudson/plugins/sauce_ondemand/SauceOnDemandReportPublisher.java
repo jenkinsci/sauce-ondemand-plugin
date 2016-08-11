@@ -26,6 +26,7 @@ package hudson.plugins.sauce_ondemand;
 import com.google.common.base.Strings;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -55,6 +56,7 @@ import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -187,6 +189,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param buildAction the Sauce Build Action instance for the build
      * @param testResult  Contains the test results for the build.
      */
+    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
         SauceREST sauceREST = getSauceREST(build);
 
@@ -202,14 +205,23 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         LinkedList<TestIDDetails> testIds = new LinkedList<TestIDDetails>();
 
+        BufferedReader in = null;
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
+            in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
             String line;
             while ((line = in.readLine()) != null) {
                 testIds.addAll(processSessionIds(true, line));
             }
         } catch (IOException e) {
             logger.severe(e.getMessage());
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         //try the stdout for the tests
@@ -218,10 +230,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
 
                 for (CaseResult cr : sr.getCases()) {
-                    if (cr.getStdout() != sr.getStdout()) {
+                    if (!Objects.equals(cr.getStdout(), sr.getStdout())) {
                         testIds.addAll(processSessionIds(false, cr.getStdout()));
                     }
-                    if (cr.getStderr() != sr.getStderr()) {
+                    if (!Objects.equals(cr.getStderr(), sr.getStderr())) {
                         testIds.addAll(processSessionIds(false, cr.getStderr()));
                     }
                 }
@@ -303,6 +315,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param job        details of a Sauce job which was run during the build.
      * @return Boolean indicating whether the test was successful.
      */
+    @SuppressFBWarnings("NP_BOOLEAN_RETURN_NULL")
     private Boolean hasTestPassed(TestResult testResult, JobInformation job) {
 
         if (testResult == null) {

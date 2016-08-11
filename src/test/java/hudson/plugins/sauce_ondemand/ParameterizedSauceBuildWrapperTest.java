@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
@@ -64,7 +65,7 @@ public class ParameterizedSauceBuildWrapperTest {
     }
 
     @Parameterized.Parameters
-    public static Collection SauceOnDemandBuildWrapperValues() {
+    public static Collection sauceOnDemandBuildWrapperValues() {
         ArrayList<Object[]> list = new ArrayList<Object[]>();
         for(boolean enableSauceConnect : new boolean[] {true, false }) {
             for(boolean launchSauceConnectOnSlave : new boolean[] { true, false }) {
@@ -186,37 +187,35 @@ public class ParameterizedSauceBuildWrapperTest {
 
         Map<String, String> envVars = (Map<String, String>)holder.get("env");
         assertNotNull(envVars);
-        if (envVars != null) {
-            assertEquals("legacy SAUCE_USER_NAME is set to API username", "fakeuser", envVars.get("SAUCE_USER_NAME"));
-            assertEquals("proper SAUCE_USERNAME is set to API username", "fakeuser", envVars.get("SAUCE_USERNAME"));
-            assertEquals("legacy SAUCE_API_KEY is set to API username", "fakekey", envVars.get("SAUCE_API_KEY"));
-            assertEquals("proper SAUCE_ACCESS_KEY is set to API username", "fakekey", envVars.get("SAUCE_ACCESS_KEY"));
-            assertThat("SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(isEmptyOrNullString()));
-            assertThat("SELENIUM_PORT equals something", envVars.get("SELENIUM_PORT"), not(isEmptyOrNullString()));
-            assertThat("JENKINS_BUILD_NUMBER equals something", envVars.get("JENKINS_BUILD_NUMBER"), not(isEmptyOrNullString()));
+        assertEquals("legacy SAUCE_USER_NAME is set to API username", "fakeuser", envVars.get("SAUCE_USER_NAME"));
+        assertEquals("proper SAUCE_USERNAME is set to API username", "fakeuser", envVars.get("SAUCE_USERNAME"));
+        assertEquals("legacy SAUCE_API_KEY is set to API username", "fakekey", envVars.get("SAUCE_API_KEY"));
+        assertEquals("proper SAUCE_ACCESS_KEY is set to API username", "fakekey", envVars.get("SAUCE_ACCESS_KEY"));
+        assertThat("SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(isEmptyOrNullString()));
+        assertThat("SELENIUM_PORT equals something", envVars.get("SELENIUM_PORT"), not(isEmptyOrNullString()));
+        assertThat("JENKINS_BUILD_NUMBER equals something", envVars.get("JENKINS_BUILD_NUMBER"), not(isEmptyOrNullString()));
 
-            if (!"".equals(sauceBuildWrapper.getNativeAppPackage())) {
-                assertNull("SAUCE_NATIVE_APP is not set when native package is not set", envVars.get("SAUCE_NATIVE_APP"));
-            } else {
-                assertThat("SAUCE_NATIVE_APP is set when native package is set", envVars.get("SAUCE_NATIVE_APP"), not(isEmptyOrNullString()));
-            }
-            if (sauceBuildWrapper.isEnableSauceConnect() && sauceBuildWrapper.isUseGeneratedTunnelIdentifier()) {
-                assertThat("TUNNEL_IDENTIFIER is set when we are managing it", envVars.get("TUNNEL_IDENTIFIER"), not(isEmptyOrNullString()));
-
-            } else {
-                assertNull("TUNNEL_IDENTIFIER is not set when we are not managing it", envVars.get("SAUCE_NATIVE_APP"));
-
-            }
-            if (sauceBuildWrapper.isUseChromeForAndroid()) {
-                assertNull("SAUCE_USE_CHROME is not set when use chrome is not set", envVars.get("SAUCE_USE_CHROME"));
-            } else {
-                assertThat("SAUCE_USE_CHROME is set when use chrome is set", envVars.get("SAUCE_USE_CHROME"), not(isEmptyOrNullString()));
-            }
-            /*
-            SELENIUM_PLATFORM, SELENIUM_BROWSER, SELENIUM_VERSION, SELENIUM_DRIVER, SELENIUM_DEVICE, SELENIUM_DEVICE_TYPE, SELENIUM_DEVICE_ORIENTATION
-            SAUCE_ONDEMAND_BROWSERS
-            */
+        if (!"".equals(sauceBuildWrapper.getNativeAppPackage())) {
+            assertNull("SAUCE_NATIVE_APP is not set when native package is not set", envVars.get("SAUCE_NATIVE_APP"));
+        } else {
+            assertThat("SAUCE_NATIVE_APP is set when native package is set", envVars.get("SAUCE_NATIVE_APP"), not(isEmptyOrNullString()));
         }
+        if (sauceBuildWrapper.isEnableSauceConnect() && sauceBuildWrapper.isUseGeneratedTunnelIdentifier()) {
+            assertThat("TUNNEL_IDENTIFIER is set when we are managing it", envVars.get("TUNNEL_IDENTIFIER"), not(isEmptyOrNullString()));
+
+        } else {
+            assertNull("TUNNEL_IDENTIFIER is not set when we are not managing it", envVars.get("SAUCE_NATIVE_APP"));
+
+        }
+        if (sauceBuildWrapper.isUseChromeForAndroid()) {
+            assertNull("SAUCE_USE_CHROME is not set when use chrome is not set", envVars.get("SAUCE_USE_CHROME"));
+        } else {
+            assertThat("SAUCE_USE_CHROME is set when use chrome is set", envVars.get("SAUCE_USE_CHROME"), not(isEmptyOrNullString()));
+        }
+        /*
+        SELENIUM_PLATFORM, SELENIUM_BROWSER, SELENIUM_VERSION, SELENIUM_DRIVER, SELENIUM_DEVICE, SELENIUM_DEVICE_TYPE, SELENIUM_DEVICE_ORIENTATION
+        SAUCE_ONDEMAND_BROWSERS
+        */
     }
 
     private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node slave) throws Exception {
@@ -238,6 +237,7 @@ public class ParameterizedSauceBuildWrapperTest {
     /**
      * Dummy builder which is run by the unit tests.
      */
+    @SuppressFBWarnings("SE_BAD_FIELD_INNER_CLASS")
     private class SauceBuilder extends TestBuilder implements Serializable {
 
         @Override

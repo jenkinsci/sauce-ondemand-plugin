@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.maven.MavenModuleSet;
@@ -18,6 +19,7 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
@@ -74,8 +76,6 @@ public class SauceBuildWrapperTest {
 
     public static final String DEFAULT_TEST_XML = "/hudson/plugins/sauce_ondemand/test-result.xml";
 
-    private String currentSessionId = DEFAULT_SESSION_ID;
-
     private String currentTestResultFile = DEFAULT_TEST_XML;
     private String credentialsId;
 
@@ -113,6 +113,20 @@ public class SauceBuildWrapperTest {
                 return "{}";
             }
         }).when(spySauceRest).retrieveResults(anyString());
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"), "UTF-8");
+            }
+        }).when(spySauceRest).getSupportedPlatforms("webdriver");
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return IOUtils.toString(getClass().getResourceAsStream("/appium.json"), "UTF-8");
+            }
+        }).when(spySauceRest).getSupportedPlatforms("appium");
 
         doAnswer(new Answer() {
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -274,7 +288,7 @@ public class SauceBuildWrapperTest {
     public void multipleBrowsers() throws Exception {
 
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-        sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("", ""));  /// THIS Actually crashes the buld but things are not properly checked
+        sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("Windows_2003internet_explorer7", "Linuxfirefox4", ""));
 
         SauceBuilder sauceBuilder = new SauceBuilder() {
             @Override
@@ -287,7 +301,7 @@ public class SauceBuildWrapperTest {
         };
 
         Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
-        //jenkinsRule.assertBuildStatusSuccess(build);
+        jenkinsRule.assertBuildStatusSuccess(build);
 
         //assert that the Sauce REST API was invoked for the Sauce job id
 //        assertNotNull(restUpdates.get(currentSessionId));
@@ -434,6 +448,7 @@ public class SauceBuildWrapperTest {
     /**
      * Dummy builder which is run by the unit tests.
      */
+    @SuppressFBWarnings("SE_BAD_FIELD_INNER_CLASS")
     private class SauceBuilder extends TestBuilder implements Serializable {
 
         @Override
