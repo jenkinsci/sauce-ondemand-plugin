@@ -215,12 +215,10 @@ public final class SauceEnvironmentUtil {
      */
     @Nonnull
     public static String getBuildName(Run<?, ?> build) {
-        if (build == null) {
-            return "";
-        }
-        while (build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
+        while (build != null && build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
             build = ((MavenBuild) build).getParentBuild();
         }
+        if (build == null) { return ""; }
 
         String displayName = build.getFullDisplayName();
         String buildName = build.getDisplayName();

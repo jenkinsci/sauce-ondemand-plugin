@@ -30,6 +30,7 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.hudson.HudsonSauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.*;
 import hudson.model.*;
 import hudson.model.listeners.ItemListener;
@@ -165,6 +166,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @deprecated moved to global scope
      * @see PluginImpl
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @SuppressWarnings("unused")
     @Deprecated
     transient private boolean sendUsageData;
@@ -197,6 +199,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * The Sauce username/access key that should be used for the build.
      * @deprecated use credentialsId instead
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Deprecated
     private transient Credentials credentials;
     /**
@@ -230,6 +233,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * RunCondition which allows users to define rules which enable Sauce Connect.
      */
+    @SuppressFBWarnings("SE_BAD_FIELD")
     private RunCondition condition;
     /**
      * @see CredentialsProvider
@@ -382,7 +386,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             JenkinsSauceREST sauceREST = credentials.getSauceREST();
             try {
                 logger.fine("Reporting usage data");
-                sauceREST.recordCI("jenkins", Jenkins.VERSION.toString());
+                sauceREST.recordCI("jenkins", Jenkins.VERSION);
             } catch (Exception e) {
                 logger.finest("Error reporting in: " + e.getMessage());
                 // This is purely for informational purposes, so if it fails, just keep going
@@ -904,7 +908,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             listener.getLogger().println(String.format("Error launching Sauce Connect, trying %s time(s) more.", (maxRetries - retryCount)));
                         }
                         try {
-                            Thread.sleep(1000 * retryWaitTime);
+                            Thread.sleep((long)1000 * retryWaitTime);
                         } catch (InterruptedException ie) {
                             throw new AbstractSauceTunnelManager.SauceConnectException(ie);
                         }
@@ -1039,10 +1043,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Extension
     static final public class ItemListenerImpl extends ItemListener {
         public void onLoaded() {
-            for (BuildableItemWithBuildWrappers item : Jenkins.getInstance().getItems(BuildableItemWithBuildWrappers.class))
+            Jenkins instance = Jenkins.getInstance();
+            if (instance == null) { return; }
+            for (BuildableItemWithBuildWrappers item : instance.getItems(BuildableItemWithBuildWrappers.class))
             {
                 AbstractProject p = item.asProject();
-                for (SauceOnDemandBuildWrapper bw : (List<SauceOnDemandBuildWrapper>) ((BuildableItemWithBuildWrappers)p).getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
+                for (SauceOnDemandBuildWrapper bw : ((BuildableItemWithBuildWrappers)p).getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
                 {
                     if (bw.migrateCredentials(p) == true) {
                         try {

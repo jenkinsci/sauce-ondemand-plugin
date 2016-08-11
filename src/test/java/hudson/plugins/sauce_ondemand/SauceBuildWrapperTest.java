@@ -54,6 +54,7 @@ import static org.hamcrest.Matchers.*;
 /**
  * @author Ross Rowe
  */
+@SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public class SauceBuildWrapperTest {
 
     /**
@@ -404,7 +405,7 @@ public class SauceBuildWrapperTest {
 
         MavenModuleSet project = jenkinsRule.createProject(MavenModuleSet.class, "mavenBuildProject");
         project.getBuildWrappersList().add(sauceBuildWrapper);
-        project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));
+        project.setScm(new SingleFileSCM("pom.xml", SauceOnDemandProjectActionTest.class.getResource("/pom.xml")));
         project.setGoals("clean");
 
         MavenModuleSetBuild build =  project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
@@ -448,7 +449,7 @@ public class SauceBuildWrapperTest {
     /**
      * Dummy builder which is run by the unit tests.
      */
-    @SuppressFBWarnings("SE_BAD_FIELD_INNER_CLASS")
+    @SuppressFBWarnings({"SE_BAD_FIELD_INNER_CLASS", "SE_NO_SERIALVERSIONID"})
     private class SauceBuilder extends TestBuilder implements Serializable {
 
         @Override

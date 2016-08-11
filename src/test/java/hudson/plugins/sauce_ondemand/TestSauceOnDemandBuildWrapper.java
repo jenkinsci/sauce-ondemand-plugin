@@ -1,7 +1,9 @@
 package hudson.plugins.sauce_ondemand;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 
+@SuppressFBWarnings("SE_NO_SERIALVERSIONID")
 class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
     @Extension
     public static class DescriptorImpl extends SauceOnDemandBuildWrapper.DescriptorImpl {

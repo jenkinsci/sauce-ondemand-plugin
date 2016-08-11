@@ -16,7 +16,7 @@ import java.net.URL;
 public class JenkinsSauceREST extends SauceREST {
 
     static {
-        SauceREST.setExtraUserAgent("Jenkins/" + Jenkins.VERSION.toString() + " " +
+        SauceREST.setExtraUserAgent("Jenkins/" + Jenkins.VERSION + " " +
             "JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion());
     }
     public JenkinsSauceREST(String username, String accessKey) {

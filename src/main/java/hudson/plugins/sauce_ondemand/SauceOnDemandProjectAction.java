@@ -9,9 +9,11 @@ import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Job;
+import hudson.model.Node;
 import hudson.model.Project;
 import hudson.model.Run;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
+import hudson.remoting.VirtualChannel;
 import hudson.security.AccessControlled;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -209,7 +211,11 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             if (sauceBuildWrapper.isEnableSauceConnect()) {
                 File sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
                 if (sauceBuildWrapper.isLaunchSauceConnectOnSlave()) {
-                    FilePath fp = new FilePath(build.getBuiltOn().getChannel(), sauceConnectLogFile.getPath());
+                    Node builtOn = build.getBuiltOn();
+                    if (builtOn == null) { return; }
+                    VirtualChannel channel = builtOn.getChannel();
+                    if (channel == null ) { return; }
+                    FilePath fp = new FilePath(channel, sauceConnectLogFile.getPath());
                     addFileToZipStream(zipOutputStream, fp.readToString().getBytes("UTF-8"), "sc.log");
                 } else if (sauceConnectLogFile != null) {
                     addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(sauceConnectLogFile), "sc.log");

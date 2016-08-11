@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Computer;
@@ -129,6 +130,7 @@ public class SauceConnectStep extends AbstractStepImpl {
         }
     }
 
+    @SuppressFBWarnings("SE_NO_SERIALVERSIONID")
     public static class SauceConnectStepExecution extends AbstractStepExecutionImpl {
         @Inject(optional=true) private transient SauceConnectStep step;
         @StepContextParameter private transient SauceCredentials sauceCredentials;

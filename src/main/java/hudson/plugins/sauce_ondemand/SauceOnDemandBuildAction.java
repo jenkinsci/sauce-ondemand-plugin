@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import hudson.Util;
+import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.BuildableItemWithBuildWrappers;
@@ -113,10 +114,14 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
      *         Can be null
      */
     public static SauceOnDemandBuildAction getSauceBuildAction(Run build) {
+        if (build == null) { return null; }
         SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
         if (buildAction == null && build instanceof MavenBuild) {
-            //try the parent
-            buildAction = ((hudson.maven.MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
+            MavenModuleSetBuild mb = ((MavenBuild) build).getParentBuild();
+            if (mb != null) {
+                //try the parent
+                buildAction = mb.getAction(SauceOnDemandBuildAction.class);
+            }
         }
         return buildAction;
     }

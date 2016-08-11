@@ -5,6 +5,7 @@ import org.apache.http.client.utils.URIBuilder;
 
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Objects;
 
 /**
  * @author Ross Rowe
@@ -15,7 +16,7 @@ public class JenkinsJobInformation extends JobInformation {
     }
 
     public String getResult() {
-       return getStatus() == "true" ? "OK" : "FAILURE";
+       return Objects.equals("true", getStatus()) ? "OK" : "FAILURE";
     }
 
     @Override

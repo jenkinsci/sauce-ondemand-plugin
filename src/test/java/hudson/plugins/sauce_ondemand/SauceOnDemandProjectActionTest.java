@@ -18,15 +18,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class SauceOnDemandProjectActionTest {
 
-    private SecurityRealm securityRealm;
     private String credentialsId;
-
-    private SecurityRealm getSecurityRealm() {
-        if (null == securityRealm) {
-            securityRealm = jenkins.createDummySecurityRealm();
-        }
-        return securityRealm;
-    }
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();

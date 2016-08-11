@@ -1,0 +1,6 @@
+<FindBugsFilter>
+  <Match>
+    <Bug category="SE_NO_SERIALVERSIONID"/>
+  </Match>
+
+</FindBugsFilter>

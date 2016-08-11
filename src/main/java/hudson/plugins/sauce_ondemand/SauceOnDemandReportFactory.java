@@ -25,6 +25,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
 import hudson.maven.MavenBuild;
+import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
@@ -71,7 +72,7 @@ public class SauceOnDemandReportFactory extends Data {
             List<String[]> ids = new ArrayList<String[]>();
 
             AbstractBuild<?, ?> build = cr.getOwner();
-            SauceOnDemandBuildAction buildAction = getBuildAction(build);
+            SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
             if (buildAction != null) {
                 List<JobInformation> jobs = buildAction.getJobs();
                 for (JobInformation job : jobs) {
@@ -105,15 +106,6 @@ public class SauceOnDemandReportFactory extends Data {
             logger.log(Level.FINE, "Test Object not a CaseResult, unable to parse output: " + testObject.toString());
         }
         return Collections.emptyList();
-    }
-
-    private SauceOnDemandBuildAction getBuildAction(AbstractBuild<?, ?> build) {
-        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
-        if (buildAction == null && build instanceof MavenBuild) {
-            //try the parent
-            buildAction = ((MavenBuild) build).getParentBuild().getAction(SauceOnDemandBuildAction.class);
-        }
-        return buildAction;
     }
 
     /**

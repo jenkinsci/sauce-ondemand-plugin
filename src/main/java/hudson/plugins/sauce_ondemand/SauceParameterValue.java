@@ -64,10 +64,4 @@ public class SauceParameterValue extends ParameterValue {
         }
 
     }
-
-    private SauceOnDemandBuildWrapper getBuildWrapper(AbstractBuild<?, ?> build) {
-        return SauceEnvironmentUtil.getBuildWrapper(build.getProject());
-    }
-
-
 }

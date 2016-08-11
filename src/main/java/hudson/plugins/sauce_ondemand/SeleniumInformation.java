@@ -1,5 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.util.List;
  *
  * @author Ross Rowe
  */
+@SuppressFBWarnings("SE_NO_SERIALVERSIONID")
 public class SeleniumInformation implements Serializable {
 
     private List<String> webDriverBrowsers;

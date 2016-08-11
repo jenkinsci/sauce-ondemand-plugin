@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
+@SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 @RunWith(Parameterized.class)
 public class ParameterizedSauceBuildWrapperTest {
     /**
@@ -237,7 +238,7 @@ public class ParameterizedSauceBuildWrapperTest {
     /**
      * Dummy builder which is run by the unit tests.
      */
-    @SuppressFBWarnings("SE_BAD_FIELD_INNER_CLASS")
+    @SuppressFBWarnings({"SE_BAD_FIELD_INNER_CLASS", "SE_NO_SERIALVERSIONID"})
     private class SauceBuilder extends TestBuilder implements Serializable {
 
         @Override

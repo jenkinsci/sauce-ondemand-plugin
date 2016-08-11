@@ -14,7 +14,7 @@ public class ExtractSauceConnectTest {
     private SauceConnectFourManager manager = new SauceConnectFourManager();
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
 
     }
 

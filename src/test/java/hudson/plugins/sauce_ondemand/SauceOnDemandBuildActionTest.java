@@ -4,6 +4,7 @@ import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.maven.MavenModuleSet;
 import hudson.model.Build;
 import hudson.model.FreeStyleProject;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public class SauceOnDemandBuildActionTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -39,7 +41,7 @@ public class SauceOnDemandBuildActionTest {
     public void doJobReportTest() throws Exception {
         final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
         when(mockSauceREST.getBuildFullJobs(anyString())).thenReturn(
-            IOUtils.toString(getClass().getResourceAsStream("/build_jobs.json"), "UTF-8")
+            IOUtils.toString(SauceOnDemandProjectActionTest.class.getResourceAsStream("/build_jobs.json"), "UTF-8")
         );
         when(mockSauceREST.getTunnels()).thenReturn("[]");
 
