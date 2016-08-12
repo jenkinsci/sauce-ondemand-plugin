@@ -1,12 +1,11 @@
 package hudson.plugins.sauce_ondemand;
 
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 
 public class SauceEnvironmentUtilTest {
 

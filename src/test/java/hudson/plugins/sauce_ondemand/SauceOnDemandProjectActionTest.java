@@ -4,8 +4,6 @@ import com.gargoylesoftware.htmlunit.Page;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
-import hudson.security.AuthorizationStrategy;
-import hudson.security.SecurityRealm;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
