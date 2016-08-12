@@ -19,8 +19,9 @@ node('master') {
       sh "${mvnHome}/bin/mvn -v"
       sh "${mvnHome}/bin/mvn clean verify package install -Dgpg.skip=true -B"
   }
-  // Archive build result
-  archive './target/*.jar'
+
+  stage 'Archive Results'
+  step([$class: 'ArtifactArchiver', artifacts: '**/target/*.hpi', fingerprint: true])
 
   stage 'Publish Results'
   step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
