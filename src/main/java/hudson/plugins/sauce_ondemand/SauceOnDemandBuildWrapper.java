@@ -1050,7 +1050,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 AbstractProject p = item.asProject();
                 for (SauceOnDemandBuildWrapper bw : ((BuildableItemWithBuildWrappers)p).getBuildWrappersList().getAll(SauceOnDemandBuildWrapper.class))
                 {
-                    if (bw.migrateCredentials(p) == true) {
+                    if (bw.migrateCredentials(p)) {
                         try {
                             p.save();
                         } catch (IOException e) {
