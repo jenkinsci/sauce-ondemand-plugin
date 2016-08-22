@@ -4,7 +4,7 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
         <version>2.11</version>
-        <relativePath />
+        <relativePath/>
     </parent>
     <properties>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -24,7 +24,7 @@
 
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.156-SNAPSHOT</version>
+    <version>1.155-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
