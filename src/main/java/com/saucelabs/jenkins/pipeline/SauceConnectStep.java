@@ -34,7 +34,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -217,13 +216,14 @@ public class SauceConnectStep extends AbstractStepImpl {
             }
 
             @Override protected void finished(StepContext context) throws Exception {
+                TaskListener listener = context.get(TaskListener.class);
                 SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
                 sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
 
                 sauceTunnelManager.closeTunnelsForPlan(
                     sauceCredentials.getUsername(),
                     options,
-                    null
+                    listener.getLogger()
                 );
             }
 
