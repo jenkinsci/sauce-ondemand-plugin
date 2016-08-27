@@ -75,8 +75,10 @@ public class SauceOnDemandProjectActionTest {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
         project.getBuildWrappersList().add(sauceBuildWrapper);
+
         /* make a build so we can get the build log */
-        project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        AbstractBuild b = project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
+        jenkins.assertBuildStatusSuccess(b);
 
         Page generateSupportZip = jenkins.createWebClient().goTo(
             project.getUrl() + pa.getUrlName() + "/generateSupportZip",

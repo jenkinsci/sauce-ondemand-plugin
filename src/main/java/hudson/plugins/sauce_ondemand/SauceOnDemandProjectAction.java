@@ -176,6 +176,12 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
         Run<?, ?> build = job.getLastBuild();
 
+        if (build == null) {
+            rsp.setStatus(500);
+            rsp.getOutputStream().print("Project has no builds");
+            return;
+        }
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zipOutputStream = new ZipOutputStream(baos);
         zipOutputStream.setLevel(ZipOutputStream.STORED);
