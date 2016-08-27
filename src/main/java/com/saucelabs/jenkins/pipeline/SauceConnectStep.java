@@ -4,7 +4,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.google.inject.Inject;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;

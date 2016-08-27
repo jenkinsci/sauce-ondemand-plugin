@@ -2,7 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.SauceREST;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;

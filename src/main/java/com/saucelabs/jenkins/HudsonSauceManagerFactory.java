@@ -1,4 +1,4 @@
-package com.saucelabs.hudson;
+package com.saucelabs.jenkins;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 

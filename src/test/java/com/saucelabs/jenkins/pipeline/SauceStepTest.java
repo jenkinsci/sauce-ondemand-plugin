@@ -1,7 +1,7 @@
 package com.saucelabs.jenkins.pipeline;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.model.Result;
 import hudson.plugins.sauce_ondemand.PluginImpl;
 import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;

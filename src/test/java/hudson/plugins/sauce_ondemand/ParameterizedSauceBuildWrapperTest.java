@@ -1,7 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.hudson.HudsonSauceManagerFactory;
+import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Launcher;
 import hudson.model.*;
