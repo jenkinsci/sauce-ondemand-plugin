@@ -23,6 +23,8 @@ node('master') {
   stage 'Publish Results'
   step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 
+  stage 'Output XML - Temp'
+  sh 'for i in target/surefire-reports/*; do echo $i; cat $i; done;'
   // stage 'Run codecov'
   // sh 'virtualenv .venv'
   // sh 'source .venv/bin/activate && pip install codecov && codecov'
