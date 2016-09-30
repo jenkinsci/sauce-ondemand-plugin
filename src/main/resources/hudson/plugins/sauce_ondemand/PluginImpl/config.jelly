@@ -9,7 +9,7 @@
             <f:entry field="sendUsageData">
                 <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
             </f:entry>
-            <f:entry title="${%Sauce Connect Working Directory}" field="sauceConnectDirectory">
+            <f:entry title="${%Override Sauce Connect Path}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>
             </f:entry>
             <f:entry title="${%Sauce Connect Options}" field="sauceConnectOptions">
