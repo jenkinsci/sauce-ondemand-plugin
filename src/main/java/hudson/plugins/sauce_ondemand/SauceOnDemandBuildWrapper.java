@@ -364,7 +364,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 );
 
                 if (launchSauceConnectOnSlave) {
-                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + tunnelIdentifier);
+                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
                     Computer.currentComputer().getChannel().call(sauceConnectStarter);
 
                 } else {
