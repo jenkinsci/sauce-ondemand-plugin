@@ -94,7 +94,7 @@ public class SauceConnectStep extends AbstractStepImpl {
 
     }
 
-    private static final class SauceConnectHandler extends MasterToSlaveCallable<Void, AbstractSauceTunnelManager.SauceConnectException> {
+    private static final class SauceStartConnectHandler extends MasterToSlaveCallable<Void, AbstractSauceTunnelManager.SauceConnectException> {
         private final SauceCredentials sauceCredentials;
         private final int port;
         private final String options;
@@ -102,7 +102,7 @@ public class SauceConnectStep extends AbstractStepImpl {
         private final Boolean verboseLogging;
         private final String sauceConnectPath;
 
-        SauceConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath) {
+        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath) {
             this.sauceCredentials = sauceCredentials;
             this.port = port;
             this.options = options;
@@ -124,6 +124,31 @@ public class SauceConnectStep extends AbstractStepImpl {
                 listener.getLogger(),
                 verboseLogging,
                 sauceConnectPath
+            );
+            return null;
+        }
+    }
+
+
+    private static final class SauceStopConnectHandler extends MasterToSlaveCallable<Void, AbstractSauceTunnelManager.SauceConnectException> {
+        private final SauceCredentials sauceCredentials;
+        private final String options;
+        private final TaskListener listener;
+
+        SauceStopConnectHandler(SauceCredentials sauceCredentials, String options, TaskListener listener) {
+            this.sauceCredentials = sauceCredentials;
+            this.options = options;
+            this.listener = listener;
+        }
+
+        @Override
+        public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
+            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
+            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+            sauceTunnelManager.closeTunnelsForPlan(
+                sauceCredentials.getUsername(),
+                options,
+                listener.getLogger()
             );
             return null;
         }
@@ -173,7 +198,7 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             listener.getLogger().println("Starting sauce connect");
 
-            SauceConnectHandler handler = new SauceConnectHandler(
+            SauceStartConnectHandler handler = new SauceStartConnectHandler(
                 sauceCredentials,
                 port,
                 options,
@@ -217,14 +242,14 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             @Override protected void finished(StepContext context) throws Exception {
                 TaskListener listener = context.get(TaskListener.class);
-                SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
-                sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+                Computer computer = context.get(Computer.class);
 
-                sauceTunnelManager.closeTunnelsForPlan(
-                    sauceCredentials.getUsername(),
+                SauceStopConnectHandler stopConnectHandler = new SauceStopConnectHandler(
+                    sauceCredentials,
                     options,
-                    listener.getLogger()
+                    listener
                 );
+                computer.getChannel().call(stopConnectHandler);
             }
 
         }
