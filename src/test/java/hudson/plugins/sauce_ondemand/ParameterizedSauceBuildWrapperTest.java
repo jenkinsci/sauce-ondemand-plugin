@@ -10,6 +10,7 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import net.sf.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,8 +38,8 @@ public class ParameterizedSauceBuildWrapperTest {
     /**
      * JUnit rule which instantiates a local Jenkins instance with our plugin installed.
      */
-    @Rule
-    public transient JenkinsRule jenkinsRule = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule jenkinsRule = new JenkinsRule();
 
     /**
      * Build Wrapper with all the parameters set right
