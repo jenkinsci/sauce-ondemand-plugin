@@ -2,19 +2,17 @@ package hudson.plugins.sauce_ondemand;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.maven.MavenBuild;
 import hudson.maven.MavenModuleSet;
+import hudson.maven.MavenModuleSetBuild;
 import hudson.model.Build;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
-import hudson.maven.MavenModuleSetBuild;
-import hudson.maven.MavenBuild;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
@@ -23,7 +21,6 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
@@ -34,8 +31,8 @@ import static org.mockito.Mockito.when;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 public class SauceOnDemandBuildActionTest {
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule jenkins = new JenkinsRule();
 
     @Test
     public void doJobReportTest() throws Exception {

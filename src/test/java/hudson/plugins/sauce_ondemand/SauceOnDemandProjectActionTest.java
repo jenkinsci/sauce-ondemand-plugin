@@ -5,7 +5,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.PresetData;
@@ -18,8 +18,8 @@ public class SauceOnDemandProjectActionTest {
 
     private String credentialsId;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule jenkins = new JenkinsRule();
 
     @Before
     public void setUp() throws Exception {

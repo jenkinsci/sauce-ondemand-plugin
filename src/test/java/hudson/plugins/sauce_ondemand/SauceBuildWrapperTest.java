@@ -9,7 +9,15 @@ import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.Build;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Node;
+import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -21,14 +29,15 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.ToolInstallations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -36,20 +45,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import java.lang.reflect.*;
-
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
-import static org.hamcrest.Matchers.*;
 
 /**
  * @author Ross Rowe
@@ -60,8 +71,8 @@ public class SauceBuildWrapperTest {
     /**
      * JUnit rule which instantiates a local Jenkins instance with our plugin installed.
      */
-    @Rule
-    public transient JenkinsRule jenkinsRule = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule jenkinsRule = new JenkinsRule();
 
     /**
      * Mockito spy of the Sauce REST instance, used to capture REST requests without sending them to Sauce Labs.
@@ -182,7 +193,7 @@ public class SauceBuildWrapperTest {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
 
-        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "resolveVariables");
         jenkinsRule.assertBuildStatusSuccess(build);
 
 
@@ -211,7 +222,7 @@ public class SauceBuildWrapperTest {
         PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
         sauceBuildWrapper.setOptions("");
 
-        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "commonOptions");
         jenkinsRule.assertBuildStatusSuccess(build);
 
 
@@ -232,7 +243,7 @@ public class SauceBuildWrapperTest {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 // Match that it starts with tunnel-identifier, because timestamp
-                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-identifier test0-"));
+                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-identifier runFreestyleBuild-resolvedOptionsOrder-"));
                 return null;
             }
         };
@@ -242,7 +253,7 @@ public class SauceBuildWrapperTest {
         sauceBuildWrapper.setOptions("--build -i 1");
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
 
-        Build build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "resolvedOptionsOrder");
         jenkinsRule.assertBuildStatusSuccess(build);
 
     }
@@ -263,7 +274,7 @@ public class SauceBuildWrapperTest {
         storeDummyManager(sauceConnectFourManager);
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, null);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, null, "sauceConnectTimeOut");
         jenkinsRule.assertBuildStatus(Result.FAILURE, build);
     }
 
@@ -277,7 +288,7 @@ public class SauceBuildWrapperTest {
 
         DumbSlave s = jenkinsRule.createOnlineSlave();
         sauceBuildWrapper.setLaunchSauceConnectOnSlave(true);
-        Build build = runFreestyleBuild(sauceBuildWrapper, null, s);
+        Build build = runFreestyleBuild(sauceBuildWrapper, null, s, "runSlaveBuild");
         jenkinsRule.assertBuildStatusSuccess(build);
     }*/
 
@@ -301,7 +312,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
+        Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null, "multipleBrowsers");
         jenkinsRule.assertBuildStatusSuccess(build);
 
         //assert that the Sauce REST API was invoked for the Sauce job id
@@ -340,7 +351,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null, "newPortIsGeneratedWhenManagingSauceConnect");
         jenkinsRule.assertBuildStatusSuccess(build);
 
         assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
@@ -385,7 +396,7 @@ public class SauceBuildWrapperTest {
             }
         };
 
-        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null);
+        FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null, "providingPortWithEnvVariableStartsUpOnThatPort");
         jenkinsRule.assertBuildStatusSuccess(build);
         assertEquals("Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
         Map<String, String> envVars = (Map<String, String>)holder.get("env");
@@ -414,12 +425,12 @@ public class SauceBuildWrapperTest {
     }
 
     /* FIXME - move to setup() */
-    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node node) throws Exception {
+    private FreeStyleBuild runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, Node node, String projectName) throws Exception {
 
         if (builder == null) {
             builder = new SauceBuilder();
         }
-        FreeStyleProject freeStyleProject = jenkinsRule.createFreeStyleProject();
+        FreeStyleProject freeStyleProject = jenkinsRule.jenkins.createProject(FreeStyleProject.class, "runFreestyleBuild-" + projectName);
         if (node != null) {
             freeStyleProject.setAssignedNode(node);
         }

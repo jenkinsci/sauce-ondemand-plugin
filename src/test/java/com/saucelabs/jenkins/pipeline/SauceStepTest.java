@@ -9,7 +9,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
@@ -20,8 +20,8 @@ import java.lang.reflect.Field;
 
 public class SauceStepTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule r = new JenkinsRule();
 
     @Before
     public void setUp() throws Exception {
@@ -38,7 +38,7 @@ public class SauceStepTest {
     @Test
     public void sauceTest() throws Exception {
         String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceTest");
         p.setDefinition(new CpsFlowDefinition(
             "node { sauce('" + credentialsId + "') { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
@@ -73,7 +73,7 @@ public class SauceStepTest {
         )).thenReturn(null);
         PluginImpl.get().setSauceConnectOptions("-i gavin -vv");
 
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithGlobalOptionsTest");
         p.setDefinition(new CpsFlowDefinition(
             "node { sauce('" + credentialsId + "') { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true, options: '-i tunnel-ident') { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
@@ -99,7 +99,7 @@ public class SauceStepTest {
 
     @Test
     public void sauceConnectWithoutSauceTest() throws Exception {
-        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithoutSauceTest");
         p.setDefinition(new CpsFlowDefinition(
             "node { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true) { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
