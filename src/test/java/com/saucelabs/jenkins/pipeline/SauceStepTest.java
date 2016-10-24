@@ -4,7 +4,6 @@ import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.model.Result;
 import hudson.plugins.sauce_ondemand.PluginImpl;
-import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -12,21 +11,13 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
-@PowerMockIgnore({"javax.crypto.*" })
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({SauceEnvironmentUtil.class})
 public class SauceStepTest {
 
     @Rule
@@ -35,9 +26,6 @@ public class SauceStepTest {
     @Before
     public void setUp() throws Exception {
         PluginImpl.get().setSauceConnectOptions("");
-        PowerMockito.mockStatic(SauceEnvironmentUtil.class);
-        PowerMockito.when(SauceEnvironmentUtil.generateTunnelIdentifier(Mockito.anyString()))
-            .thenReturn("random-tunnel-identifier");
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -102,7 +90,7 @@ public class SauceStepTest {
             Mockito.eq("fakekey"),
             Mockito.anyInt(),
             Mockito.any(File.class),
-            Mockito.eq("-i gavin -vv -i tunnel-ident --tunnel-identifier random-tunnel-identifier"),
+            Mockito.matches("-i gavin -vv -i tunnel-ident --tunnel-identifier [a-zA-Z0-9_-]+"),
             Mockito.any(PrintStream.class),
             Mockito.eq(true),
             Mockito.anyString()

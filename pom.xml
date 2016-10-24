@@ -19,7 +19,6 @@
         <plugins.workflow.version>1.15</plugins.workflow.version>
         <ci-sauce.version>1.121</ci-sauce.version>
         <sauce.rest.version>1.0.33</sauce.rest.version>
-        <powermock.version>1.6.3</powermock.version>
     </properties>
 
 
@@ -265,24 +264,6 @@
             <groupId>com.github.stephenc.findbugs</groupId>
             <artifactId>findbugs-annotations</artifactId>
             <version>1.3.9-1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-core</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>
