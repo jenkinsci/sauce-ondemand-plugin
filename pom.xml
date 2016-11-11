@@ -204,7 +204,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>${sauce.rest.version}</version>
+            <version>${saucerest.version}</version>
         </dependency>
 
         <dependency>
