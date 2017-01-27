@@ -1,3 +1,9 @@
+# Jenkins 1.160 - 2017-01-27
+
+* Make parameters for publish sauce labs test results pipeline step optional - https://issues.jenkins-ci.org/browse/JENKINS-37610
+* Also make a helper symbol of saucePublisher()
+* Make parameters for sauceconnect pipeline step optional - https://issues.jenkins-ci.org/browse/JENKINS-41236
+
 # Jenkins 1.159 - 2016-12-14
 
 update to upstream sauce connect - 4.4.2
