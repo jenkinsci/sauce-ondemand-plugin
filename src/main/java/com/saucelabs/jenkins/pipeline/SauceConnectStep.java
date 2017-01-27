@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -41,12 +42,15 @@ import java.util.HashMap;
 import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepExecution.getSauceTunnelManager;
 
 public class SauceConnectStep extends AbstractStepImpl {
-    private final Boolean verboseLogging;
-    private final Boolean useGeneratedTunnelIdentifier;
-    private final String options;
-    private final String sauceConnectPath;
+    private Boolean verboseLogging = false;
+    private Boolean useGeneratedTunnelIdentifier = false;
+    private String options;
+    private String sauceConnectPath;
 
     @DataBoundConstructor
+    public SauceConnectStep() {
+    }
+
     public SauceConnectStep(String options, Boolean verboseLogging, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
         this.verboseLogging = verboseLogging;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
@@ -54,21 +58,43 @@ public class SauceConnectStep extends AbstractStepImpl {
         this.options = StringUtils.trimToEmpty(options);
     }
 
+
     public String getOptions() {
         return options;
+    }
+
+    @DataBoundSetter
+    public void setOptions(String options) {
+        this.options = options;
     }
 
     public String getSauceConnectPath() {
         return sauceConnectPath;
     }
 
+    @DataBoundSetter
+    public void setSauceConnectPath(String sauceConnectPath) {
+        this.sauceConnectPath = sauceConnectPath;
+    }
+
     public Boolean getUseGeneratedTunnelIdentifier() {
         return useGeneratedTunnelIdentifier;
+    }
+
+    @DataBoundSetter
+    public void setUseGeneratedTunnelIdentifier(Boolean useGeneratedTunnelIdentifier) {
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
     public Boolean getVerboseLogging() {
         return verboseLogging;
     }
+
+    @DataBoundSetter
+    public void setVerboseLogging(Boolean verboseLogging) {
+        this.verboseLogging = verboseLogging;
+    }
+
 
     @Extension public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
         public DescriptorImpl() {

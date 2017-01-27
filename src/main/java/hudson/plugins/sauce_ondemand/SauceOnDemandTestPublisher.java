@@ -17,12 +17,15 @@ import hudson.tasks.junit.TestResultAction;
 import hudson.util.DescribableList;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +38,13 @@ import java.util.Map;
  * @see <a href="https://issues.jenkins-ci.org/browse/JENKINS-11721">JENKINS-11721</a>
  */
 public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildStep {
-    private final DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers;
+    private DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);;
 
     @DataBoundConstructor
+    public SauceOnDemandTestPublisher() {
+        super();
+    }
+
     public SauceOnDemandTestPublisher(DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         super();
         this.testDataPublishers = testDataPublishers;
@@ -137,11 +144,26 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
         return new SauceOnDemandReportPublisher();
     }
 
-    public DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> getTestDataPublishers() {
-        return testDataPublishers;
+    public List<TestDataPublisher> getTestDataPublishers() {
+        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+    }
+
+    /*@DataBoundSetter
+    public void setTestDataPublishers(ArrayList testDataPublishers) {
+        // This should never actually be called, but is needed because the pipeline generator provides a list
+        this.testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(
+            Saveable.NOOP,
+            testDataPublishers
+        );
+    }*/
+
+    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
+        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        this.testDataPublishers.addAll(testDataPublishers);
     }
 
     @Extension
+    @Symbol("saucePublisher")
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @Override
@@ -152,18 +174,6 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return !TestDataPublisher.all().isEmpty();
-        }
-
-        @Override
-        public Publisher newInstance(StaplerRequest req, JSONObject formData) throws Descriptor.FormException {
-            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers =
-                    new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);
-            try {
-                testDataPublishers.rebuild(req, formData, TestDataPublisher.all());
-            } catch (IOException e) {
-                throw new Descriptor.FormException(e, null);
-            }
-            return new SauceOnDemandTestPublisher(testDataPublishers);
         }
     }
 }
