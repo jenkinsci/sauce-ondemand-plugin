@@ -217,6 +217,6 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      */
     public String getHMAC(String jobId) {
         String key = username + ":" + getPassword().getPlainText();
-        return SecurityUtils.hmacEncode("HmacMD5", jobId, key);
+        return username + ":" + SecurityUtils.hmacEncode("HmacMD5", jobId, key);
     }
 }
