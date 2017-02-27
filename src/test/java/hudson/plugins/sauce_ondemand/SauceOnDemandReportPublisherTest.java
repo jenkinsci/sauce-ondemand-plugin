@@ -24,7 +24,7 @@ public class SauceOnDemandReportPublisherTest {
     @Test
     public void testProcessSessionIds_one() throws Exception{
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
-        List<JobInformation> jobs;
+        List<JenkinsJobInformation> jobs;
 
         LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, new String[]{
             "SauceOnDemandSessionID=abc123 job-name=gavin"
@@ -37,7 +37,7 @@ public class SauceOnDemandReportPublisherTest {
     @Test
     public void testProcessSessionIds_two() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
-        List<JobInformation> jobs;
+        List<JenkinsJobInformation> jobs;
 
         LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, new String[]{
             "SauceOnDemandSessionID=abc123 job-name=gavin\n[firefox 32 OS X 10.10 #1-5] SauceOnDemandSessionID=941b498c5ad544dba92fe73fabfa9eb6 job-name=Insert Job Name Here"

@@ -143,14 +143,14 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     @Override
-    public List<JobInformation> getJobsWithAuth() {
+    public List<JenkinsJobInformation> getJobsWithAuth() {
         return super.getJobsWithAuth();
     }
 
-    public List<JobInformation> getJobs() {
+    public List<JenkinsJobInformation> getJobs() {
         List<SauceOnDemandBuildAction> sauceOnDemandBuildAction = getSauceBuildActions();
         if (sauceOnDemandBuildAction != null) {
-            List<JobInformation> allJobs = new ArrayList<JobInformation>();
+            List<JenkinsJobInformation> allJobs = new ArrayList<JenkinsJobInformation>();
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildAction) {
                 allJobs.addAll(action.getJobs());
             }

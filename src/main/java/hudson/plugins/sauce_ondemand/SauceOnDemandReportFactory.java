@@ -74,7 +74,7 @@ public class SauceOnDemandReportFactory extends Data {
             AbstractBuild<?, ?> build = cr.getOwner();
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
             if (buildAction != null) {
-                List<JobInformation> jobs = buildAction.getJobs();
+                List<JenkinsJobInformation> jobs = buildAction.getJobs();
                 for (JobInformation job : jobs) {
                     //if job name matches test class/test name, then add id
                     if (job.getName() != null) {

@@ -193,12 +193,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
         SauceREST sauceREST = getSauceREST(build);
 
-        LinkedHashMap<String, JobInformation> onDemandTests;
+        LinkedHashMap<String, JenkinsJobInformation> onDemandTests;
 
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
-            onDemandTests = new LinkedHashMap<String, JobInformation>();
+            onDemandTests = new LinkedHashMap<>();
 
             logger.severe(e.getMessage());
         }
@@ -241,11 +241,11 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
 
         for (TestIDDetails details : testIds) {
-            JobInformation jobInformation;
+            JenkinsJobInformation jobInformation;
             if (onDemandTests.containsKey(details.getJobId())) {
                 jobInformation = onDemandTests.get(details.getJobId());
             } else {
-                jobInformation = new JobInformation(details.getJobId(), "");
+                jobInformation = new JenkinsJobInformation(details.getJobId(), "");
                 try {
                     jobInformation.populateFromJson(
                         new JSONObject(sauceREST.getJobInfo(details.getJobId()))
@@ -284,7 +284,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         }
 
         if (onDemandTests.size() > 0) {
-            buildAction.setJobs(new LinkedList<JobInformation>(onDemandTests.values()));
+            buildAction.setJobs(new LinkedList<JenkinsJobInformation>(onDemandTests.values()));
             try {
                 build.save();
             } catch (IOException e) {
@@ -316,7 +316,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @return Boolean indicating whether the test was successful.
      */
     @SuppressFBWarnings("NP_BOOLEAN_RETURN_NULL")
-    private Boolean hasTestPassed(TestResult testResult, JobInformation job) {
+    private Boolean hasTestPassed(TestResult testResult, JenkinsJobInformation job) {
 
         if (testResult == null) {
             return null;

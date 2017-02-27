@@ -27,13 +27,13 @@ public abstract class AbstractAction implements Action {
         return "sauce-ondemand-report";
     }
 
-    public abstract List<JobInformation> getJobs();
+    public abstract List<JenkinsJobInformation> getJobs();
 
     abstract protected SauceCredentials getCredentials();
 
     @SuppressWarnings("unused") // used by stapler
-    public List<JobInformation> getJobsWithAuth() {
-        List<JobInformation> allJobs = this.getJobs();
+    public List<JenkinsJobInformation> getJobsWithAuth() {
+        List<JenkinsJobInformation> allJobs = this.getJobs();
         for(JobInformation j: allJobs) {
             j.setHmac(getCredentials().getHMAC(j.getJobId()));
         }

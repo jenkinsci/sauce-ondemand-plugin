@@ -11,6 +11,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.maven.MavenBuild;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
+import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,9 +19,12 @@ import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +39,9 @@ import java.util.regex.Pattern;
  *
  * @author Ross Rowe
  */
-public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBuildStep.LastBuildAction {
+@ExportedBean
+public class SauceOnDemandBuildAction extends AbstractAction implements Serializable, RunAction2, SimpleBuildStep.LastBuildAction {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Logger instance.
@@ -47,8 +53,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
      */
     public static final Pattern SESSION_ID_PATTERN = Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
 
-    private Run build;
-    private List<JobInformation> jobInformation;
+    private transient Run build;
+    private List<JenkinsJobInformation> jobInformation;
     @Deprecated
     private String accessKey;
     @Deprecated
@@ -73,14 +79,20 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
         return !getJobs().isEmpty();
     }
 
-    public List<JobInformation> getJobs() {
+    @Exported(visibility=2)
+    public List<JenkinsJobInformation> getJobs() {
         if (jobInformation == null) {
             try {
-                jobInformation = new ArrayList<JobInformation>();
+                jobInformation = new ArrayList<JenkinsJobInformation>();
                 jobInformation.addAll(retrieveJobIdsFromSauce(getSauceREST(), build, getCredentials()).values());
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
             }
+        }
+        SauceCredentials credentials = getCredentials();
+        for (JobInformation j : jobInformation) {
+            j.setHmac(credentials.getHMAC(j.getJobId()));
+
         }
         return jobInformation;
     }
@@ -103,7 +115,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
      * @return List of processed job information
      * @throws JSONException Not json returned properly
      */
-    public static LinkedHashMap<String, JobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build) throws JSONException {
         SauceCredentials credentials = getSauceBuildAction(build).getCredentials();
         return retrieveJobIdsFromSauce(sauceREST, build, credentials);
     }
@@ -127,9 +139,9 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
     }
 
 
-    public static LinkedHashMap<String, JobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build, SauceCredentials credentials) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build, SauceCredentials credentials) throws JSONException {
         //invoke Sauce Rest API to find plan results with those values
-        LinkedHashMap<String, JobInformation> jobInformation = new LinkedHashMap<String, JobInformation>();
+        LinkedHashMap<String, JenkinsJobInformation> jobInformation = new LinkedHashMap<String, JenkinsJobInformation>();
 
         String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
@@ -145,7 +157,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
-                JobInformation information = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
+                JenkinsJobInformation information = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
                 information.populateFromJson(jobData);
                 jobInformation.put(information.getJobId(), information);
             }
@@ -181,7 +193,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
         }
     }
 
-    public void setJobs(List<JobInformation> jobs) {
+    public void setJobs(List<JenkinsJobInformation> jobs) {
         this.jobInformation = jobs;
     }
 
@@ -203,5 +215,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements SimpleBu
             return Collections.emptySet();
         }
         return Collections.singleton(new SauceOnDemandProjectAction(job));
+    }
+
+    @Override
+    public void onAttached(Run<?, ?> run) {
+        this.build = run;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> run) {
+        this.build = run;
     }
 }
