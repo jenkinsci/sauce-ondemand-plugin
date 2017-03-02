@@ -143,7 +143,7 @@ public class SauceConnectStep extends AbstractStepImpl {
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
             sauceTunnelManager.openConnection(
                 sauceCredentials.getUsername(),
-                sauceCredentials.getPassword().getPlainText(),
+                sauceCredentials.getApiKey().getPlainText(),
                 port,
                 null, /*sauceConnectJar,*/
                 options,

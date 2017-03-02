@@ -1,5 +1,7 @@
 package com.saucelabs.jenkins.pipeline;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.model.Result;
@@ -8,6 +10,7 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -19,13 +22,15 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 
 public class SauceStepTest {
-
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
 
     @Before
     public void setUp() throws Exception {
-        PluginImpl.get().setSauceConnectOptions("");
+        PluginImpl p = PluginImpl.get();
+        if (p != null) {
+            p.setSauceConnectOptions("");
+        }
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
@@ -50,6 +55,32 @@ public class SauceStepTest {
         WorkflowRun run = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("USERNAME=fakeuser", run);
         r.assertLogContains("ACCESS_KEY=fakekey", run);
+    }
+
+    @Test
+    public void sauceJWTTest() throws Exception {
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeJWTuser", "fakeJWTkey", "unittest");
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceJWTTest");
+        SauceCredentials.getCredentialsById(p, credentialsId).setShortLivedConfig(new SauceCredentials.ShortLivedConfig(120));
+
+        p.setDefinition(new CpsFlowDefinition(
+            "node { sauce('" + credentialsId + "') { \n" +
+                "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
+                "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n" +
+                "}}",
+            true
+        ));
+        WorkflowRun run = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        r.assertLogContains("USERNAME=fakeJWTuser", run);
+        String[] lines = r.getLog(run).split("\n|\r");
+        String accessKey = null;
+        for (String line: lines) {
+            if (line.contains("ACCESS_KEY=")) {
+                accessKey = line.replaceFirst("ACCESS_KEY=", "");
+            }
+        }
+        Assert.assertNotNull(accessKey);
+        JWT.require(Algorithm.HMAC256("fakeJWTkey")).build().verify(accessKey);
     }
 
     @Test

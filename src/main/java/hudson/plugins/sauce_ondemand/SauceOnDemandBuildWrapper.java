@@ -317,7 +317,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         CredentialsProvider.track(build, credentials);
 
         final PluginImpl p = PluginImpl.get();
-        final String apiKey = credentials.getApiKey().getPlainText();
+        final String apiKey = credentials.getPassword().getPlainText();
         final String username = credentials.getUsername();
 
         final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
@@ -360,7 +360,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     this, env, listener,
                     workingDirectory, resolvedOptions,
                     null,
-                    username, apiKey,
+                    username, credentials.getApiKey().getPlainText(),
                     maxRetries, retryWaitTime
                 );
 

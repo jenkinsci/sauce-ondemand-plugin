@@ -1,5 +1,8 @@
 package hudson.plugins.sauce_ondemand.credentials;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -18,22 +21,29 @@ import com.saucelabs.saucerest.SecurityUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
+import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
-import hudson.model.Run;
+import hudson.plugins.sauce_ondemand.BuildUtils;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
 import java.io.IOException;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,12 +59,23 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      */
     protected final Secret apiKey;
 
+    protected ShortLivedConfig shortLivedConfig;
+
     @DataBoundConstructor
     public SauceCredentials(@CheckForNull CredentialsScope scope, @CheckForNull String id,
                             @NonNull String username, @NonNull String apiKey, @CheckForNull String description) {
         super(scope, id, description);
         this.apiKey = Secret.fromString(apiKey);
         this.username = username;
+    }
+
+    public ShortLivedConfig getShortLivedConfig() {
+        return shortLivedConfig;
+    }
+
+    @DataBoundSetter
+    public void setShortLivedConfig(ShortLivedConfig shortLivedConfig) {
+        this.shortLivedConfig = shortLivedConfig;
     }
 
     public static SauceCredentials getCredentials(AbstractProject project) {
@@ -76,11 +97,34 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
     @NonNull
     public Secret getPassword() {
+        if (this.getShortLivedConfig() != null) {
+            try {
+                Date d = new Date();
+                Date expires = new Date(
+                    System.currentTimeMillis() +
+                        (long) this.getShortLivedConfig().getTime() * 1000 /* to millis */ * 60 /* to minutes */
+                );
+
+                String token = JWT.create()
+                    .withIssuer("Jenkins/" + Jenkins.VERSION + " JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion())
+                    .withExpiresAt(expires)
+                    .withIssuedAt(d)
+                    .sign(Algorithm.HMAC256(this.apiKey.getPlainText()));
+                return Secret.fromString(token);
+            } catch (JWTCreationException e){
+                //Invalid Signing configuration / Couldn't convert Claims.
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
         return this.getApiKey();
     }
 
     @NonNull
-    public Secret getApiKey() { return this.apiKey; }
+    public Secret getApiKey() {
+        return this.apiKey;
+    }
 
     @NonNull
     public String getUsername() { return this.username; }
@@ -99,7 +143,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public JenkinsSauceREST getSauceREST() {
-        return new JenkinsSauceREST(getUsername(), getApiKey().getPlainText());
+        return new JenkinsSauceREST(getUsername(), getPassword().getPlainText());
     }
 
     @Extension
@@ -217,6 +261,26 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      */
     public String getHMAC(String jobId) {
         String key = username + ":" + getPassword().getPlainText();
-        return username + ":" + SecurityUtils.hmacEncode("HmacMD5", jobId, key);
+        return SecurityUtils.hmacEncode(HMAC_KEY, jobId, key);
+    }
+
+    public static final class ShortLivedConfig extends AbstractDescribableImpl<ShortLivedConfig> implements Serializable {
+        protected final Integer time;
+
+        @DataBoundConstructor
+        public ShortLivedConfig(Integer time) {
+            this.time = time;
+        }
+
+        public Integer getTime() {
+            return time;
+        }
+
+        @Extension
+        public static class DescriptorImpl extends Descriptor<ShortLivedConfig> {
+            @Override
+            public String getDisplayName() { return ""; }
+        }
+
     }
 }

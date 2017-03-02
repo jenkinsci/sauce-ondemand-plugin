@@ -33,7 +33,7 @@ public class SauceParameterValue extends ParameterValue {
     public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
         SauceCredentials credentials = SauceCredentials.getCredentials(build);
         String userName = credentials.getUsername();
-        String apiKey = credentials.getApiKey().getPlainText();
+        String apiKey = credentials.getPassword().getPlainText();
 
         if (selectedBrowsers != null && !selectedBrowsers.isEmpty()) {
             if (selectedBrowsers.size() == 1) {
