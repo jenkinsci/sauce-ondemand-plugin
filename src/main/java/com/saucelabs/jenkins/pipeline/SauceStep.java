@@ -68,6 +68,7 @@ public class SauceStep extends AbstractStepImpl {
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, credentials.getUsername());
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, credentials.getPassword().getPlainText());
             overrides.put(SauceOnDemandBuildWrapper.JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(run));
+            overrides.put(SauceOnDemandBuildWrapper.SAUCE_BUILD_NAME, SauceEnvironmentUtil.getSanitizedBuildNumber(run));
 
             SauceOnDemandBuildAction buildAction = run.getAction(SauceOnDemandBuildAction.class);
             if (buildAction == null) {

@@ -144,8 +144,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     public static final String SELENIUM_VERSION = "SELENIUM_VERSION";
     /**
      * Environment variable key which contains the Jenkins build number.
+     *
+     * @deprecated Should use the standard SAUCE_BUILD_NAME
      */
+    @Deprecated
     public static final String JENKINS_BUILD_NUMBER = "JENKINS_BUILD_NUMBER";
+
+    /**
+     * Environment variable key which contains the Jenkins build number.
+     */
+    public static final String SAUCE_BUILD_NAME = "SAUCE_BUILD_NAME";
+
     public static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
 
     /**
@@ -436,7 +445,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM), true, verboseLogging, listener.getLogger());
                 }
+                /* Legacy Build Number */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
+                SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_BUILD_NAME, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
                 /* Legacy Env name */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_USER_NAME, username, true, verboseLogging, listener.getLogger());
                 /* New standard env name */
