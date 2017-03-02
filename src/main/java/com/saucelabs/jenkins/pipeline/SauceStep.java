@@ -1,5 +1,6 @@
 package com.saucelabs.jenkins.pipeline;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.google.inject.Inject;
 import hudson.Extension;
@@ -60,6 +61,8 @@ public class SauceStep extends AbstractStepImpl {
             if (credentials == null) {
                 throw new Exception("no credentials provided");
             }
+            CredentialsProvider.track(run, credentials);
+
 
             HashMap<String,String> overrides = new HashMap<String,String>();
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, credentials.getUsername());

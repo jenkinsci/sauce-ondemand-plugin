@@ -314,6 +314,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         logger.fine("Setting up Sauce Build Wrapper");
 
         SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, this);
+        CredentialsProvider.track(build, credentials);
 
         final PluginImpl p = PluginImpl.get();
         final String apiKey = credentials.getApiKey().getPlainText();
