@@ -1,8 +1,8 @@
 # Jenkins 1.161 - 2017-03-03
 
-* Added new standard SAUCE_BUILD_NAME environment variable - ECO-1390
-* Added new feature for Self-Expiring Access keys - ECO-1388
-* Added support to track usage of Sauce Labs Credentials on credentials pages - ECO-1389
+* Added new standard SAUCE_BUILD_NAME environment variable
+* Added new feature for Self-Expiring Access keys
+* Added support to track usage of Sauce Labs Credentials on credentials pages
 * Upgraded to latest ci-sauce dependancy (1.124)
 	* Updated to latest Sauce Connect Proxy (4.4.3)
 	* Remove selenium dependancy
