@@ -1,3 +1,14 @@
+# Jenkins 1.161 - 2017-03-03
+
+* Added new standard SAUCE_BUILD_NAME environment variable - ECO-1390
+* Added new feature for Self-Expiring Access keys - ECO-1388
+* Added support to track usage of Sauce Labs Credentials on credentials pages - ECO-1389
+* Upgraded to latest ci-sauce dependancy (1.124)
+	* Updated to latest Sauce Connect Proxy (4.4.3)
+	* Remove selenium dependancy
+	* Re-write browser selection api to not use selenium and return more accurate results
+* Add support to export sauce job results in the rest api for upcoming blueocean support
+
 # Jenkins 1.160 - 2017-01-27
 
 * Make parameters for publish sauce labs test results pipeline step optional - https://issues.jenkins-ci.org/browse/JENKINS-37610
