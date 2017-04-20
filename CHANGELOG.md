@@ -1,3 +1,7 @@
+# Jenkins 1.162 - 2017-04-20
+
+* Updating to ci-sauce 1.126 which brings in sauce-connect 4.4.6
+
 # Jenkins 1.161 - 2017-03-03
 
 * Added new standard SAUCE_BUILD_NAME environment variable - ECO-1390
