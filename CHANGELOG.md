@@ -1,4 +1,4 @@
-# Jenkisn 1.165 - 2017-09-08
+# Jenkins 1.165 - 2017-09-08
 
 * Updating to ci-sauce 1.129 which brings in sauce-connect 4.4.9
 
