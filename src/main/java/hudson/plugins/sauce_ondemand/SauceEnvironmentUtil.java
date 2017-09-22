@@ -237,8 +237,9 @@ public final class SauceEnvironmentUtil {
         return sanitizedName + "-" + System.currentTimeMillis();
     }
 
+    // the buildNumber variable returned from the API uses hyphens, so we should sanitize with hyphens here
     public static String getSanitizedBuildNumber(Run run) {
-        return SauceEnvironmentUtil.getBuildName(run).replaceAll("[^A-Za-z0-9]", "_");
+        return "jenkins-"+SauceEnvironmentUtil.getBuildName(run).replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "-");
     }
 
 }

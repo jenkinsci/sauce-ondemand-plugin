@@ -97,6 +97,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         return jobInformation;
     }
 
+    // Get the list of running jobs and stop them all
+    public void stopJobs() {
+        SauceREST sauceREST = getSauceREST();
+        List<JenkinsJobInformation> jobs = getJobs();
+        for (JobInformation job : jobs) {
+            sauceREST.stopJob(job.getJobId());
+        }
+    }
+
     @Override
     protected SauceCredentials getCredentials() {
         if (credentialsId != null) {
@@ -153,7 +162,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         } else {
             //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
-            for (int i = jobResults.length() - 1; i > 0; i--) {
+            for (int i = jobResults.length() - 1; i >= 0; i--) {
                 //check custom data to find job that was for build
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
