@@ -68,13 +68,6 @@ import java.util.regex.Pattern;
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
 
-    @Override
-    public void makeSensitiveBuildVariables(AbstractBuild build, Set<String> sensitiveVariables) {
-        super.makeSensitiveBuildVariables(build, sensitiveVariables);
-        sensitiveVariables.add(SAUCE_ACCESS_KEY);
-        sensitiveVariables.add(SAUCE_API_KEY);
-    }
-
     /**
      * Logger instance.
      */
@@ -255,6 +248,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private String credentialId;
 
+    @Override
+    public void makeSensitiveBuildVariables(AbstractBuild build, Set<String> sensitiveVariables) {
+        super.makeSensitiveBuildVariables(build, sensitiveVariables);
+        sensitiveVariables.add(SAUCE_ACCESS_KEY);
+        sensitiveVariables.add(SAUCE_API_KEY);
+    }
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
@@ -555,7 +554,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
                     JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
-                    String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build); // may need this for tunnels. will need this for debugging
 
                     //immediately stop any running jobs
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
