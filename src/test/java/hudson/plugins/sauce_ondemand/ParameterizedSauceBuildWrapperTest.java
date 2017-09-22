@@ -76,8 +76,8 @@ public class ParameterizedSauceBuildWrapperTest {
                 for (boolean useGeneratedTunnelIdentifier : new boolean[]{true, false}) {
                     for (boolean verboseLogging : new boolean[]{true, false}) {
                         for (boolean useLatestVersion : new boolean[]{true, false}) {
-                            for (boolean forceCleanup : new boolean[]{true, false}) {
-                                for (String seleniumPort : new String[]{"", "4444"}) {
+                            for (boolean forceCleanup : new boolean[]{false}) { // set this to {true, false} for proper testing.  But it will increase test times by about 20m
+                                 for (String seleniumPort : new String[]{"", "4444"}) {
                                     for (String seleniumHost : new String[]{"", "localhost"}) {
                                         list.add(new Object[]{
                                                 enableSauceConnect,
