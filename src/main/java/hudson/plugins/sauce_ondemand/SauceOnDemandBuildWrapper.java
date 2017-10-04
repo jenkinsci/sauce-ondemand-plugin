@@ -43,6 +43,8 @@ import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -65,13 +67,6 @@ import java.util.regex.Pattern;
  * @author Ross Rowe
  */
 public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializable {
-
-    @Override
-    public void makeSensitiveBuildVariables(AbstractBuild build, Set<String> sensitiveVariables) {
-        super.makeSensitiveBuildVariables(build, sensitiveVariables);
-        sensitiveVariables.add(SAUCE_ACCESS_KEY);
-        sensitiveVariables.add(SAUCE_API_KEY);
-    }
 
     /**
      * Logger instance.
@@ -228,6 +223,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private boolean useLatestVersion;
     /**
+     * Boolean which indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
+     */
+    private boolean forceCleanup;
+    /**
      * Default behaviour is to launch Sauce Connect on the slave node.
      */
     private boolean launchSauceConnectOnSlave = true;
@@ -249,6 +248,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private String credentialId;
 
+    @Override
+    public void makeSensitiveBuildVariables(AbstractBuild build, Set<String> sensitiveVariables) {
+        super.makeSensitiveBuildVariables(build, sensitiveVariables);
+        sensitiveVariables.add(SAUCE_ACCESS_KEY);
+        sensitiveVariables.add(SAUCE_API_KEY);
+    }
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
@@ -262,6 +267,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
      * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
+     * @param forceCleanup              indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      * @param webDriverBrowsers         which browser(s) should be used for web driver
      * @param appiumBrowsers            which browser(s( should be used for appium
      * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
@@ -281,6 +287,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         boolean launchSauceConnectOnSlave,
         boolean verboseLogging,
         boolean useLatestVersion,
+        boolean forceCleanup,
         List<String> webDriverBrowsers,
         List<String> appiumBrowsers,
         String nativeAppPackage,
@@ -301,6 +308,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
         this.verboseLogging = verboseLogging;
         this.useLatestVersion = useLatestVersion;
+        this.forceCleanup = forceCleanup;
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
         this.nativeAppPackage = nativeAppPackage;
@@ -497,7 +505,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
              * {@inheritDoc}
              *
              * Terminates the Sauce Connect process (if the build is configured to launch Sauce Connect), and adds a {@link SauceOnDemandBuildAction} instance to the build.
-             *  @param build
+             * @param build
              *      The build in progress for which an {@link Environment} object is created.
              *      Never null.
              * @param listener
@@ -539,6 +547,50 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildAction == null) {
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
                     build.addAction(buildAction);
+                }
+
+                if (forceCleanup){
+                    listener.getLogger().println("Force cleanup enabled: Cleaning up jobs and tunnels instead of waiting for timeout");
+
+                    SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
+                    JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
+
+                    //immediately stop any running jobs
+                    buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
+                    List<JenkinsJobInformation> jobs = buildAction.getJobs();
+                    buildAction.stopJobs();
+
+                    // stop tunnels matching the tunnel identifier
+                    // this is needed as aborting during tunnel creation will prevent it from closing properly above
+                    try {
+                        String listResponse = sauceREST.getTunnels();
+                        JSONArray tunnels = new JSONArray(listResponse);
+                        for (int i = 0; i < tunnels.length(); i++) {
+                            String tunnel = tunnels.getString(i);
+                            String jsonResponse = sauceREST.getTunnelInformation(tunnel);
+                            JSONObject tunnelObj = new JSONObject(jsonResponse);
+                            if (tunnelObj.getString("tunnel_identifier").equals(tunnelIdentifier)) {
+                                listener.getLogger().println("Closing tunnel: " + tunnelObj.getString("id"));
+                                sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                            }
+                        }
+                    } catch (JSONException e) {
+                        listener.getLogger().println(e);
+                    }
+
+                    // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
+                    int numJobs = jobs.size();
+                    for (int waitCount = 0; waitCount < 5; waitCount++) {
+                        Thread.sleep(1000);
+                        buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
+                        jobs = buildAction.getJobs();
+                        if (jobs.size()!=numJobs) {
+                            buildAction.stopJobs();
+                            numJobs=jobs.size();
+                            waitCount=-1;
+                        }
+                    }
+                    listener.getLogger().println("Stopped " + numJobs + " jobs");
                 }
 
                 listener.getLogger().println("Finished post-build for Sauce Labs plugin");
@@ -672,6 +724,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return useLatestVersion;
     }
 
+    public boolean isForceCleanup() {
+        return forceCleanup;
+    }
+
     public String getSeleniumHost() {
         return seleniumHost;
     }
@@ -774,6 +830,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setUseLatestVersion(boolean useLatestVersion) {
         this.useLatestVersion = useLatestVersion;
+    }
+
+    public void setForceCleanup(boolean forceCleanup) {
+        this.forceCleanup = forceCleanup;
     }
 
     public void setNativeAppPackage(String nativeAppPackage) {
