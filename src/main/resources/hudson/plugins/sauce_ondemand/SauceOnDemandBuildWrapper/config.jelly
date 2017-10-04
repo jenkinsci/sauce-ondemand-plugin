@@ -60,7 +60,7 @@
             </f:entry>
 
             <f:entry field="forceCleanup">
-                <f:checkbox title="${%Cleanup instead of waiting for timeouts - useful when aborting builds}"/>
+                <f:checkbox title="${%Clean up jobs/tunnels instead of waiting for timeouts}"/>
             </f:entry>
         </f:section>
         <f:section title="Sauce Connect Advanced Options">

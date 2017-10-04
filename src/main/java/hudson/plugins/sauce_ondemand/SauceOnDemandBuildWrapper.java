@@ -59,6 +59,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.mixpanel.mixpanelapi.ClientDelivery;
+import com.mixpanel.mixpanelapi.MessageBuilder;
+import com.mixpanel.mixpanelapi.MixpanelAPI;
+
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel and populates environment variables which
  * represent the selected browser(s).
@@ -257,7 +261,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
-     *  @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
+     * @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
      * @param condition                 allows users to define rules which enable Sauce Connect
      * @param seleniumInformation       the browser information that is to be used for the build.
      * @param seleniumHost              host location of the selenium server.
@@ -269,8 +273,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
      * @param forceCleanup              indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      * @param webDriverBrowsers         which browser(s) should be used for web driver
-     * @param appiumBrowsers            which browser(s( should be used for appium
-     * @param nativeAppPackage          indicates whether the latest version of the selected browser(s) should be used
+     * @param appiumBrowsers            which browser(s) should be used for appium
+     * @param nativeAppPackage          the path to the native app package to be tested
      * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
      * @param credentialId              Which credential a build should use
      */
@@ -405,6 +409,29 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             try {
                 logger.fine("Reporting usage data");
                 sauceREST.recordCI("jenkins", Jenkins.VERSION);
+
+                // send usage data so we know what features our customers actually use
+                try {
+                    MessageBuilder messageBuilder = new MessageBuilder("5d9a83c5f58311b7b88622d0da5e7e9d");
+                    String distinctId = username;
+                    JSONObject props = new JSONObject();
+                    props.put("plugin", "jenkins");
+                    props.put("enableSauceConnect", enableSauceConnect);
+                    props.put("verboseLogging", verboseLogging);
+                    props.put("useGeneratedTunnelIdentifier", useGeneratedTunnelIdentifier);
+                    props.put("launchSauceConnectOnSlave", launchSauceConnectOnSlave);
+                    props.put("webDriverBrowsers", webDriverBrowsers);
+                    props.put("appiumBrowsers", appiumBrowsers);
+                    props.put("useLatestVersion", useLatestVersion);
+                    props.put("forceCleanup", forceCleanup);
+                    JSONObject sentEvent = messageBuilder.event(distinctId, "Jenkins settings", props);
+                    ClientDelivery delivery = new ClientDelivery();
+                    delivery.addMessage(sentEvent);
+                    MixpanelAPI mixpanel = new MixpanelAPI();
+                    mixpanel.deliver(delivery);
+                } catch (JSONException e) {
+                    listener.getLogger().println(e);
+                }
             } catch (Exception e) {
                 logger.finest("Error reporting in: " + e.getMessage());
                 // This is purely for informational purposes, so if it fails, just keep going
@@ -590,7 +617,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                             waitCount=-1;
                         }
                     }
-                    listener.getLogger().println("Stopped " + numJobs + " jobs");
+                    listener.getLogger().println("Stopped/completed " + numJobs + " jobs");
                 }
 
                 listener.getLogger().println("Finished post-build for Sauce Labs plugin");
