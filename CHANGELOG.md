@@ -1,3 +1,8 @@
+# Jenkins 1.166 - 2017-10-05
+
+* Add a new option to let the plugin close jobs and tunnels with auto-generated IDs instead of waiting for timeout, saving resources
+* If the send build usage data option is checked, some additional configuration settings will be sent for us to better gauge feature usage
+
 # Jenkins 1.165 - 2017-09-08
 
 * Updating to ci-sauce 1.129 which brings in sauce-connect 4.4.9
