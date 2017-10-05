@@ -158,6 +158,11 @@
             <version>1.4.01</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.mixpanel</groupId>
+            <artifactId>mixpanel-java</artifactId>
+            <version>1.4.4</version>
+        </dependency>
 
         <!-- Dependencies on other Jenkins plugins -->
         <dependency>
