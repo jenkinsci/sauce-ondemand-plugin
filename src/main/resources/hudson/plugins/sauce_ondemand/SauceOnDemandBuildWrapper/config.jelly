@@ -58,6 +58,10 @@
             <f:entry field="useLatestVersion">
                 <f:checkbox title="${%Use latest version of selected browsers}" default="checked"/>
             </f:entry>
+
+            <f:entry field="forceCleanup">
+                <f:checkbox title="${%Clean up jobs and uniquely generated tunnels instead of waiting for timeouts}"/>
+            </f:entry>
         </f:section>
         <f:section title="Sauce Connect Advanced Options">
             <f:advanced>

@@ -30,7 +30,7 @@ public final class SauceEnvironmentUtil {
     private static final Logger logger = Logger.getLogger(SauceEnvironmentUtil.class.getName());
 
     //only allow word, digit, and hyphen characters
-    private static final String PATTERN_DISALLOWED_TUNNEL_ID_CHARS = "[^\\w\\d-]+";
+    private static final String PATTERN_DISALLOWED_CHARS = "[^\\w\\d-]+";
 
     /**
      * Disallow instantiation of class.
@@ -233,12 +233,13 @@ public final class SauceEnvironmentUtil {
 
     public static String generateTunnelIdentifier(final String projectName) {
         //String rawName = build.getProject().getName();
-        String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_TUNNEL_ID_CHARS, "_");
+        String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_CHARS, "_");
         return sanitizedName + "-" + System.currentTimeMillis();
     }
 
+    // the buildNumber variable returned from the API uses hyphens, so we should sanitize with hyphens here
     public static String getSanitizedBuildNumber(Run run) {
-        return SauceEnvironmentUtil.getBuildName(run).replaceAll("[^A-Za-z0-9]", "_");
+        return "jenkins-"+SauceEnvironmentUtil.getBuildName(run).replaceAll(PATTERN_DISALLOWED_CHARS, "-");
     }
 
 }

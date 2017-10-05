@@ -11,7 +11,6 @@ import net.sf.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -52,6 +51,7 @@ public class ParameterizedSauceBuildWrapperTest {
             boolean useGeneratedTunnelIdentifier,
             boolean verboseLogging,
             boolean useLatestVersion,
+            boolean forceCleanup,
             String seleniumPort,
             String seleniumHost
     ) throws Exception {
@@ -62,6 +62,7 @@ public class ParameterizedSauceBuildWrapperTest {
         sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
         sauceBuildWrapper.setVerboseLogging(verboseLogging);
         sauceBuildWrapper.setUseLatestVersion(useLatestVersion);
+        sauceBuildWrapper.setForceCleanup(forceCleanup);
         sauceBuildWrapper.setSeleniumPort(seleniumPort);
         sauceBuildWrapper.setSeleniumHost(seleniumHost);
     }
@@ -74,17 +75,20 @@ public class ParameterizedSauceBuildWrapperTest {
                 for (boolean useGeneratedTunnelIdentifier : new boolean[]{true, false}) {
                     for (boolean verboseLogging : new boolean[]{true, false}) {
                         for (boolean useLatestVersion : new boolean[]{true, false}) {
-                            for (String seleniumPort : new String[]{"", "4444"}) {
-                                for (String seleniumHost : new String[]{"", "localhost"}) {
-                                    list.add(new Object[]{
-                                            enableSauceConnect,
-                                            launchSauceConnectOnSlave,
-                                            useGeneratedTunnelIdentifier,
-                                            verboseLogging,
-                                            useLatestVersion,
-                                            seleniumPort,
-                                            seleniumHost
-                                    });
+                            for (boolean forceCleanup : new boolean[]{false}) { // set this to {true, false} for proper testing.  But it will increase test times by about 20m
+                                 for (String seleniumPort : new String[]{"", "4444"}) {
+                                    for (String seleniumHost : new String[]{"", "localhost"}) {
+                                        list.add(new Object[]{
+                                                enableSauceConnect,
+                                                launchSauceConnectOnSlave,
+                                                useGeneratedTunnelIdentifier,
+                                                verboseLogging,
+                                                useLatestVersion,
+                                                forceCleanup,
+                                                seleniumPort,
+                                                seleniumHost
+                                        });
+                                    }
                                 }
                             }
                         }

@@ -22,6 +22,7 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
                 false,
                 false,
                 true,
+                false,
                 null,
                 null,
                 null,
