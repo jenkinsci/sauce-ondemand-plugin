@@ -589,22 +589,25 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                     // stop tunnels matching the tunnel identifier
                     // this is needed as aborting during tunnel creation will prevent it from closing properly above
-                    try {
-                        String listResponse = sauceREST.getTunnels();
-                        JSONArray tunnels = new JSONArray(listResponse);
-                        for (int i = 0; i < tunnels.length(); i++) {
-                            String tunnel = tunnels.getString(i);
-                            String jsonResponse = sauceREST.getTunnelInformation(tunnel);
-                            JSONObject tunnelObj = new JSONObject(jsonResponse);
-                            if (tunnelObj.getString("tunnel_identifier").equals(tunnelIdentifier)) {
-                                listener.getLogger().println("Closing tunnel: " + tunnelObj.getString("id"));
-                                sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                    if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
+                        try {
+                            String listResponse = sauceREST.getTunnels();
+                            JSONArray tunnels = new JSONArray(listResponse);
+                            for (int i = 0; i < tunnels.length(); i++) {
+                                String tunnel = tunnels.getString(i);
+                                String jsonResponse = sauceREST.getTunnelInformation(tunnel);
+                                JSONObject tunnelObj = new JSONObject(jsonResponse);
+                                if (tunnelObj.getString("tunnel_identifier").equals(tunnelIdentifier)) {
+                                    listener.getLogger().println("Closing tunnel with uniquely generated ID: " + tunnelIdentifier);
+                                    sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                                }
                             }
+                        } catch (JSONException e) {
+                            listener.getLogger().println(e);
                         }
-                    } catch (JSONException e) {
-                        listener.getLogger().println(e);
+                    } else {
+                        listener.getLogger().println("Tunnel may not have a unique ID, not force closing it");
                     }
-
                     // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
                     int numJobs = jobs.size();
                     for (int waitCount = 0; waitCount < 5; waitCount++) {
