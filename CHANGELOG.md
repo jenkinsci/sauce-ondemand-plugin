@@ -1,4 +1,4 @@
-# Jenkins 1.167 - 2017-12-06
+# Jenkins 1.168 - 2017-12-07
 
 * Updating to ci-sauce 1.130 which bring in sauce-connect 4.4.10
 
