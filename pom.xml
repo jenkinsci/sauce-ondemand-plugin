@@ -23,7 +23,7 @@
 
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.168-SNAPSHOT</version>
+    <version>1.168</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -31,7 +31,7 @@
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>sauce-ondemand-1.168</tag>
     </scm>
 
     <developers>
