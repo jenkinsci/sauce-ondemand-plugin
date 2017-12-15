@@ -480,6 +480,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM), true, verboseLogging, listener.getLogger());
                 }
+
                 /* Legacy Build Number */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_BUILD_NAME, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
@@ -542,6 +543,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 listener.getLogger().println("Starting post-build for Sauce Labs plugin");
+
                 if (isEnableSauceConnect()) {
                     boolean shouldClose = true;
                     try {
@@ -621,6 +623,21 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         }
                     }
                     listener.getLogger().println("Stopped/completed " + numJobs + " jobs");
+                }
+
+                // if usage data is allowed we will fill in the custom data field in the jobs with Jenkins build info for analytics
+                if (shouldSendUsageData()) {
+                    listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
+
+                    Map<String, Object> customData = new HashMap<String, Object>();
+                    customData.put("JENKINS_BUILD_NAME", build.getProject().getName());
+                    customData.put("BUILD_NUMBER", build.getNumber());
+                    customData.put("GIT_COMMIT", build.getEnvironment().get("GIT_COMMIT"));
+                    Map<String, Object> customDataObj = new HashMap<String, Object>();
+                    customDataObj.put("custom-data", customData);
+
+                    buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
+                    buildAction.updateJobs(customDataObj);
                 }
 
                 listener.getLogger().println("Finished post-build for Sauce Labs plugin");

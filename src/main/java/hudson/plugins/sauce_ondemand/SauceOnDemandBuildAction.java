@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.Map;
 
 /**
  * Presents the links to the Sauce OnDemand jobs on the build summary page.
@@ -103,6 +104,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         List<JenkinsJobInformation> jobs = getJobs();
         for (JobInformation job : jobs) {
             sauceREST.stopJob(job.getJobId());
+        }
+    }
+
+    // Get the list of jobs and update them with custom data
+    public void updateJobs(Map<String, Object> customDataObj) {
+        SauceREST sauceREST = getSauceREST();
+        List<JenkinsJobInformation> jobs = getJobs();
+        for (JobInformation job : jobs) {
+            sauceREST.updateJobInfo(job.getJobId(), customDataObj);
         }
     }
 
