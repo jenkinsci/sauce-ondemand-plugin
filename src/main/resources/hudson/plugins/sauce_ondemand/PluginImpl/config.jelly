@@ -7,7 +7,7 @@
             <j:set var="instance" value="${it}"/>
             <j:set var="descriptor" value="${it.descriptor}"/>
             <f:entry field="sendUsageData">
-                <f:checkbox title="${%Send build usage data to Sauce Labs}"/>
+                <f:checkbox title="${%Send build usage data to Sauce Labs}" default="true"/>
             </f:entry>
             <f:entry title="${%Override Sauce Connect Path}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>
