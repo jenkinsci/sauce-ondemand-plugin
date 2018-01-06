@@ -43,6 +43,7 @@ import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepEx
 
 public class SauceConnectStep extends AbstractStepImpl {
     private Boolean verboseLogging = false;
+    private Boolean useLatestSauceConnect = false;
     private Boolean useGeneratedTunnelIdentifier = false;
     private String options;
     private String sauceConnectPath;
@@ -51,8 +52,9 @@ public class SauceConnectStep extends AbstractStepImpl {
     public SauceConnectStep() {
     }
 
-    public SauceConnectStep(String options, Boolean verboseLogging, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
+    public SauceConnectStep(String options, Boolean verboseLogging, Boolean useLatestSauceConnect, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
         this.verboseLogging = verboseLogging;
+        this.useLatestSauceConnect = useLatestSauceConnect;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
         this.sauceConnectPath = Util.fixEmptyAndTrim(sauceConnectPath);
         this.options = StringUtils.trimToEmpty(options);
@@ -84,6 +86,15 @@ public class SauceConnectStep extends AbstractStepImpl {
     @DataBoundSetter
     public void setUseGeneratedTunnelIdentifier(Boolean useGeneratedTunnelIdentifier) {
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
+    }
+
+    public Boolean getUseLatestSauceConnect() {
+        return useLatestSauceConnect;
+    }
+
+    @DataBoundSetter
+    public void setUseLatestSauceConnect(Boolean useLatestSauceConnect) {
+        this.useLatestSauceConnect = useLatestSauceConnect;
     }
 
     public Boolean getVerboseLogging() {

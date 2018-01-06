@@ -154,6 +154,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     public static final String SAUCE_BUILD_NAME = "SAUCE_BUILD_NAME";
 
+    public static final String USE_LATEST_SAUCE_CONNECT = "USE_LATEST_SAUCE_CONNECT";
+
     public static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
 
     /**
@@ -227,6 +229,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private boolean useLatestVersion;
     /**
+     * Boolean which indicates whether the latest available version of Sauce Connect should be used.
+     */
+    private static boolean useLatestSauceConnect;
+    /**
      * Boolean which indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      */
     private boolean forceCleanup;
@@ -271,6 +277,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
      * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
+     * @param useLatestSauceConnect.    indicates whether the latest version of Sauce Connect should always be used
      * @param forceCleanup              indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      * @param webDriverBrowsers         which browser(s) should be used for web driver
      * @param appiumBrowsers            which browser(s) should be used for appium
@@ -291,6 +298,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         boolean launchSauceConnectOnSlave,
         boolean verboseLogging,
         boolean useLatestVersion,
+        boolean useLatestSauceConnect,
         boolean forceCleanup,
         List<String> webDriverBrowsers,
         List<String> appiumBrowsers,
@@ -312,6 +320,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
         this.verboseLogging = verboseLogging;
         this.useLatestVersion = useLatestVersion;
+        this.useLatestSauceConnect = useLatestSauceConnect;
         this.forceCleanup = forceCleanup;
         this.condition = condition;
         this.sauceConnectPath = sauceConnectPath;
@@ -423,6 +432,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     props.put("webDriverBrowsers", webDriverBrowsers);
                     props.put("appiumBrowsers", appiumBrowsers);
                     props.put("useLatestVersion", useLatestVersion);
+                    props.put("useLatestSauceConnect", useLatestSauceConnect);
                     props.put("forceCleanup", forceCleanup);
                     JSONObject sentEvent = messageBuilder.event(distinctId, "Jenkins settings", props);
                     ClientDelivery delivery = new ClientDelivery();
@@ -831,6 +841,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
     }
 
+    public boolean isUseLatestSauceConnect() {
+        return useLatestSauceConnect;
+    }
+
+    public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
+        this.useLatestSauceConnect = useLatestSauceConnect;
+    }
+
     public boolean isUseGeneratedTunnelIdentifier() {
         return useGeneratedTunnelIdentifier;
     }
@@ -1001,6 +1019,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 sauceTunnelManager = getSauceTunnelManager();
                 if (sauceTunnelManager instanceof HudsonSauceConnectFourManager && workingDirectory != null) {
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
+                    ((HudsonSauceConnectFourManager) sauceTunnelManager).setUseLatestSauceConnect(useLatestSauceConnect);
                 }
                 sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key));
                 if (StringUtils.isBlank(username)) {
