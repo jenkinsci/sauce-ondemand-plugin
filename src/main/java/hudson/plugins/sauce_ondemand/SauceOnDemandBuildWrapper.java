@@ -231,7 +231,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * Boolean which indicates whether the latest available version of Sauce Connect should be used.
      */
-    private static boolean useLatestSauceConnect;
+    private boolean useLatestSauceConnect;
     /**
      * Boolean which indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      */
@@ -388,7 +388,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             if (canRun) {
                 sauceConnectStarter = new SauceConnectHandler(
                     this, env, listener,
-                    workingDirectory, resolvedOptions,
+                    workingDirectory, useLatestSauceConnect, resolvedOptions,
                     null,
                     username, credentials.getApiKey().getPlainText(),
                     maxRetries, retryWaitTime
@@ -956,6 +956,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final class SauceConnectHandler extends MasterToSlaveCallable<SauceConnectHandler, AbstractSauceTunnelManager.SauceConnectException> {
         private final String options;
         private final String workingDirectory;
+        private final boolean useLatestSauceConnect;
         private final String username;
         private final String key;
         private int maxRetries;
@@ -972,6 +973,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             EnvVars env,
             BuildListener listener,
             String workingDirectory,
+            boolean useLatestSauceConnect,
             String resolvedOptions,
             File sauceConnectJar,
             String username,
@@ -981,6 +983,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         ) {
             this.options = resolvedOptions;
             this.workingDirectory = workingDirectory;
+            this.useLatestSauceConnect = useLatestSauceConnect;
             this.listener = listener;
             this.username = username;
             this.key = apiKey;
