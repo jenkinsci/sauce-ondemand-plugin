@@ -1,3 +1,11 @@
+# Jenkins 1.171 - 2018-01-05
+
+* Add a checkbox in the job configuration to always use the latest released version of Sauce Connect.
+
+# Jenkins 1.170 - 2017-12-15
+
+* Send usage data by default, which now also adds Jenkins build name, number, and git commits if enabled for test result analytics.  Also add help box in the configuration on what data gets collected.
+
 # Jenkins 1.169 - 2017-12-11
 
 * Updating to ci-sauce 1.131 which brings in sauce-connect 4.4.11
