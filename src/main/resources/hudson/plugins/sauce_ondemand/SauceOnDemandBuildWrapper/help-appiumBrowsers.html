@@ -1,7 +1,6 @@
 <div>
-   If a single browser is selected, then it will be used to populate a SELENIUM_VERSION, SELENIUM_BROWSER, SELENIUM_PLATFORM and SELENIUM_DRIVER variable.
+   If a single browser is selected, then the SELENIUM_PLATFORM, SELENIUM_BROWSER, SELENIUM_VERSION, SELENIUM_DRIVER, SELENIUM_DEVICE, and SELENIUM_DEVICE_ORIENTATION environment variables will be populated to contain the details of the selected browser.<br /><br />
 
-   If multiple browsers are selected, then they will be included in a SAUCE_ONDEMAND_BROWSERS environment
-   variable in JSON format.  These values can be extracted by your unit tests to invoke parallel Selenium tests.
-
+   If you select multiple the <em>SAUCE_ONDEMAND_BROWSERS</em> environment
+   variable will be populated with a JSON-formatted string containing the attributes of the selected browsers.
 </div>

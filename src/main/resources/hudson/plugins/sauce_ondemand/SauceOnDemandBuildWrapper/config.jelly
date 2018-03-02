@@ -60,7 +60,7 @@
             </f:entry>
 
             <f:entry field="useLatestSauceConnect">
-                <f:checkbox title="${%Use latest version of Sauce Connnect - if unchecked, will use the bundled version of 4.4.11}"/>
+                <f:checkbox title="${%Use latest version of Sauce Connect - if unchecked, will use the bundled version of 4.4.11}"/>
             </f:entry>
             <f:entry field="forceCleanup">
                 <f:checkbox title="${%Clean up jobs and uniquely generated tunnels instead of waiting for timeouts}"/>
