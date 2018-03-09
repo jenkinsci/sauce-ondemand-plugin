@@ -87,9 +87,18 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private String environmentVariablePrefix;
 
-    private boolean sendUsageData;
+    private transient Boolean sendUsageData;
+
+    private boolean disableUsageStats;
 
     private String credentialId;
+
+    protected Object readResolve() {
+        if (sendUsageData != null) {
+           disableUsageStats = false;
+        }
+        return this;
+    }
 
     @Override
     public void start() throws Exception {
@@ -135,11 +144,10 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         sauceConnectDirectory = formData.getString("sauceConnectDirectory");
         sauceConnectOptions = formData.getString("sauceConnectOptions");
         environmentVariablePrefix = formData.getString("environmentVariablePrefix");
-        setSendUsageData(formData.getBoolean("sendUsageData"));
+        setDisableUsageStats(formData.getBoolean("disableUsageStats"));
         sauceConnectMaxRetries = formData.getString("sauceConnectMaxRetries");
         sauceConnectRetryWaitTime = formData.getString("sauceConnectRetryWaitTime");
         save();
-
     }
 
     public DescriptorImpl getDescriptor() {
@@ -221,11 +229,11 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
         this.sauceConnectOptions = sauceConnectOptions;
     }
 
-    public void setSendUsageData(boolean sendUsageData) {
-        this.sendUsageData = sendUsageData;
+    public void setDisableUsageStats(boolean disableUsageStats) {
+        this.disableUsageStats = disableUsageStats;
     }
 
-    public boolean isSendUsageData() {
-        return sendUsageData;
+    public boolean isDisableUsageStats() {
+        return disableUsageStats;
     }
 }

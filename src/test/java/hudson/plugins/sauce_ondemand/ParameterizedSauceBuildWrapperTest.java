@@ -120,7 +120,7 @@ public class ParameterizedSauceBuildWrapperTest {
         pluginConfig.put("sauceConnectOptions", "");
         pluginConfig.put("disableStatusColumn", false);
         pluginConfig.put("environmentVariablePrefix", "");
-        pluginConfig.put("sendUsageData", true);
+        pluginConfig.put("disableUsageStats", false);
         pluginConfig.put("sauceConnectMaxRetries", "");
         pluginConfig.put("sauceConnectRetryWaitTime", "");
 

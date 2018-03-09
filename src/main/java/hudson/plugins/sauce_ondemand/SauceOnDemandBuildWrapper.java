@@ -172,7 +172,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     private static final long serialVersionUID = 1L;
     /**
-     * Indicates whether the plugin should send usage data to Sauce Labs.
+     * Indicates whether the plugin should send usage stats to Sauce Labs.
      * @deprecated moved to global scope
      * @see PluginImpl
      */
@@ -413,13 +413,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
-        if (shouldSendUsageData()) {
+        if (!isDisableUsageStats()) {
             JenkinsSauceREST sauceREST = credentials.getSauceREST();
             try {
-                logger.fine("Reporting usage data");
+                logger.fine("Reporting usage stats");
                 sauceREST.recordCI("jenkins", Jenkins.VERSION);
 
-                // send usage data so we know what features our customers actually use
+                // send usage stats so we know what features our customers actually use
                 try {
                     MessageBuilder messageBuilder = new MessageBuilder("5d9a83c5f58311b7b88622d0da5e7e9d");
                     String distinctId = username;
@@ -635,8 +635,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     listener.getLogger().println("Stopped/completed " + numJobs + " jobs");
                 }
 
-                // if usage data is allowed we will fill in the custom data field in the jobs with Jenkins build info for analytics
-                if (shouldSendUsageData()) {
+                // if usage stats is allowed we will fill in the custom data field in the jobs with Jenkins build info for analytics
+                if (!isDisableUsageStats()) {
                     listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
 
                     Map<String, Object> customData = new HashMap<String, Object>();
@@ -656,10 +656,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         };
     }
 
-    public boolean shouldSendUsageData() {
+    public boolean isDisableUsageStats() {
         PluginImpl plugin = PluginImpl.get();
         if (plugin == null) { return false; }
-        return plugin.isSendUsageData();
+        return plugin.isDisableUsageStats();
     }
 
     /**
