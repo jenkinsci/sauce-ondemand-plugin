@@ -590,15 +590,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 if (forceCleanup){
                     listener.getLogger().println("Force cleanup enabled: Cleaning up jobs and tunnels instead of waiting for timeout");
-                    SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
-                    JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
-
                     //immediately stop any running jobs
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
                     buildAction.stopJobs();
 
                     // stop tunnels matching the tunnel identifier
                     // this is needed as aborting during tunnel creation will prevent it from closing properly above
+                    SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
+                    JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
                     if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                         try {
                             String listResponse = sauceREST.getTunnels();
@@ -618,23 +617,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     } else {
                         listener.getLogger().println("Tunnel may not have a unique ID, not force closing it");
                     }
-                    // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
-                    List<JenkinsJobInformation> jobs = buildAction.getJobs();
-                    int numJobs = jobs.size();
-                    for (int waitCount = 0; waitCount < 5; waitCount++) {
-                        Thread.sleep(1000);
-                        buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
-                        jobs = buildAction.getJobs();
-                        if (jobs.size()!=numJobs) {
-                            buildAction.stopJobs();
-                            numJobs=jobs.size();
-                            waitCount=-1;
-                        }
-                    }
-                    listener.getLogger().println("Stopped/completed " + numJobs + " jobs");
                 }
 
                 // if usage stats is allowed we will fill in the custom data field in the jobs with Jenkins build info for analytics
+                Map<String, Object> customDataObj = new HashMap<String, Object>();
                 if (!isDisableUsageStats()) {
                     listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
 
@@ -642,11 +628,32 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     customData.put("JENKINS_BUILD_NAME", build.getProject().getName());
                     customData.put("BUILD_NUMBER", build.getNumber());
                     customData.put("GIT_COMMIT", build.getEnvironment().get("GIT_COMMIT"));
-                    Map<String, Object> customDataObj = new HashMap<String, Object>();
                     customDataObj.put("custom-data", customData);
 
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
                     buildAction.updateJobs(customDataObj);
+                }
+
+                // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
+                if (forceCleanup || !isDisableUsageStats()) {
+                    List<JenkinsJobInformation> jobs = buildAction.getJobs();
+                    int numJobs = jobs.size();
+                    for (int waitCount = 0; waitCount < 5; waitCount++) {
+                        Thread.sleep(1000);
+                        buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
+                        jobs = buildAction.getJobs();
+                        if (jobs.size() != numJobs) {
+                            if (forceCleanup) {
+                                buildAction.stopJobs();
+                            }
+                            if (!isDisableUsageStats()) {
+                                buildAction.updateJobs(customDataObj);
+                            }
+                            numJobs = jobs.size();
+                            waitCount = -1;
+                        }
+                    }
+                    listener.getLogger().println("Stopped/completed/updated " + numJobs + " jobs");
                 }
 
                 listener.getLogger().println("Finished post-build for Sauce Labs plugin");
