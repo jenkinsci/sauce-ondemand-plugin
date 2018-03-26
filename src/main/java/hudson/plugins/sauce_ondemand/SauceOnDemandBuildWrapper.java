@@ -590,13 +590,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                 if (forceCleanup){
                     listener.getLogger().println("Force cleanup enabled: Cleaning up jobs and tunnels instead of waiting for timeout");
-
                     SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
                     JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
 
                     //immediately stop any running jobs
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
-                    List<JenkinsJobInformation> jobs = buildAction.getJobs();
                     buildAction.stopJobs();
 
                     // stop tunnels matching the tunnel identifier
@@ -621,6 +619,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         listener.getLogger().println("Tunnel may not have a unique ID, not force closing it");
                     }
                     // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
+                    List<JenkinsJobInformation> jobs = buildAction.getJobs();
                     int numJobs = jobs.size();
                     for (int waitCount = 0; waitCount < 5; waitCount++) {
                         Thread.sleep(1000);
