@@ -35,6 +35,25 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.Map;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+
+class StopJobThread implements Runnable {
+    private JobInformation job;
+    private SauceREST sauceREST;
+
+    public StopJobThread(SauceREST sauceREST, JobInformation job){
+        this.job = job;
+        this.sauceREST = sauceREST;
+    }
+
+    @Override
+    public void run() {
+        this.sauceREST.stopJob(job.getJobId());
+    }
+}
+
 /**
  * Presents the links to the Sauce OnDemand jobs on the build summary page.
  *
@@ -102,8 +121,13 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     public void stopJobs() {
         SauceREST sauceREST = getSauceREST();
         List<JenkinsJobInformation> jobs = getJobs();
+        ExecutorService executor = Executors.newFixedThreadPool(5);
         for (JobInformation job : jobs) {
-            sauceREST.stopJob(job.getJobId());
+            Runnable worker = new StopJobThread(sauceREST, job);
+            executor.execute(worker);
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
         }
     }
 
