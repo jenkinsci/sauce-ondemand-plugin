@@ -49,7 +49,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
      * Project that owns this action.
      * @since 1.153
      */
-    public final Job<?,?> job;
+    public transient Job<?,?> job;
 
     @Deprecated
     private AbstractProject<?, ?> project;
