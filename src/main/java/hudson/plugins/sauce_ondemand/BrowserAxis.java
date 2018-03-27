@@ -43,7 +43,7 @@ public abstract class BrowserAxis extends Axis {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
     protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
-    private MatrixProject project;
+    private transient MatrixProject project;
 
     public BrowserAxis(List<String> values) {
         super("SELENIUM_DRIVER", values);
