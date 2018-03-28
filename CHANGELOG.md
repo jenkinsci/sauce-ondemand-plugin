@@ -1,3 +1,17 @@
+# Jenkins 1.173 - 2018-03-28
+
+* Fix JENKINS-45892
+* Add missing sauce username field in sent data
+* Multithread stopjob Sauce API command as it was taking 11 seconds per request (used for the cleanup checkbox option)
+* Check for new jobs when updating Sauce jobs data
+
+# Jenkins 1.172 - 2018-03-09
+
+* Fix JEP-200 errors
+* Fix build usage data not being sent by default
+* Update ci-sauce to 1.132
+* Update device browser help files
+
 # Jenkins 1.171 - 2018-01-05
 
 * Add a checkbox in the job configuration to always use the latest released version of Sauce Connect.
