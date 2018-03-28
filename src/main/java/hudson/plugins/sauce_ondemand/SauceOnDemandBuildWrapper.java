@@ -434,6 +434,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     props.put("useLatestVersion", useLatestVersion);
                     props.put("useLatestSauceConnect", useLatestSauceConnect);
                     props.put("forceCleanup", forceCleanup);
+                    props.put("username", username);
                     JSONObject sentEvent = messageBuilder.event(distinctId, "Jenkins settings", props);
                     ClientDelivery delivery = new ClientDelivery();
                     delivery.addMessage(sentEvent);
