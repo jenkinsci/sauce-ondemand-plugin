@@ -62,6 +62,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildAction;
 
 /**
@@ -133,28 +137,28 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      *
      * @param build         The build in progress
      * @param launcher      This launcher can be used to launch processes for this build.
-     * @param buildListener Can be used to send any message.
+     * @param listener Can be used to send any message.
      * @param testResult    Contains the test results for the build.
      * @return a singleton {@link SauceOnDemandReportFactory} instance if the build has Sauce results, null if no results are found
      */
     @Override
-    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, TestResult testResult) {
+    public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, TestResult testResult) {
         try
         {
-            buildListener.getLogger().println("Starting Sauce Labs test publisher");
+            listener.getLogger().println("Starting Sauce Labs test publisher");
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
             if (buildAction != null) {
                 processBuildOutput(build, buildAction, testResult);
                 if (buildAction.hasSauceOnDemandResults()) {
                     return SauceOnDemandReportFactory.INSTANCE;
                 } else {
-                    buildListener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
+                    listener.getLogger().println("The Sauce OnDemand plugin is configured, but no session IDs were found in the test output.");
                     return null;
                 }
             }
             return null;
         } finally {
-            buildListener.getLogger().println("Finished Sauce Labs test publisher");
+            listener.getLogger().println("Finished Sauce Labs test publisher");
         }
     }
 
@@ -194,6 +198,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         SauceREST sauceREST = getSauceREST(build);
 
         LinkedHashMap<String, JenkinsJobInformation> onDemandTests;
+        List<CaseResult> failedTests;
+        HashMap failedTestsMap = new HashMap();
 
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
@@ -238,6 +244,13 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     }
                 }
             }
+            if (!isDisableUsageStats()) {
+                failedTests = testResult.getFailedTests();
+                for (CaseResult failedTest : failedTests) {
+                    // if this turns out to be too much info we can use getErrorDetails() instead
+                    failedTestsMap.put(failedTest.getName(),failedTest.getErrorStackTrace());
+                }
+            }
         }
 
         for (TestIDDetails details : testIds) {
@@ -277,6 +290,31 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (!Strings.isNullOrEmpty(getJobVisibility())) {
                 updates.put("public", getJobVisibility());
             }
+
+            // add the failure message to custom data IF we're sending data, also there may be other custom data we want to preserve
+            if (!isDisableUsageStats() && testResult != null && jobInformation.getStatus() == "Failed") {
+                try {
+                    JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
+                    JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
+                    Map<String, Object> customData = new HashMap<String, Object>();
+
+                    Iterator<String> customDataKeys = existingCustomData.keys();
+                    while (customDataKeys.hasNext()) {
+                        String customDataKey = customDataKeys.next();
+                        customData.put(customDataKey, existingCustomData.getString(customDataKey));
+                    }
+
+                    // see if failedTests contains the job name
+                    if (failedTestsMap.get(jobInformation.getName())!=null) {
+                        customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
+                    }
+                    updates.put("custom-data", customData);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    logger.warning("Could not add failure message: " + e.getMessage());
+                }
+            }
+
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
@@ -292,6 +330,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 logger.warning("Unable to save build: " + e.getMessage());
             }
         }
+    }
+
+    private boolean isDisableUsageStats() {
+        PluginImpl plugin = PluginImpl.get();
+        if (plugin == null) { return false; }
+        return plugin.isDisableUsageStats();
     }
 
     protected SauceREST getSauceREST(Run build) {
