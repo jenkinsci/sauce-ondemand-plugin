@@ -1,6 +1,6 @@
 language: java
 sudo: required
-dist: precise
+dist: trusty
 cache:
   directories:
   - $HOME/.m2/repository
