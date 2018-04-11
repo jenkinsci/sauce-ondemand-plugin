@@ -230,7 +230,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
         }
 
-        //try the stdout for the tests
+        JenkinsBuildInformation buildInformation = buildAction.getSauceBuild();
+
+        //try the stdout for the tests, if build are aborted testResult will be null
         if (testResult != null) {
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
@@ -248,7 +250,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 failedTests = testResult.getFailedTests();
                 for (CaseResult failedTest : failedTests) {
                     // if this turns out to be too much info we can use getErrorDetails() instead
-                    failedTestsMap.put(failedTest.getName(),failedTest.getErrorStackTrace());
+                    failedTestsMap.put(failedTest.getName(),failedTest.getErrorStackTrace().trim());
                 }
             }
         }

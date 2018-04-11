@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
+import com.saucelabs.ci.BuildInformation;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.FilePath;
@@ -158,6 +159,41 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         }
         logger.fine("No Sauce jobs found");
         return Collections.emptyList();
+    }
+
+    public JenkinsBuildInformation getBuild() {
+        List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
+        if (sauceOnDemandBuildActions != null) {
+            for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
+                return action.getSauceBuild();
+            }
+        }
+        logger.fine("No Sauce build found");
+        return null;
+    }
+
+    public Map<String,String> getAnalytics() {
+        HashMap<String,String> analytics = new HashMap<String,String>();
+
+        JenkinsBuildInformation buildInformation = getBuild();
+        List<JenkinsJobInformation> allJobs = this.getJobs();
+        int maxJobDuration = 0;
+        for (JenkinsJobInformation job : allJobs) {
+            int duration = job.getDuration();
+            if (duration > maxJobDuration) {
+                maxJobDuration = duration;
+            }
+        }
+
+        analytics.put("start", buildInformation.getStartDate());
+        analytics.put("duration", buildInformation.getPrettyDuration());
+        analytics.put("efficiency", buildInformation.getEfficiency(maxJobDuration));
+        analytics.put("size", String.valueOf(buildInformation.getJobsFinished()));
+        analytics.put("pass", buildInformation.getJobsPassRate());
+        analytics.put("fail", buildInformation.getJobsFailRate());
+        analytics.put("error", buildInformation.getJobsErrorRate());
+
+        return analytics;
     }
 
     @Override

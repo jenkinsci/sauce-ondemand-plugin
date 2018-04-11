@@ -10,15 +10,15 @@
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
         <jenkins.version>1.609.2</jenkins.version>
         <!-- Java Level to use. Java 7 required when using core >= 1.612 -->
-        <java.level>7</java.level>
+        <java.level>8</java.level>
         <plugins.credentials.version>2.1.1</plugins.credentials.version>
         <plugins.matrix-project.version>1.4</plugins.matrix-project.version>
         <plugins.maven-project.version>2.11</plugins.maven-project.version>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
         <plugins.junit.version>1.9</plugins.junit.version>
         <plugins.workflow.version>1.15</plugins.workflow.version>
-        <ci-sauce.version>1.134</ci-sauce.version>
-        <saucerest.version>1.0.36</saucerest.version>
+        <ci-sauce.version>1.136</ci-sauce.version>
+        <saucerest.version>1.0.37</saucerest.version>
     </properties>
 
 
@@ -318,7 +318,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.3</version>
+                <version>3.0.5</version>
                 <configuration>
                     <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
                 </configuration>
