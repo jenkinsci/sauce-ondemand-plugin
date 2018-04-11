@@ -34,10 +34,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.Map;
+import java.util.HashMap;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 
 class StopJobThread implements Runnable {
     private JobInformation job;
@@ -75,6 +75,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
     private transient Run build;
     private List<JenkinsJobInformation> jobInformation;
+    private JenkinsBuildInformation buildInformation;
+
     @Deprecated
     private String accessKey;
     @Deprecated
@@ -98,6 +100,39 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         }
         return !getJobs().isEmpty();
     }
+
+    // we can grab the buildName from a job, or possibly from sanitized build name
+    @Exported(visibility=2)
+    public JenkinsBuildInformation getSauceBuild() {
+        if (buildInformation == null) {
+            try {
+                buildInformation = retrieveBuildFromSauce(getSauceREST(), build);
+            } catch (JSONException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }
+        }
+
+        return buildInformation;
+    }
+
+    public static JenkinsBuildInformation retrieveBuildFromSauce(SauceREST sauceREST, Run build) throws JSONException {
+        // this is the build name in the sauce API
+        String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
+
+        JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildNumber);
+
+        logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
+        String jsonResponse = sauceREST.getBuild(buildNumber);
+        JSONObject buildObj = new JSONObject(jsonResponse);
+
+        if (buildObj == null) {
+            logger.log(Level.WARNING, "Unable to find build data for " + buildNumber);
+        } else {
+            buildInformation.populateFromJson(buildObj);
+        }
+        return buildInformation;
+    }
+
 
     @Exported(visibility=2)
     public List<JenkinsJobInformation> getJobs() {
@@ -207,6 +242,30 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         }
         return jobInformation;
     }
+
+    public Map<String,String> getAnalytics() {
+        HashMap<String,String> analytics = new HashMap<String,String>();
+
+        List<JenkinsJobInformation> allJobs = getJobs();
+        int maxJobDuration = 0;
+        for (JenkinsJobInformation job : allJobs) {
+            int duration = job.getDuration();
+            if (duration > maxJobDuration) {
+                maxJobDuration = duration;
+            }
+        }
+
+        analytics.put("start", buildInformation.getStartDate());
+        analytics.put("duration", buildInformation.getPrettyDuration());
+        analytics.put("efficiency", buildInformation.getEfficiency(maxJobDuration));
+        analytics.put("size", String.valueOf(buildInformation.getJobsFinished()));
+        analytics.put("pass", buildInformation.getJobsPassRate());
+        analytics.put("fail", buildInformation.getJobsFailRate());
+        analytics.put("error", buildInformation.getJobsErrorRate());
+
+        return analytics;
+    }
+
 
     protected JenkinsSauceREST getSauceREST() {
         SauceCredentials creds = getCredentials();

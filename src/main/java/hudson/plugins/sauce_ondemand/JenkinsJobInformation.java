@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Objects;
+import java.time.Duration;
+import java.lang.StringBuffer;
 
 @ExportedBean
 public class JenkinsJobInformation extends JobInformation {
@@ -67,6 +69,20 @@ public class JenkinsJobInformation extends JobInformation {
     }
 
     @Nullable
+    @Exported(visibility=2)
+    public String getStatusColor() {
+        String status = this.getStatus();
+        if (status.equals("Passed")) {
+            return "green";
+        } else if (status.equals("Failed")) {
+            return "red";
+        } else if (status.equals("Error")) {
+            return "orange";
+        }
+        return status;
+    }
+
+    @Nullable
     @Override
     @Exported(visibility=2)
     public String getName() {
@@ -76,7 +92,16 @@ public class JenkinsJobInformation extends JobInformation {
     @Override
     @Exported(visibility=2)
     public String getBrowser() {
-        return super.getBrowser();
+        String browser = super.getBrowser();
+        // this is incomplete (e.g. missing mobile)
+        browser = browser.replace("firefox","Firefox");
+        browser = browser.replace("iexplore","Internet Explorer");
+        browser = browser.replace("googlechrome","Google Chrome");
+        browser = browser.replace("safari","Safari");
+        browser = browser.replace("microsoftedge","Microsoft Edge");
+        browser = browser.replace("iphone","iPhone");
+        browser = browser.replace("android","Android");
+        return browser;
     }
 
     @Override
@@ -89,5 +114,26 @@ public class JenkinsJobInformation extends JobInformation {
     @Exported(visibility=2)
     public String getVersion() {
         return super.getVersion();
+    }
+
+    @Exported(visibility=2)
+    public String getPrettyDuration() {
+        Duration duration = Duration.ofSeconds(super.getDuration());
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+
+        StringBuffer prettyDuration = new StringBuffer();
+        if (hours>0) {
+            prettyDuration.append(hours).append("hr ");
+        }
+        if (minutes>0) {
+            prettyDuration.append(minutes).append("m ");
+        }
+        if (seconds>0) {
+            prettyDuration.append(seconds).append("s");
+        }
+
+        return prettyDuration.toString().trim();
     }
 }

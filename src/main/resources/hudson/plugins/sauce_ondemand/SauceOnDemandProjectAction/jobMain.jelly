@@ -2,28 +2,82 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <j:if test="${from.isSauceEnabled()}">
+        <style>
+        #analytics, #results {
+            border-collapse: collapse;
+            width: 100%;
+            empty-cells: show;
+        }
+        #results {
+            border: 1px solid gray;
+        }
+        #analytics td, #analytics th {
+            padding: 8px;
+        }
+        #analytics th {
+            text-align: left;
+        }
+        #analytics td {
+            text-align: left;
+        }
+        #results td, #results th {
+            padding: 8px;
+        }
+        #results th {
+            text-align: left;
+        }
+        #results tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        </style>
         <h2>Sauce Labs results</h2>
-
         <div>
             <j:choose>
                 <j:when test="${from.hasSauceOnDemandResults()}">
                     <div>
-                        <table>
+                        <j:set var="analytics" value="${from.getAnalytics()}"/>
+                        <table id="analytics">
                             <tr>
-                                <th align="left">Job Name</th>
-                                <th align="left">OS/Browser</th>
-                                <th align="left">Pass/Fail</th>
-                                <th align="left">Job Links</th>
+                                <th>Start Time</th>
+                                <td>${analytics.get("start")}</td>
+                                <td></td>
+                                <th><font color="black"># Of Tests</font></th>
+                                <th><font color="green">■ Pass Rate</font></th>
+                                <th><font color="#ec4047">■ Fail Rate</font></th>
+                                <th><font color="#f68d38">■ Error Rate</font></th>
+                                <th>Efficiency</th>
+                            </tr>
+                            <tr>
+                                <th>Duration</th>
+                                <td>${analytics.get("duration")}</td>
+                                <td></td>
+                                <td>${analytics.get("size")}</td>
+                                <td>${analytics.get("pass")}%</td>
+                                <td>${analytics.get("fail")}%</td>
+                                <td>${analytics.get("error")}%</td>
+                                <td>${analytics.get("efficiency")}%</td>
+                            </tr>
+                        </table>
+                        <table id="results">
+                            <tr>
+                                <th>Job Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>OS</th>
+                                <th>Browser</th>
+                                <th>Job Links</th>
                             </tr>
                             <j:forEach var="job" items="${from.getJobsWithAuth()}" indexVar="indexA">
                                 <tr>
                                     <td>
                                         <a href="${from.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
                                     </td>
-                                    <td>${job.getOs()} ${job.getBrowser()} ${job.getVersion()}</td>
-                                    <td>${job.getStatus()}</td>
+                                    <td><font color="${job.getStatusColor()}">${job.getStatus()}</font></td>
+                                    <td>${job.getPrettyDuration()}</td>
+                                    <td>${job.getOs()}</td>
+                                    <td>${job.getBrowser()} ${job.getVersion()}</td>
                                     <td>
-                                        <a href="${job.getVideoUrl()}">Video</a>
+                                        <a href="${job.getVideoUrl()}">Watch</a>
                                         -
                                         <a href="${job.getLogUrl()}">Logs</a>
                                     </td>
