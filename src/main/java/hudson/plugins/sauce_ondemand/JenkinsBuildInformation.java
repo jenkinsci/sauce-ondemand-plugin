@@ -5,15 +5,10 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.annotation.Nullable;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Objects;
 
 import java.text.SimpleDateFormat;
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.lang.StringBuffer;
-import java.util.Date;
 
 @ExportedBean
 public class JenkinsBuildInformation extends BuildInformation {
