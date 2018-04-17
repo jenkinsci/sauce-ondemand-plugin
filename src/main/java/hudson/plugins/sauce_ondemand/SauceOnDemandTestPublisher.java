@@ -44,6 +44,7 @@ import com.mixpanel.mixpanelapi.MixpanelAPI;
  */
 public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildStep {
     private DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);;
+    private JSONObject mixpanelJSON;
 
     @DataBoundConstructor
     public SauceOnDemandTestPublisher() {
@@ -58,8 +59,6 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
-
-    private JSONObject mixpanelJSON;
 
     /**
      * {@inheritDoc}

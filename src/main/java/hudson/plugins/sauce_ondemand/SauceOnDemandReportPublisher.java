@@ -305,30 +305,27 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
 
             // add the failure message to custom data IF we're sending data, also there may be other custom data we want to preserve
-            if (!isDisableUsageStats()) {
+            if (!isDisableUsageStats() && testResult != null && "Failed".equals(jobInformation.getStatus())) {
+                try {
+                    JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
+                    JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
+                    Map<String, Object> customData = new HashMap<String, Object>();
 
-                if (testResult != null && jobInformation.getStatus() == "Failed") {
-                    try {
-                        JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
-                        JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
-                        Map<String, Object> customData = new HashMap<String, Object>();
-
-                        Iterator<String> customDataKeys = existingCustomData.keys();
-                        while (customDataKeys.hasNext()) {
-                            String customDataKey = customDataKeys.next();
-                            customData.put(customDataKey, existingCustomData.getString(customDataKey));
-                        }
-
-                        // see if failedTests contains the job name
-                        if (failedTestsMap.get(jobInformation.getName())!=null) {
-                            customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
-                            failureMessageSent = true;
-                        }
-                        updates.put("custom-data", customData);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        logger.warning("Could not add failure message: " + e.getMessage());
+                    Iterator<String> customDataKeys = existingCustomData.keys();
+                    while (customDataKeys.hasNext()) {
+                        String customDataKey = customDataKeys.next();
+                        customData.put(customDataKey, existingCustomData.getString(customDataKey));
                     }
+
+                    // see if failedTests contains the job name
+                    if (failedTestsMap.get(jobInformation.getName())!=null) {
+                        customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
+                        failureMessageSent = true;
+                    }
+                    updates.put("custom-data", customData);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    logger.warning("Could not add failure message: " + e.getMessage());
                 }
             }
 

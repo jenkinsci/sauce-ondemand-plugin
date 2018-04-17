@@ -10,7 +10,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Objects;
 import java.time.Duration;
-import java.lang.StringBuffer;
 
 @ExportedBean
 public class JenkinsJobInformation extends JobInformation {
@@ -72,11 +71,11 @@ public class JenkinsJobInformation extends JobInformation {
     @Exported(visibility=2)
     public String getStatusColor() {
         String status = this.getStatus();
-        if (status.equals("Passed")) {
+        if ("Passed".equals(status)) {
             return "green";
-        } else if (status.equals("Failed")) {
+        } else if ("Failed".equals(status)) {
             return "red";
-        } else if (status.equals("Error")) {
+        } else if ("Error".equals(status)) {
             return "orange";
         }
         return status;
