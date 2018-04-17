@@ -246,10 +246,13 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     public Map<String,String> getAnalytics() {
         HashMap<String,String> analytics = new HashMap<String,String>();
 
+        JenkinsBuildInformation buildInformation = getSauceBuild();
         List<JenkinsJobInformation> allJobs = getJobs();
-        int maxJobDuration = 0;
+        long maxJobDuration = 0;
+        long totalJobDuration = 0;
         for (JenkinsJobInformation job : allJobs) {
-            int duration = job.getDuration();
+            long duration = job.getDuration();
+            totalJobDuration += duration;
             if (duration > maxJobDuration) {
                 maxJobDuration = duration;
             }
@@ -257,7 +260,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         analytics.put("start", buildInformation.getStartDate());
         analytics.put("duration", buildInformation.getPrettyDuration());
-        analytics.put("efficiency", buildInformation.getEfficiency(maxJobDuration));
+        analytics.put("efficiency", buildInformation.getEfficiency(maxJobDuration, totalJobDuration));
         analytics.put("size", String.valueOf(buildInformation.getJobsFinished()));
         analytics.put("pass", buildInformation.getJobsPassRate());
         analytics.put("fail", buildInformation.getJobsFailRate());

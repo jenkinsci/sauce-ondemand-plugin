@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.google.common.base.Strings;
 import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
@@ -91,6 +92,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      */
     private String jobVisibility = "";
 
+    /**
+     * The mixpanel json for SauceOnDemandTestPublisher to fetch and update its internal value for final sending
+     */
+    private JSONObject mixpanelJSON;
 
     /**
      * Constructs a new instance.
@@ -99,6 +104,13 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public SauceOnDemandReportPublisher() {
     }
 
+    public void setMixpanelJSON(JSONObject mixpanelJSON) {
+        this.mixpanelJSON = mixpanelJSON;
+    }
+
+    public JSONObject getMixpanelJSON() {
+        return this.mixpanelJSON;
+    }
 
     public String getJobVisibility() {
         return jobVisibility;
@@ -108,7 +120,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public void setJobVisibility(String jobVisibility) {
         this.jobVisibility = jobVisibility;
     }
-
 
     @Override
     public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
@@ -197,6 +208,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
         SauceREST sauceREST = getSauceREST(build);
 
+        boolean failureMessageSent = false;
+
         LinkedHashMap<String, JenkinsJobInformation> onDemandTests;
         List<CaseResult> failedTests;
         HashMap failedTestsMap = new HashMap();
@@ -229,8 +242,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 }
             }
         }
-
-        JenkinsBuildInformation buildInformation = buildAction.getSauceBuild();
 
         //try the stdout for the tests, if build are aborted testResult will be null
         if (testResult != null) {
@@ -294,32 +305,55 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
 
             // add the failure message to custom data IF we're sending data, also there may be other custom data we want to preserve
-            if (!isDisableUsageStats() && testResult != null && jobInformation.getStatus() == "Failed") {
-                try {
-                    JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
-                    JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
-                    Map<String, Object> customData = new HashMap<String, Object>();
+            if (!isDisableUsageStats()) {
 
-                    Iterator<String> customDataKeys = existingCustomData.keys();
-                    while (customDataKeys.hasNext()) {
-                        String customDataKey = customDataKeys.next();
-                        customData.put(customDataKey, existingCustomData.getString(customDataKey));
-                    }
+                if (testResult != null && jobInformation.getStatus() == "Failed") {
+                    try {
+                        JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
+                        JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
+                        Map<String, Object> customData = new HashMap<String, Object>();
 
-                    // see if failedTests contains the job name
-                    if (failedTestsMap.get(jobInformation.getName())!=null) {
-                        customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
+                        Iterator<String> customDataKeys = existingCustomData.keys();
+                        while (customDataKeys.hasNext()) {
+                            String customDataKey = customDataKeys.next();
+                            customData.put(customDataKey, existingCustomData.getString(customDataKey));
+                        }
+
+                        // see if failedTests contains the job name
+                        if (failedTestsMap.get(jobInformation.getName())!=null) {
+                            customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
+                            failureMessageSent = true;
+                        }
+                        updates.put("custom-data", customData);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        logger.warning("Could not add failure message: " + e.getMessage());
                     }
-                    updates.put("custom-data", customData);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    logger.warning("Could not add failure message: " + e.getMessage());
                 }
             }
 
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
+            }
+        }
+
+        // set the mixpanel jsonobject which will be sent later from test publisher
+        if (!isDisableUsageStats()) {
+            try {
+                SauceCredentials credentials = SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials();
+                CredentialsProvider.track(build, credentials);
+                String username = credentials.getUsername();
+                JenkinsBuildInformation buildInformation = buildAction.getSauceBuild();
+
+                JSONObject props = new JSONObject();
+                props.put("plugin", "jenkins");
+                props.put("username", username);
+                props.put("passed", buildInformation.getJobsFinished() == buildInformation.getJobsPassed());
+                props.put("failureMessageSent", failureMessageSent);
+                setMixpanelJSON(props);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
 
@@ -336,7 +370,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     private boolean isDisableUsageStats() {
         PluginImpl plugin = PluginImpl.get();
-        if (plugin == null) { return false; }
+        if (plugin == null) { return true; }
         return plugin.isDisableUsageStats();
     }
 

@@ -47,12 +47,24 @@ public class JenkinsBuildInformation extends BuildInformation {
     @Exported(visibility=2)
     public String getStartDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
-        return sdf.format(1000 * (long)super.getStartTime());
+        return sdf.format(1000 * super.getStartTime());
     }
 
     @Exported(visibility=2)
-    public int getDuration() {
+    public long getDuration() {
         return super.getEndTime() - super.getStartTime();
+    }
+
+    @Override
+    @Exported(visibility=2)
+    public long getStartTime() {
+        return super.getStartTime();
+    }
+
+    @Override
+    @Exported(visibility=2)
+    public long getEndTime() {
+        return super.getEndTime();
     }
 
     @Exported(visibility=2)
@@ -77,8 +89,15 @@ public class JenkinsBuildInformation extends BuildInformation {
     }
 
     @Exported(visibility=2)
-    public String getEfficiency(int maxJobDuration) {
-        return df.format((float)maxJobDuration * 100 / (super.getEndTime() - super.getStartTime()));
+    public String getEfficiency(long maxJobDuration, long totalJobDuration) {
+        if (totalJobDuration == getDuration()) {
+            return "0% (Sequential)";
+        }
+        float efficiency = (float)maxJobDuration * 100 / getDuration();
+        if (efficiency <= 90) {
+            return df.format(efficiency) + "% (Semi-parallel)";
+        }
+        return df.format(efficiency) + "% (Parallel)";
     }
 
     @Override

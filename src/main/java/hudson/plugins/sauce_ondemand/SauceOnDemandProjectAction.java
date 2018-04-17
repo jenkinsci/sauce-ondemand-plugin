@@ -173,27 +173,8 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public Map<String,String> getAnalytics() {
-        HashMap<String,String> analytics = new HashMap<String,String>();
-
-        JenkinsBuildInformation buildInformation = getBuild();
-        List<JenkinsJobInformation> allJobs = this.getJobs();
-        int maxJobDuration = 0;
-        for (JenkinsJobInformation job : allJobs) {
-            int duration = job.getDuration();
-            if (duration > maxJobDuration) {
-                maxJobDuration = duration;
-            }
-        }
-
-        analytics.put("start", buildInformation.getStartDate());
-        analytics.put("duration", buildInformation.getPrettyDuration());
-        analytics.put("efficiency", buildInformation.getEfficiency(maxJobDuration));
-        analytics.put("size", String.valueOf(buildInformation.getJobsFinished()));
-        analytics.put("pass", buildInformation.getJobsPassRate());
-        analytics.put("fail", buildInformation.getJobsFailRate());
-        analytics.put("error", buildInformation.getJobsErrorRate());
-
-        return analytics;
+        SauceOnDemandBuildAction sauceBuildAction = getSauceBuildActions().get(0);
+        return sauceBuildAction.getAnalytics();
     }
 
     @Override
