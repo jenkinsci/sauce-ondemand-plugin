@@ -1,3 +1,11 @@
+# Jenkins 1.174 - 2018-04-16
+
+* Add sauce build information to the sauce labs results page
+* UI tweaks for better test status visibility
+* If sending stats is enabled, we also capture junit failure messages under the custom data metadata field for each job.
+	* Currently this is only visible through the API or on the saucelabs.com page
+	* In the next version we will also have these JUNIT failure messages more readily available in the results on Jenkins
+
 # Jenkins 1.173 - 2018-03-28
 
 * Fix JENKINS-45892

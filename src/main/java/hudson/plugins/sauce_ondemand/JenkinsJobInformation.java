@@ -116,6 +116,21 @@ public class JenkinsJobInformation extends JobInformation {
         return super.getVersion();
     }
 
+    @Nullable
+    @Override
+    @Exported(visibility=2)
+    public String getFailureMessage() {
+        return super.getFailureMessage();
+    }
+
+    @Override
+    @Exported(visibility=2)
+    public boolean hasFailureMessage() {
+        // temporarily disabled until we can make the UX for this better
+        // return super.hasFailureMessage();
+        return false;
+    }
+
     @Exported(visibility=2)
     public String getPrettyDuration() {
         Duration duration = Duration.ofSeconds(super.getDuration());

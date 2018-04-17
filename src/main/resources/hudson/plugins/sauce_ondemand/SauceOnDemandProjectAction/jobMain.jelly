@@ -29,6 +29,22 @@
         #results tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
         </style>
         <h2>Sauce Labs results</h2>
         <div>
@@ -55,7 +71,7 @@
                                 <td>${analytics.get("pass")}%</td>
                                 <td>${analytics.get("fail")}%</td>
                                 <td>${analytics.get("error")}%</td>
-                                <td>${analytics.get("efficiency")}%</td>
+                                <td>${analytics.get("efficiency")}</td>
                             </tr>
                         </table>
                         <table id="results">
@@ -72,7 +88,16 @@
                                     <td>
                                         <a href="${from.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
                                     </td>
-                                    <td><font color="${job.getStatusColor()}">${job.getStatus()}</font></td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <font color="${job.getStatusColor()}">${job.getStatus()}</font>
+                                            <j:if test="${job.hasFailureMessage()}">
+                                                <div class="dropdown-content">
+                                                    ${job.getFailureMessage()}
+                                                </div>
+                                            </j:if>
+                                        </div>
+                                    </td>
                                     <td>${job.getPrettyDuration()}</td>
                                     <td>${job.getOs()}</td>
                                     <td>${job.getBrowser()} ${job.getVersion()}</td>

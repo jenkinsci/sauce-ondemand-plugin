@@ -665,7 +665,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public boolean isDisableUsageStats() {
         PluginImpl plugin = PluginImpl.get();
-        if (plugin == null) { return false; }
+        if (plugin == null) { return true; }
         return plugin.isDisableUsageStats();
     }
 

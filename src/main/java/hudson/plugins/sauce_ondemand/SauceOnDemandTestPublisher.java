@@ -16,7 +16,8 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.util.DescribableList;
 import jenkins.tasks.SimpleBuildStep;
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
+import org.json.JSONException;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -28,6 +29,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import com.mixpanel.mixpanelapi.ClientDelivery;
+import com.mixpanel.mixpanelapi.MessageBuilder;
+import com.mixpanel.mixpanelapi.MixpanelAPI;
 
 /**
  * Reimplementation of {@link hudson.maven.MavenTestDataPublisher} in order to add
@@ -53,6 +58,8 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
+
+    private JSONObject mixpanelJSON;
 
     /**
      * {@inheritDoc}
@@ -90,6 +97,25 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
 
         addTestDataPublishersToMavenModules(build, launcher, listener);
         addTestDataPublishersToBuildReport(build, launcher, listener);
+
+        // send mixpanel outside of the build processing above so we don't end up sending multiple messages per build
+        if (isDisableUsageStats()) {
+            return true;
+        }
+        if (mixpanelJSON == null) {
+            return true;
+        }
+        try {
+            MessageBuilder messageBuilder = new MessageBuilder("5d9a83c5f58311b7b88622d0da5e7e9d");
+            JSONObject sentEvent = messageBuilder.event(mixpanelJSON.getString("username"), "Jenkins JUNIT status", mixpanelJSON);
+            ClientDelivery delivery = new ClientDelivery();
+            delivery.addMessage(sentEvent);
+            MixpanelAPI mixpanel = new MixpanelAPI();
+            mixpanel.deliver(delivery);
+        } catch (JSONException e) {
+            listener.getLogger().println("Could not send junit status: " + e.getMessage());
+        }
+
         return true;
     }
 
@@ -114,6 +140,33 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
         }
     }
 
+    /**
+    * Keep a copy of the mixpanel json and specifically whether or not we've sent the failure message
+    */
+    private void updateMixpanelJSON(JSONObject mixpanelJSON) {
+        try {
+            if (mixpanelJSON == null) {
+                return;
+            }
+            if (this.mixpanelJSON == null) {
+                this.mixpanelJSON = mixpanelJSON;
+                return;
+            }
+            if (this.mixpanelJSON.getBoolean("failureMessageSent")) {
+                return;
+            }
+            this.mixpanelJSON.put("failureMessageSent", mixpanelJSON.getBoolean("failureMessageSent"));
+        } catch (JSONException e) {
+        }
+
+    }
+
+    private boolean isDisableUsageStats() {
+        PluginImpl plugin = PluginImpl.get();
+        if (plugin == null) { return true; }
+        return plugin.isDisableUsageStats();
+    }
+
     private void addTestDataPublishersToBuildReport(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException,
             InterruptedException {
         TestResultAction report = build.getAction(TestResultAction.class);
@@ -129,6 +182,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
             }
             SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
             TestResultAction.Data d = saucePublisher.getTestData(build, launcher, listener, report.getResult());
+            updateMixpanelJSON(saucePublisher.getMixpanelJSON());
             data.add(d);
 
             report.setData(data);
@@ -137,6 +191,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
             //no test publisher defined, process stdout only
             SauceOnDemandReportPublisher saucePublisher = createReportPublisher();
             saucePublisher.getTestData(build, launcher, listener, null);
+            updateMixpanelJSON(saucePublisher.getMixpanelJSON());
         }
     }
 
