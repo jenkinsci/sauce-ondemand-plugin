@@ -125,11 +125,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         String jsonResponse = sauceREST.getBuild(buildNumber);
         JSONObject buildObj = new JSONObject(jsonResponse);
 
-        if (buildObj == null) {
-            logger.log(Level.WARNING, "Unable to find build data for " + buildNumber);
-        } else {
-            buildInformation.populateFromJson(buildObj);
-        }
+        buildInformation.populateFromJson(buildObj);
         return buildInformation;
     }
 
