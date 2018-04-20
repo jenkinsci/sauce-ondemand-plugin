@@ -49,6 +49,10 @@ public class SauceTestResultsById {
         return job.getName();
     }
 
+    public boolean hasFailureMessage() {
+        return job.hasFailureMessage();
+    }
+
     public String getFailureMessage() {
         return job.getFailureMessage();
     }

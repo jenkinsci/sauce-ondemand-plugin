@@ -40,8 +40,11 @@ THE SOFTWARE.
               </script>
           </div>
         </l:ajax>
-        <h3>Stacktrace</h3>
-        <pre>${it.getFailureMessage()}</pre>
+        <j:if test="${it.hasFailureMessage()}">
+          <h3>Stacktrace</h3>
+          <pre>${it.getFailureMessage()}</pre>
+        </j:if>
+
     </l:main-panel>
   </l:layout>
 </j:jelly>
