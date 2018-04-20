@@ -265,7 +265,6 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         return analytics;
     }
 
-
     protected JenkinsSauceREST getSauceREST() {
         SauceCredentials creds = getCredentials();
         String username = creds != null ? creds.getUsername() : null;

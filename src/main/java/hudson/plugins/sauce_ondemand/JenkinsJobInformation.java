@@ -125,9 +125,7 @@ public class JenkinsJobInformation extends JobInformation {
     @Override
     @Exported(visibility=2)
     public boolean hasFailureMessage() {
-        // temporarily disabled until we can make the UX for this better
-        // return super.hasFailureMessage();
-        return false;
+        return super.hasFailureMessage();
     }
 
     @Exported(visibility=2)
