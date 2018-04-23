@@ -36,8 +36,8 @@ void mvn(def args) {
 
   /* Set JAVA_HOME, and special PATH variables. */
   List javaEnv = [
-    "JAVA_HOME=${tool 'jdk8'}"
-    "PATH+JDK=$JAVA_HOME/bin",
+    "JAVA_HOME=${tool 'jdk8'}",
+    "PATH+JDK=$JAVA_HOME/bin"
   ]
 
   /* Call maven tool with java envVars. */
