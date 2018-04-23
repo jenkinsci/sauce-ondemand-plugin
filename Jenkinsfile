@@ -31,13 +31,15 @@ node {
 
 /* Run maven from tool "mvn" */
 void mvn(def args) {
+  /* Get jdk tool. */
+  String jdktool = tool name: "jdk8", type: 'hudson.model.JDK'
+
   /* Get the maven tool. */
   def mvnHome = tool name: 'mvn'
 
   /* Set JAVA_HOME, and special PATH variables. */
   List javaEnv = [
-    "JAVA_HOME=${tool 'jdk8'}",
-    "PATH+JDK=$JAVA_HOME/bin"
+    "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
   ]
 
   /* Call maven tool with java envVars. */
