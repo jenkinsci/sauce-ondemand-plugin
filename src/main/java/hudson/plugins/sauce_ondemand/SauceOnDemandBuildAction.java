@@ -101,12 +101,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         return !getJobs().isEmpty();
     }
 
-    // we can grab the buildName from a job, or possibly from sanitized build name
+    /**
+     * Default method of getting Sauce build information using the sanitized Jenkins build number
+     */
     @Exported(visibility=2)
     public JenkinsBuildInformation getSauceBuild() {
         if (buildInformation == null) {
             try {
-                buildInformation = retrieveBuildFromSauce(getSauceREST(), build);
+                String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
+                buildInformation = retrieveBuildFromSauce(getSauceREST(), buildNumber);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
             }
@@ -115,20 +118,44 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         return buildInformation;
     }
 
-    public static JenkinsBuildInformation retrieveBuildFromSauce(SauceREST sauceREST, Run build) throws JSONException {
-        // this is the build name in the sauce API
-        String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
+    /**
+     * Method for getting Sauce build information if we know the actual Sauce build name
+     */
+    @Exported(visibility=2)
+    public JenkinsBuildInformation getSauceBuild(String sauceBuildName) {
+        if (buildInformation == null) {
+            try {
+                buildInformation = retrieveBuildFromSauce(getSauceREST(), sauceBuildName);
+            } catch (JSONException e) {
+                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
+            }
+        }
 
+        return buildInformation;
+    }
+
+    /**
+     * Invokes the Sauce REST API to retrieve the build information.
+     * @param sauceREST    Sauce Rest object/credentials to use
+     * @param buildNumber  The build name on Sauce or sanitized build number from Jenkins
+     * @return Jenkins build information
+     * @throws JSONException Not json returned properly
+     */
+    public static JenkinsBuildInformation retrieveBuildFromSauce(SauceREST sauceREST, String buildNumber) throws JSONException {
         JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildNumber);
 
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
         String jsonResponse = sauceREST.getBuild(buildNumber);
+        if ("".equals(jsonResponse)) {
+            logger.log(Level.WARNING, "Sauce REST API get build JSON Response was empty for " + buildNumber);
+            return buildInformation;
+        }
+
         JSONObject buildObj = new JSONObject(jsonResponse);
 
         buildInformation.populateFromJson(buildObj);
         return buildInformation;
     }
-
 
     @Exported(visibility=2)
     public List<JenkinsJobInformation> getJobs() {

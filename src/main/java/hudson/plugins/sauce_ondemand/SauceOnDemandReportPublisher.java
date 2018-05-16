@@ -214,6 +214,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         List<CaseResult> failedTests;
         HashMap failedTestsMap = new HashMap();
 
+        /**
+         * sanitizedBuildNumber is not valid if users set a custom build name
+         * if we can set it, we should use the Sauce build name API endpoints using the build ID
+         */
+        String sauceBuildName = null;
+
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
@@ -300,6 +306,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 jobInformation.setBuild(SauceEnvironmentUtil.getSanitizedBuildNumber(build));
                 updates.put("build", jobInformation.getBuild());
             }
+
             if (!Strings.isNullOrEmpty(getJobVisibility())) {
                 updates.put("public", getJobVisibility());
             }
@@ -333,6 +340,11 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
             }
+
+            // this should be more reliable than relying on sanitizedBuildNumber by default as long as there were test IDs
+            if (sauceBuildName == null) {
+                sauceBuildName = jobInformation.getBuild();
+            }
         }
 
         // set the mixpanel jsonobject which will be sent later from test publisher
@@ -341,12 +353,24 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 SauceCredentials credentials = SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials();
                 CredentialsProvider.track(build, credentials);
                 String username = credentials.getUsername();
-                JenkinsBuildInformation buildInformation = buildAction.getSauceBuild();
+                JenkinsBuildInformation buildInformation;
+
+                // if we were able to get a sauceBuildName we should use it, otherwise we default to using sanitizedBuildNumber;
+                if (sauceBuildName != null) {
+                    buildInformation = buildAction.getSauceBuild(sauceBuildName);
+                } else {
+                    buildInformation = buildAction.getSauceBuild();
+                }
 
                 JSONObject props = new JSONObject();
                 props.put("plugin", "jenkins");
                 props.put("username", username);
-                props.put("passed", buildInformation.getJobsFinished() == buildInformation.getJobsPassed());
+                // buildInformation can be null in some edge cases, e.g. sauce tests never get run at all because of an error in an earlier build step
+                if (buildInformation == null) {
+                    props.put("passed", JSONObject.NULL);
+                } else {
+                    props.put("passed", "success".equals(buildInformation.getStatus()));
+                }
                 props.put("failureMessageSent", failureMessageSent);
                 setMixpanelJSON(props);
             } catch (JSONException e) {
