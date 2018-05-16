@@ -1,3 +1,8 @@
+# Jenkins 1.176 - 2018-05-16
+
+* fix NullPointerException when unable to find Sauce builds through the REST API
+* handle custom build names better
+
 # Jenkins 1.175 - 2018-04-20
 
 * JUnit failure messages are now available in the results
