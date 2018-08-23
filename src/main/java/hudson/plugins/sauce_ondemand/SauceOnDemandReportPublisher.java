@@ -83,9 +83,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private static final Logger logger = Logger.getLogger(SauceOnDemandReportPublisher.class.getName());
 
     /**
-     * Regex which identifies the first word of the job name.
+     * Regex which identifies the job name.
      */
-    private static final String JOB_NAME_PATTERN = "\\b({0})\\b";
+    private static final String JOB_NAME_PATTERN = Pattern.quote("{0}");
 
     /**
      * What job security level we should set jobs to
@@ -190,6 +190,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             for (String text : logString.split("\n|\r")) {
                 TestIDDetails details = TestIDDetails.processString(text);
                 if (details != null) {
+                    logger.finer("Extracted ID " + details.getJobId() + " from the line: " + text)
                     onDemandTests.add(details);
                 }
             }
@@ -223,6 +224,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
+            logger.finer("Exception during retrieveJobIdsFromSauce");
+
             onDemandTests = new LinkedHashMap<>();
 
             logger.severe(e.getMessage());
@@ -234,10 +237,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         try {
             in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
             String line;
+
             while ((line = in.readLine()) != null) {
                 testIds.addAll(processSessionIds(true, line));
             }
         } catch (IOException e) {
+            logger.finer("Exception while adding testIds ");
             logger.severe(e.getMessage());
         } finally {
             if (in != null) {
@@ -249,7 +254,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
         }
 
-        //try the stdout for the tests, if build are aborted testResult will be null
+        //try the stdout for the tests, if build was aborted testResult will be null
         if (testResult != null) {
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
@@ -313,27 +318,28 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
             // add the failure message to custom data IF we're sending data, also there may be other custom data we want to preserve
             if (!isDisableUsageStats() && testResult != null && "Failed".equals(jobInformation.getStatus())) {
+                Map<String, Object> customData = new HashMap<String, Object>();
+
+                // preserve any existing custom data
                 try {
                     JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
                     JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
-                    Map<String, Object> customData = new HashMap<String, Object>();
-
                     Iterator<String> customDataKeys = existingCustomData.keys();
                     while (customDataKeys.hasNext()) {
                         String customDataKey = customDataKeys.next();
                         customData.put(customDataKey, existingCustomData.getString(customDataKey));
                     }
-
-                    // see if failedTests contains the job name
-                    if (failedTestsMap.get(jobInformation.getName())!=null) {
-                        customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
-                        failureMessageSent = true;
-                    }
-                    updates.put("custom-data", customData);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    logger.warning("Could not add failure message: " + e.getMessage());
+                    logger.fine("No existing custom data found, inserting failure message into new custom data object. " + e.getMessage());
                 }
+
+                // see if failedTests contains the job name
+                if (failedTestsMap.get(jobInformation.getName())!=null) {
+                    customData.put("FAILURE_MESSAGE", failedTestsMap.get(jobInformation.getName()));
+                    failureMessageSent = true;
+                }
+                updates.put("custom-data", customData);
             }
 
             if (!updates.isEmpty()) {
@@ -439,7 +445,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                         }
                     } catch (Exception e) {
                         //ignore and continue
-                        logger.log(Level.WARNING, "Error parsing line, attempting to continue");
+                        logger.log(Level.WARNING, "Error parsing line, attempting to continue", e);
                     }
 
                 }
