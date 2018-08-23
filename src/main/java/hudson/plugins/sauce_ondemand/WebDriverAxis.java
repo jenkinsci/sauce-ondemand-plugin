@@ -59,8 +59,6 @@ public class WebDriverAxis extends BrowserAxis {
         public List<Browser> getBrowsers() {
             try {
                 return BROWSER_FACTORY.getWebDriverBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Error retrieving browsers from Sauce Labs", e);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Error parsing JSON response", e);
             }
