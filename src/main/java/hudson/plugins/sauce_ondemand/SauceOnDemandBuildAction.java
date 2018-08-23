@@ -267,6 +267,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     }
 
     public Map<String,String> getAnalytics() {
+        logger.fine("Getting Sauce analytics");
         HashMap<String,String> analytics = new HashMap<String,String>();
 
         JenkinsBuildInformation buildInformation = getSauceBuild();

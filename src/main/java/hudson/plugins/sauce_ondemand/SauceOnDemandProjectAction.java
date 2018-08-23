@@ -85,9 +85,9 @@ public class SauceOnDemandProjectAction extends AbstractAction {
      * @return Whether sauce results were found for this project/builds
      */
     public boolean hasSauceOnDemandResults() {
-        logger.fine("checking if project has sauce results");
+        logger.fine("Checking if project has Sauce enabled");
         if (isSauceEnabled()) {
-            logger.fine("Checking to see if project has Sauce results");
+            logger.fine("Sauce is enabled, checking to see if project has Sauce results");
             List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
             if (sauceOnDemandBuildActions != null) {
                 for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
@@ -144,10 +144,12 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
     @Override
     public List<JenkinsJobInformation> getJobsWithAuth() {
+        logger.fine("Getting Sauce jobs with auth");
         return super.getJobsWithAuth();
     }
 
     public List<JenkinsJobInformation> getJobs() {
+        logger.fine("Getting Sauce jobs");
         List<SauceOnDemandBuildAction> sauceOnDemandBuildAction = getSauceBuildActions();
         if (sauceOnDemandBuildAction != null) {
             List<JenkinsJobInformation> allJobs = new ArrayList<JenkinsJobInformation>();
@@ -161,6 +163,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public JenkinsBuildInformation getBuild() {
+        logger.fine("Getting Sauce build");
         List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
         if (sauceOnDemandBuildActions != null) {
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
@@ -172,6 +175,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public Map<String,String> getAnalytics() {
+        logger.fine("Getting Sauce analytics");
         SauceOnDemandBuildAction sauceBuildAction = getSauceBuildActions().get(0);
         return sauceBuildAction.getAnalytics();
     }
