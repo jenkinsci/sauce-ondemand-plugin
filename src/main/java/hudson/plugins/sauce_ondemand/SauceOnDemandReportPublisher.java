@@ -181,8 +181,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @return list of session ids found in log strings
      */
     public static LinkedList<TestIDDetails> processSessionIds(Boolean isStdout, String... logStrings) {
-        logger.log(Level.FINE, isStdout == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
-
         LinkedList<TestIDDetails> onDemandTests = new LinkedList<TestIDDetails>();
 
         for (String logString : logStrings) {
@@ -190,7 +188,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             for (String text : logString.split("\n|\r")) {
                 TestIDDetails details = TestIDDetails.processString(text);
                 if (details != null) {
-                    logger.finer("Extracted ID " + details.getJobId() + " from the line: " + text)
+                    logger.finer("Extracted ID " + details.getJobId() + " from line: " + text)
                     onDemandTests.add(details);
                 }
             }
@@ -237,6 +235,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         try {
             in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
             String line;
+            logger.log(Level.FINE, "Parsing Sauce Session ids in stdout");
 
             while ((line = in.readLine()) != null) {
                 testIds.addAll(processSessionIds(true, line));
@@ -254,8 +253,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             }
         }
 
-        //try the stdout for the tests, if build was aborted testResult will be null
+        //try the stdout for the tests, but if build was aborted testResult will be null
         if (testResult != null) {
+            logger.log(Level.FINE, "Parsing Sauce Session ids in test results");
+
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
 
@@ -268,6 +269,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     }
                 }
             }
+
             if (!isDisableUsageStats()) {
                 failedTests = testResult.getFailedTests();
                 for (CaseResult failedTest : failedTests) {
