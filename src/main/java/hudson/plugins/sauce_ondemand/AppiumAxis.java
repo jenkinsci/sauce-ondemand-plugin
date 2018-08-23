@@ -59,8 +59,6 @@ public class AppiumAxis extends BrowserAxis {
         public List<Browser> getBrowsers() {
             try {
                 return BROWSER_FACTORY.getAppiumBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Error parsing JSON response", e);
             }

@@ -1100,8 +1100,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public List<Browser> getAppiumBrowsers() {
             try {
                 return PluginImpl.BROWSER_FACTORY.getAppiumBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
@@ -1114,8 +1112,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public List<Browser> getWebDriverBrowsers() {
             try {
                 return PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
@@ -1137,8 +1133,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     browsers.add(browser);
                 }
                 return map;
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error retrieving browsers from Saucelabs", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
