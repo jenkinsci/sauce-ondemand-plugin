@@ -55,9 +55,10 @@ public class SauceOnDemandReportFactory extends Data {
      * Ideally we also want word boundaries but it doesn't work with \Q \E
      * But since job names can be arbitrary, things like [] would cause errors without it
      * so this seems like the safer option
+     *
+     * Aug 29, 2018: The $ is a new addition that solves some edge cases but could potentially break other edge cases
      */
-    private static final String JOB_NAME_PATTERN = Pattern.quote("{0}");
-
+    private static final String JOB_NAME_PATTERN = "("+Pattern.quote("{0}")+")$";
     /**
      * Makes this a singleton -- since it's stateless, there's no need to keep one around for every build.
      *
@@ -74,7 +75,7 @@ public class SauceOnDemandReportFactory extends Data {
             CaseResult cr = (CaseResult) testObject;
             List<String[]> ids = new ArrayList<String[]>();
 
-            logger.log(Level.FINE, "Attempting to find Sauce SessionID for test object " + cr.getFullName());
+            logger.log(Level.FINE, "Attempting to find Sauce SessionID for test object: " + cr.getFullName());
             logger.log(Level.FINER, "Test object display name: " + cr.getDisplayName());
 
             AbstractBuild<?, ?> build = cr.getOwner();
@@ -88,7 +89,7 @@ public class SauceOnDemandReportFactory extends Data {
                         Matcher matcher = jobNamePattern.matcher(cr.getFullName());
                         if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
                                 || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                                || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                                || matcher.find()) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
                             //then we have a match
                             logger.log(Level.FINER, "Checking if job name matches test object: " + job.getName() + " [TRUE]");
                             ids.add(new String[]{job.getJobId(), job.getHmac()});
@@ -98,14 +99,12 @@ public class SauceOnDemandReportFactory extends Data {
                     }
                 }
             } else {
-                logger.log(Level.FINE, "Unable to get build action, not doing name matching");
+                logger.log(Level.FINE, "Unable to get build action");
             }
 
             if (ids.isEmpty()) {
-                logger.log(Level.FINE, "No Sauce SessionIDs found for test object via name matching, adding Sauce SessionIDs by parsing results");
-                logger.log(Level.FINE, cr == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results");
-
-                ids.addAll(findSessionIDs(cr, cr.getFullName(), cr.getStdout(), cr.getStderr()));
+                logger.log(Level.FINE, "No Sauce SessionIDs found for test object via build action name matching, adding Sauce SessionIDs by parsing results");
+                ids.addAll(findSessionIDs(cr, cr.getStdout(), cr.getStderr()));
             }
 
             if (ids.isEmpty()) {
@@ -113,7 +112,7 @@ public class SauceOnDemandReportFactory extends Data {
             }
 
             if (!ids.isEmpty()) {
-                logger.log(Level.FINE, "Sauce SessionIDs found: " + ids.size());
+                logger.log(Level.FINE, "Final number of Sauce SessionIDs found: " + ids.size());
                 return Collections.singletonList(new SauceOnDemandReport(cr, ids));
             }
 
@@ -127,9 +126,13 @@ public class SauceOnDemandReportFactory extends Data {
      * Returns all sessions matching a given jobName in the provided logs.
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
-    static List<String[]> findSessionIDs(CaseResult caseResult, String... output) {
+    static List<String[]> findSessionIDs(CaseResult cr, String... output) {
+
+        logger.log(Level.FINE, cr == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results"); //cr shouldn't be null?
 
         List<String[]> sessions = new ArrayList<String[]>();
+        List<String[]> matchedSessions = new ArrayList<String[]>();
+
         for (String text : output) {
             if (text == null) continue;
             Matcher m = SauceOnDemandBuildAction.SESSION_ID_PATTERN.matcher(text);
@@ -139,12 +142,29 @@ public class SauceOnDemandReportFactory extends Data {
                 if (m.groupCount() == 2) {
                     job = m.group(2);
                 }
-                if (caseResult == null) {
+                if (cr == null) {
                     sessions.add(new String[]{sessionId, job});
                 } else {
-                    sessions.add(new String[]{sessionId, job, String.valueOf(caseResult.isPassed())});
+                    Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job));
+                    Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                    if (job.equals(cr.getFullName()) //if job name equals full name of test
+                            || job.contains(cr.getFullName()) //or if job name contains the test name
+                            || matcher.find()) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
+                        matchedSessions.add(new String[]{sessionId, job, String.valueOf(cr.isPassed())});
+                        logger.log(Level.FINER, "Checking if job name matches test object: " + job + " [TRUE]");
+                    } else {
+                        sessions.add(new String[]{sessionId, job, String.valueOf(cr.isPassed())});
+                        logger.log(Level.FINER, "Checking if job name matches test object: " + job + " [FALSE]");
+                    }
                 }
             }
+        }
+
+        logger.log(Level.FINER, "Sauce SessionIDs with matching job names: " + matchedSessions.size());
+        logger.log(Level.FINER, "Sauce SessionIDs without matching job names: " + sessions.size());
+
+        if (!matchedSessions.isEmpty()) {
+            return matchedSessions;
         }
         return sessions;
     }
