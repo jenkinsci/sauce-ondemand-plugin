@@ -259,8 +259,14 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
                 JenkinsJobInformation information = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
-                information.populateFromJson(jobData);
-                jobInformation.put(information.getJobId(), information);
+                try {
+                    information.populateFromJson(jobData);
+                    jobInformation.put(information.getJobId(), information);
+                } catch (JSONException e) {
+                    logger.finer("Exception with populatefromJson:" + e);
+                    logger.finer("jobData: " + jobData.toString());
+                    throw e;
+                }
             }
         }
         return jobInformation;
