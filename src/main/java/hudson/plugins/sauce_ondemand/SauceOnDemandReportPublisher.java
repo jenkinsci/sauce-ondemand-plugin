@@ -188,7 +188,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             for (String text : logString.split("\n|\r")) {
                 TestIDDetails details = TestIDDetails.processString(text);
                 if (details != null) {
-                    logger.finer("Extracted ID " + details.getJobId() + " from line: " + text)
+                    logger.finer("Extracted ID " + details.getJobId() + " from line: " + text);
                     onDemandTests.add(details);
                 }
             }
@@ -222,7 +222,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
-            logger.finer("Exception during retrieveJobIdsFromSauce");
+            logger.finer("Exception during retrieveJobIdsFromSauce:" + e);
 
             onDemandTests = new LinkedHashMap<>();
 
@@ -325,15 +325,17 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 // preserve any existing custom data
                 try {
                     JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
-                    JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
-                    Iterator<String> customDataKeys = existingCustomData.keys();
-                    while (customDataKeys.hasNext()) {
-                        String customDataKey = customDataKeys.next();
-                        customData.put(customDataKey, existingCustomData.getString(customDataKey));
+                    if (jobDetails.has("custom-data") && !jobDetails.isNull("custom-data")) {
+                        JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
+                        Iterator<String> customDataKeys = existingCustomData.keys();
+                        while (customDataKeys.hasNext()) {
+                            String customDataKey = customDataKeys.next();
+                            customData.put(customDataKey, existingCustomData.getString(customDataKey));
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    logger.fine("No existing custom data found, inserting failure message into new custom data object. " + e.getMessage());
+                    logger.fine("Error reading existing custom data: " + e.getMessage());
                 }
 
                 // see if failedTests contains the job name
