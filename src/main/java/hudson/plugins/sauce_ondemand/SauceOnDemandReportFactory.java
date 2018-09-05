@@ -148,7 +148,7 @@ public class SauceOnDemandReportFactory extends Data {
                     Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job));
                     Matcher matcher = jobNamePattern.matcher(cr.getFullName());
                     if (job.equals(cr.getFullName()) //if job name equals full name of test
-                            || job.contains(cr.getFullName()) //or if job name contains the test name
+                            || job.contains(cr.getDisplayName()) //or if job name contains the test name
                             || matcher.find()) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
                         matchedSessions.add(new String[]{sessionId, job, String.valueOf(cr.isPassed())});
                         logger.log(Level.FINER, "Checking if job name matches test object: " + job + " [TRUE]");
