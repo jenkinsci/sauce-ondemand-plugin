@@ -1,6 +1,5 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.JobInformation;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.FilePath;

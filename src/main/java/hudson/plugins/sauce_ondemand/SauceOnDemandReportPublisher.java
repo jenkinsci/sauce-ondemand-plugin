@@ -25,13 +25,11 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.google.common.base.Strings;
-import com.saucelabs.ci.JobInformation;
 import com.saucelabs.saucerest.SauceREST;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.maven.MavenBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
