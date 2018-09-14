@@ -83,12 +83,7 @@ public class SauceOnDemandReportFactory extends Data {
                 for (JobInformation job : jobs) {
                     //if job name matches test class/test name, then add id
                     if (job.getName() != null) {
-                        Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
-                        Matcher matcher = jobNamePattern.matcher(cr.getFullName());
-                        if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
-                                || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
-                                || matcher.find()) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
-                            //then we have a match
+                        if (matchTestNames(job.getName(), cr.getFullName(), cr.getDisplayName())) {
                             logger.log(Level.FINER, "Checking if job name matches test object: " + job.getName() + " [TRUE]");
                             ids.add(new String[]{job.getJobId(), job.getHmac()});
                         } else {
@@ -143,11 +138,7 @@ public class SauceOnDemandReportFactory extends Data {
                 if (cr == null) {
                     sessions.add(new String[]{sessionId, job});
                 } else {
-                    Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job));
-                    Matcher matcher = jobNamePattern.matcher(cr.getFullName());
-                    if (job.equals(cr.getFullName()) //if job name equals full name of test
-                            || job.contains(cr.getDisplayName()) //or if job name contains the test name
-                            || matcher.find()) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
+                    if (matchTestNames(job, cr.getFullName(), cr.getDisplayName())) { //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
                         matchedSessions.add(new String[]{sessionId, job, String.valueOf(cr.isPassed())});
                         logger.log(Level.FINER, "Checking if job name matches test object: " + job + " [TRUE]");
                     } else {
@@ -165,5 +156,14 @@ public class SauceOnDemandReportFactory extends Data {
             return matchedSessions;
         }
         return sessions;
+    }
+
+    public static boolean matchTestNames(String jobName, String fullName, String displayName) {
+        Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, jobName));
+        Matcher matcher = jobNamePattern.matcher(fullName);
+
+        return jobName.equals(fullName) //if job name equals full name of test
+            || jobName.contains(displayName) //or if job name contains the test name
+            || matcher.find(); //or if the full name of the test contains the job name (must end the same, as only the beginning should differ)
     }
 }

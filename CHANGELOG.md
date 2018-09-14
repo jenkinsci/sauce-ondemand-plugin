@@ -1,3 +1,11 @@
+# Jenkins 1.177 - 2018-09-14
+
+* Update ci-sauce to 1.140 and saucerest to 1.139
+* Fix inaccurate sauce build information in results page
+* No longer add jenkins- to the build name
+* Fixes for wrong test results being embedded under some cases
+* Increased amount of logging for use in debugging problems
+
 # Jenkins 1.176 - 2018-05-16
 
 * fix NullPointerException when unable to find Sauce builds through the REST API
