@@ -105,8 +105,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * Default method of getting Sauce build information using the sanitized Jenkins build number
      */
     @Exported(visibility=2)
-    public JenkinsBuildInformation getSauceBuild() {
-        if (buildInformation == null) {
+    public JenkinsBuildInformation getSauceBuild(boolean updateBuild) {
+        if (updateBuild || buildInformation == null) {
             try {
                 String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
                 buildInformation = retrieveBuildFromSauce(getSauceREST(), buildNumber);
@@ -122,8 +122,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * Method for getting Sauce build information if we know the actual Sauce build name
      */
     @Exported(visibility=2)
-    public JenkinsBuildInformation getSauceBuild(String sauceBuildName) {
-        if (buildInformation == null) {
+    public JenkinsBuildInformation getSauceBuild(String sauceBuildName, boolean updateBuild) {
+        if (updateBuild || buildInformation == null) {
             try {
                 buildInformation = retrieveBuildFromSauce(getSauceREST(), sauceBuildName);
             } catch (JSONException e) {
@@ -276,7 +276,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         logger.fine("Getting Sauce analytics");
         HashMap<String,String> analytics = new HashMap<String,String>();
 
-        JenkinsBuildInformation buildInformation = getSauceBuild();
+        JenkinsBuildInformation buildInformation = getSauceBuild(true);
         List<JenkinsJobInformation> allJobs = getJobs();
         long maxJobDuration = 0;
         long totalJobDuration = 0;
