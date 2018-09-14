@@ -167,7 +167,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         List<SauceOnDemandBuildAction> sauceOnDemandBuildActions = getSauceBuildActions();
         if (sauceOnDemandBuildActions != null) {
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildActions) {
-                return action.getSauceBuild();
+                return action.getSauceBuild(true);
             }
         }
         logger.fine("No Sauce build found");

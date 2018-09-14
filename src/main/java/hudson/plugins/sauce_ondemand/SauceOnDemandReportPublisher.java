@@ -367,9 +367,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
                 // if we were able to get a sauceBuildName we should use it, otherwise we default to using sanitizedBuildNumber;
                 if (sauceBuildName != null) {
-                    buildInformation = buildAction.getSauceBuild(sauceBuildName);
+                    buildInformation = buildAction.getSauceBuild(sauceBuildName, false);
                 } else {
-                    buildInformation = buildAction.getSauceBuild();
+                    buildInformation = buildAction.getSauceBuild(false);
                 }
 
                 JSONObject props = new JSONObject();
