@@ -24,8 +24,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
-import hudson.maven.MavenBuild;
-import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
@@ -126,7 +124,7 @@ public class SauceOnDemandReportFactory extends Data {
      * Returns all sessions matching a given jobName in the provided logs.
      * If no session is found for the jobName, return all session that do not provide job-name (old format)
      */
-    static List<String[]> findSessionIDs(CaseResult cr, String... output) {
+    public static List<String[]> findSessionIDs(CaseResult cr, String... output) {
 
         logger.log(Level.FINE, cr == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results"); //cr shouldn't be null?
 

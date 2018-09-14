@@ -7,7 +7,6 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.annotation.Nullable;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Objects;
 import java.time.Duration;
 
