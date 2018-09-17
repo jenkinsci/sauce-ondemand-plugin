@@ -107,15 +107,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     @Exported(visibility=2)
     public JenkinsBuildInformation getSauceBuild(boolean updateBuild) {
         if (updateBuild || buildInformation == null) {
-            try {
-                String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
-                buildInformation = retrieveBuildFromSauce(getSauceREST(), buildNumber);
-            } catch (JSONException e) {
-                logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
-            }
+            String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
+            buildInformation = getSauceBuild(buildNumber, updateBuild);
         }
-
         return buildInformation;
+    }
+
+    @Exported(visibility=2)
+    public JenkinsBuildInformation getSauceBuild() {
+        return getSauceBuild(false);
     }
 
     /**
@@ -132,6 +132,11 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         }
 
         return buildInformation;
+    }
+
+    @Exported(visibility=2)
+    public JenkinsBuildInformation getSauceBuild(String sauceBuildName) {
+        return getSauceBuild(sauceBuildName, false);
     }
 
     /**
@@ -158,8 +163,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     }
 
     @Exported(visibility=2)
-    public List<JenkinsJobInformation> getJobs() {
-        if (jobInformation == null) {
+    public List<JenkinsJobInformation> getJobs(boolean updateJobs) {
+        if (updateJobs || jobInformation == null) {
             try {
                 jobInformation = new ArrayList<JenkinsJobInformation>();
                 jobInformation.addAll(retrieveJobIdsFromSauce(getSauceREST(), build, getCredentials()).values());
@@ -173,6 +178,11 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         }
         return jobInformation;
+    }
+
+    @Exported(visibility=2)
+    public List<JenkinsJobInformation> getJobs() {
+        return getJobs(false);
     }
 
     // Get the list of running jobs and stop them all

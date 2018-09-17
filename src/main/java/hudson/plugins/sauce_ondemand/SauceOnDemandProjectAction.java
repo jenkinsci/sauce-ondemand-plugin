@@ -154,7 +154,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         if (sauceOnDemandBuildAction != null) {
             List<JenkinsJobInformation> allJobs = new ArrayList<JenkinsJobInformation>();
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildAction) {
-                allJobs.addAll(action.getJobs());
+                allJobs.addAll(action.getJobs(true));
             }
             return allJobs;
         }

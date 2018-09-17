@@ -351,6 +351,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
             }
 
+            // this *may* be causing problems with custom build names that don't match the jenkins-(job)-(number) convention
             // this should be more reliable than relying on sanitizedBuildNumber by default as long as there were test IDs
             if (sauceBuildName == null) {
                 sauceBuildName = jobInformation.getBuild();
@@ -367,9 +368,9 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
                 // if we were able to get a sauceBuildName we should use it, otherwise we default to using sanitizedBuildNumber;
                 if (sauceBuildName != null) {
-                    buildInformation = buildAction.getSauceBuild(sauceBuildName, false);
+                    buildInformation = buildAction.getSauceBuild(sauceBuildName);
                 } else {
-                    buildInformation = buildAction.getSauceBuild(false);
+                    buildInformation = buildAction.getSauceBuild();
                 }
 
                 JSONObject props = new JSONObject();
