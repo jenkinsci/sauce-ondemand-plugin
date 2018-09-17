@@ -4,7 +4,7 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
         <version>2.11</version>
-        <relativePath/>
+        <relativePath />
     </parent>
     <properties>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -23,7 +23,7 @@
 
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.177-SNAPSHOT</version>
+    <version>1.177</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -31,7 +31,7 @@
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/sauce-ondemand-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>sauce-ondemand-1.177</tag>
     </scm>
 
     <developers>
@@ -59,10 +59,10 @@
                         <configuration>
                             <tasks>
                                 <filterset id="filters">
-                                    <filter token="VERSION" value="${project.version}"/>
+                                    <filter token="VERSION" value="${project.version}" />
                                 </filterset>
                                 <copy preservelastmodified="true" file="./src/main/resources/hudson/plugins/sauce_ondemand/BuildUtils.template" tofile="./src/main/java/hudson/plugins/sauce_ondemand/BuildUtils.java" overwrite="true">
-                                    <filterset refid="filters"/>
+                                    <filterset refid="filters" />
                                 </copy>
                             </tasks>
                         </configuration>
