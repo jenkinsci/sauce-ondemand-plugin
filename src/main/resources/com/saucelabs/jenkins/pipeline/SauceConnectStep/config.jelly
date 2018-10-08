@@ -10,6 +10,11 @@
     <f:entry field="useGeneratedTunnelIdentifier">
         <f:checkbox title="${%Create a new unique Sauce Connect tunnel per build}"/>
     </f:entry>
+    <f:entry field="useLatestSauceConnect"
+        title="${%Download and the latest version of Sauce Connect}"
+        description="Leave blank to used the bundled version">
+        <f:checkbox/>
+    </f:entry>
 
     <f:entry field="sauceConnectPath"
         title="${%Sauce Connect Binary Location}"
