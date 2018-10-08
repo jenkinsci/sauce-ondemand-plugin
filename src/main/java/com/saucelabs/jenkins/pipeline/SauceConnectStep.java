@@ -138,20 +138,23 @@ public class SauceConnectStep extends AbstractStepImpl {
         private final TaskListener listener;
         private final Boolean verboseLogging;
         private final String sauceConnectPath;
+        private final Boolean useLatestSauceConnect;
 
-        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath) {
+        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath, Boolean useLatestSauceConnect) {
             this.sauceCredentials = sauceCredentials;
             this.port = port;
             this.options = options;
             this.listener = listener;
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
+            this.useLatestSauceConnect = useLatestSauceConnect;
         }
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
             SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+            sauceTunnelManager.setUseLatestSauceConnect(useLatestSauceConnect);
             sauceTunnelManager.openConnection(
                 sauceCredentials.getUsername(),
                 sauceCredentials.getApiKey().getPlainText(),
@@ -241,7 +244,8 @@ public class SauceConnectStep extends AbstractStepImpl {
                 options,
                 listener,
                 step.getVerboseLogging(),
-                step.getSauceConnectPath()
+                step.getSauceConnectPath(),
+                step.getUseLatestSauceConnect()
             );
             computer.getChannel().call(handler);
 
