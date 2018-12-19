@@ -1,3 +1,8 @@
+# Jenkins 1.178 - 2018-12-19
+
+* Update ci-sauce to 1.141 (with Sauce Connect 4.5.1)
+* Replace flv video links with mp4
+
 # Jenkins 1.177 - 2018-09-17
 
 * Update ci-sauce to 1.140 and saucerest to 1.139
