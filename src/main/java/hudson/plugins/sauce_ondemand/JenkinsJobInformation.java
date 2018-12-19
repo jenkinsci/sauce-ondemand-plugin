@@ -38,7 +38,7 @@ public class JenkinsJobInformation extends JobInformation {
     @Exported(visibility=2)
     public String getVideoUrl() {
         try {
-            URIBuilder uriBuilder = new URIBuilder(super.getVideoUrl());
+            URIBuilder uriBuilder = new URIBuilder(super.getVideoUrl().replace(".flv",".mp4"));
             uriBuilder.addParameter("auth", this.getHmac());
             return uriBuilder.toString();
         } catch (URISyntaxException e) {
