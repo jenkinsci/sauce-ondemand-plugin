@@ -38,7 +38,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
     @Override
     public ParameterValue createValue(StaplerRequest request, JSONObject jo) {
 
-        JSONArray selectedBrowsers = jo.getJSONArray("webDriverBrowsers");
+        String selectedBrowsers = jo.getJSONArray("webDriverBrowsers").toString();
         return new SauceParameterValue(getName(), selectedBrowsers);
     }
 

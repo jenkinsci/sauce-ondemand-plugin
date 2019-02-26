@@ -18,12 +18,12 @@ public class SauceParameterValue extends ParameterValue {
     /** Handles the retrieval of browsers from Sauce Labs. */
     private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
 
-    private final JSONArray selectedBrowsers;
+    private final String selectedBrowsersString;
 
     @DataBoundConstructor
-    public SauceParameterValue(String name, JSONArray selectedBrowsers) {
+    public SauceParameterValue(String name, String selectedBrowsers) {
         super(name);
-        this.selectedBrowsers = selectedBrowsers;
+        this.selectedBrowsersString = selectedBrowsers;
     }
 
     /**
@@ -34,6 +34,7 @@ public class SauceParameterValue extends ParameterValue {
         SauceCredentials credentials = SauceCredentials.getCredentials(build);
         String userName = credentials.getUsername();
         String apiKey = credentials.getPassword().getPlainText();
+        JSONArray selectedBrowsers = JSONArray.fromObject(selectedBrowsersString);
 
         if (selectedBrowsers != null && !selectedBrowsers.isEmpty()) {
             if (selectedBrowsers.size() == 1) {
