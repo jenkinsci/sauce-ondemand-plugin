@@ -1,7 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
-import com.saucelabs.saucerest.SauceREST;
 import hudson.Util;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
@@ -41,9 +40,9 @@ import java.util.concurrent.Executors;
 
 class StopJobThread implements Runnable {
     private JobInformation job;
-    private SauceREST sauceREST;
+    private JenkinsSauceREST sauceREST;
 
-    public StopJobThread(SauceREST sauceREST, JobInformation job){
+    public StopJobThread(JenkinsSauceREST sauceREST, JobInformation job){
         this.job = job;
         this.sauceREST = sauceREST;
     }
@@ -146,10 +145,12 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * @return Jenkins build information
      * @throws JSONException Not json returned properly
      */
-    public static JenkinsBuildInformation retrieveBuildFromSauce(SauceREST sauceREST, String buildNumber) throws JSONException {
+    public static JenkinsBuildInformation retrieveBuildFromSauce(JenkinsSauceREST sauceREST, String buildNumber) throws JSONException {
         JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildNumber);
 
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
+        logger.fine("Using endpoint: " + sauceREST.getRESTURL());
+        logger.fine("getEnv: " + System.getenv("SAUCE_REST_ENDPOINT"));
         String jsonResponse = sauceREST.getBuild(buildNumber);
         if ("".equals(jsonResponse)) {
             logger.log(Level.WARNING, "Sauce REST API get build JSON Response was empty for " + buildNumber);
@@ -187,7 +188,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
     // Get the list of running jobs and stop them all
     public void stopJobs() {
-        SauceREST sauceREST = getSauceREST();
+        JenkinsSauceREST sauceREST = getSauceREST();
         List<JenkinsJobInformation> jobs = getJobs();
         ExecutorService executor = Executors.newFixedThreadPool(5);
         for (JobInformation job : jobs) {
@@ -201,7 +202,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
     // Get the list of jobs and update them with custom data
     public void updateJobs(Map<String, Object> customDataObj) {
-        SauceREST sauceREST = getSauceREST();
+        JenkinsSauceREST sauceREST = getSauceREST();
         List<JenkinsJobInformation> jobs = getJobs();
         for (JobInformation job : jobs) {
             sauceREST.updateJobInfo(job.getJobId(), customDataObj);
@@ -226,7 +227,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * @return List of processed job information
      * @throws JSONException Not json returned properly
      */
-    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(JenkinsSauceREST sauceREST, Run build) throws JSONException {
         SauceCredentials credentials = getSauceBuildAction(build).getCredentials();
         return retrieveJobIdsFromSauce(sauceREST, build, credentials);
     }
@@ -250,7 +251,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     }
 
 
-    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(SauceREST sauceREST, Run build, SauceCredentials credentials) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(JenkinsSauceREST sauceREST, Run build, SauceCredentials credentials) throws JSONException {
         //invoke Sauce Rest API to find plan results with those values
         LinkedHashMap<String, JenkinsJobInformation> jobInformation = new LinkedHashMap<String, JenkinsJobInformation>();
 

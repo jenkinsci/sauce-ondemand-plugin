@@ -25,7 +25,6 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.google.common.base.Strings;
-import com.saucelabs.saucerest.SauceREST;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
@@ -35,6 +34,8 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.model.BuildableItemWithBuildWrappers;
+import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
@@ -96,6 +97,11 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private JSONObject mixpanelJSON;
 
     /**
+     * The selected data center for rest endpoints
+     */
+    private String restEndpoint = "unsetEndpoint";
+
+    /**
      * Constructs a new instance.
      */
     @DataBoundConstructor
@@ -119,13 +125,22 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         this.jobVisibility = jobVisibility;
     }
 
+    public String getRestEndpoint() {
+        return restEndpoint;
+    }
+
+    @DataBoundSetter
+    public void setRestEndpoint(String restEndpoint) {
+        this.restEndpoint = restEndpoint;
+    }
+
     @Override
     public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
         try {
-            listener.getLogger().println("Starting Sauce Labs test publisher");
+            listener.getLogger().println("Starting Sauce Labs test publisher (ctd)");
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(run);
             if (buildAction != null) {
-                processBuildOutput(run, buildAction, testResult);
+                processBuildOutput(run, buildAction, testResult, listener);
                 if (buildAction.hasSauceOnDemandResults()) {
                     return SauceOnDemandReportFactory.INSTANCE;
                 } else {
@@ -154,10 +169,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, TestResult testResult) {
         try
         {
-            listener.getLogger().println("Starting Sauce Labs test publisher");
+            listener.getLogger().println("Starting Sauce Labs test publisher (gtd)");
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
             if (buildAction != null) {
-                processBuildOutput(build, buildAction, testResult);
+                processBuildOutput(build, buildAction, testResult, listener);
                 if (buildAction.hasSauceOnDemandResults()) {
                     return SauceOnDemandReportFactory.INSTANCE;
                 } else {
@@ -202,8 +217,22 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
      * @param testResult  Contains the test results for the build.
      */
     @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-    private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult) {
-        SauceREST sauceREST = getSauceREST(build);
+    private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult, TaskListener listener) {
+
+        String restEndpoint = "pborestendpoint";
+        try {
+            BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) buildAction.getBuild().getParent();
+            SauceOnDemandBuildWrapper bw = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
+            restEndpoint = bw.getRestEndpoint();
+            listener.getLogger().println("was able to get buildWrapper: " + restEndpoint);
+        } catch (Exception e) {
+            listener.getLogger().println("could not getParent for buildWrapper: " + e);
+        }
+
+        JenkinsSauceREST sauceREST = getSauceREST(build);
+        sauceREST.setServer(restEndpoint);
+
+        listener.getLogger().println("SauceRest REST URL: " + sauceREST.getRESTURL());
 
         boolean failureMessageSent = false;
 
@@ -404,7 +433,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         return plugin.isDisableUsageStats();
     }
 
-    protected SauceREST getSauceREST(Run build) {
+    protected JenkinsSauceREST getSauceREST(Run build) {
         return SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials().getSauceREST();
     }
 

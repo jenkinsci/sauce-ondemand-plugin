@@ -16,7 +16,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import com.google.common.base.Strings;
-import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.SecurityUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -156,7 +155,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         @SuppressWarnings("unused") // used by stapler
         public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username) {
-            SauceREST rest = new JenkinsSauceREST(username, value);
+            JenkinsSauceREST rest = new JenkinsSauceREST(username, value);
             // If unauthorized getUser returns an empty string.
             if (rest.getUser().equals("")) {
                 return FormValidation.error("Bad username or Access key");

@@ -3,7 +3,6 @@ package hudson.plugins.sauce_ondemand;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
-import com.saucelabs.saucerest.SauceREST;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Launcher;
@@ -185,7 +184,7 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertTrue("Variable not resolved", options.equals("-i 1"));
+                assertTrue("Variable not resolved", options.equals("-i 1")); // should not pass in -x if no actual restEndpoint variable
                 return null;
             }
         };
@@ -213,7 +212,7 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertEquals("Variables are resolved correctly", options, "-i 1");
+                assertEquals("Variables are resolved correctly", options, "-i 1"); // should not pass in -x if no actual restEndpoint variable
                 return null;
             }
         };
@@ -438,7 +437,7 @@ public class SauceBuildWrapperTest {
         freeStyleProject.getBuildersList().add(builder);
         SauceOnDemandReportPublisher publisher = new SauceOnDemandReportPublisher() {
             @Override
-            protected SauceREST getSauceREST(Run build) {
+            protected JenkinsSauceREST getSauceREST(Run build) {
                 return spySauceRest;
             }
         };
