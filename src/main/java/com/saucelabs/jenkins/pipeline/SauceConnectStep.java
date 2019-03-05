@@ -236,6 +236,12 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             }
 
+            // TODO: Add options
+
+            if (System.getenv("SAUCE_REST_ENDPOINT") != null && System.getenv("SAUCE_REST_ENDPOINT") != "") {
+                options = options + " -x " + System.getenv("SAUCE_REST_ENDPOINT") + "/rest/v1";;
+            }
+
             listener.getLogger().println("Starting sauce connect");
 
             SauceStartConnectHandler handler = new SauceStartConnectHandler(

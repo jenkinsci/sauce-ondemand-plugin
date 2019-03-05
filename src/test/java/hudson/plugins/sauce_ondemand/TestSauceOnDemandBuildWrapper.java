@@ -14,6 +14,7 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
                 true,
                 null,
                 credentialId,
+                "", // restEndpoint
                 new SeleniumInformation(null, null),
                 null,
                 null,
