@@ -648,7 +648,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (!isDisableUsageStats()) {
                     listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
                     listener.getLogger().println("restEndpoint: " + restEndpoint);
-                    listener.getLogger().println("getEnv: " + System.getenv("SAUCE_REST_ENDPOINT")); // always fails
 
                     Map<String, Object> customData = new HashMap<String, Object>();
                     customData.put("JENKINS_BUILD_NAME", build.getProject().getName());

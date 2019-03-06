@@ -25,14 +25,10 @@ THE SOFTWARE.
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <l:ajax>
+        <div>SODReport</div>
+        <div>${it.server}job-embed/${it.id}.js?auth=${it.auth}</div>
         <div id="sauce_results"><!-- needed because applySubtree doesn't properly apply the style to the top node -->
-            <script type="text/javascript" src="https://saucelabs.com/job-embed/${it.id}.js?auth=${it.auth}"></script>
-            <script type="text/javascript">
-                var iframe = document.getElementById('sauce_results').children[0];
-                iframe.style.width = "1024px";
-                iframe.style.height = "1000px";
-            </script>
+            <iframe src="${it.server}job-embed/${it.id}?auth=${it.auth}" name="iframe_job_${it.id}" style="width: 1024px; height: 1000px;"></iframe>
+            <iframe src="https://app.eu-central-1.saucelabs.com/job-embed/${it.id}?auth=${it.auth}" name="iframe_job_${it.id}" style="width: 1024px; height: 1000px;"></iframe>
         </div>
-    </l:ajax>
 </j:jelly>
