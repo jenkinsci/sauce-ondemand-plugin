@@ -229,10 +229,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             listener.getLogger().println("could not getParent for buildWrapper: " + e);
         }
 
-        JenkinsSauceREST sauceREST = getSauceREST(build);
+        JenkinsSauceREST sauceREST = getSauceREST(build, restEndpoint);
+        listener.getLogger().println("SauceRest REST URL with preset: " + sauceREST.getRESTURL());
+
         sauceREST.setServer(restEndpoint);
 
-        listener.getLogger().println("SauceRest REST URL: " + sauceREST.getRESTURL());
+        listener.getLogger().println("SauceRest REST URL after fixing: " + sauceREST.getRESTURL());
 
         boolean failureMessageSent = false;
 
@@ -250,7 +252,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
             logger.finer("Exception during retrieveJobIdsFromSauce:" + e);
-
+            listener.getLogger().println("Exception during retrieveJobIdsFromSauce:" + e);
             onDemandTests = new LinkedHashMap<>();
 
             logger.severe(e.getMessage());
@@ -263,12 +265,14 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
             String line;
             logger.log(Level.FINE, "Parsing Sauce Session ids in stdout");
+            listener.getLogger().println("Parsing Sauce Session ids in stdout");
 
             while ((line = in.readLine()) != null) {
                 testIds.addAll(processSessionIds(true, line));
             }
         } catch (IOException e) {
             logger.finer("Exception while adding testIds ");
+            listener.getLogger().println("Exception while adding testIds " + e.getMessage());
             logger.severe(e.getMessage());
         } finally {
             if (in != null) {
@@ -283,6 +287,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         //try the stdout for the tests, but if build was aborted testResult will be null
         if (testResult != null) {
             logger.log(Level.FINE, "Parsing Sauce Session ids in test results");
+            listener.getLogger().println("Parsing Sauce Session ids in test results");
 
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
@@ -375,6 +380,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
+                listener.getLogger().println("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
             }
 
@@ -435,6 +441,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     protected JenkinsSauceREST getSauceREST(Run build) {
         return SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials().getSauceREST();
+    }
+
+    protected JenkinsSauceREST getSauceREST(Run build, String restEndpoint) {
+        SauceOnDemandBuildAction ba = SauceOnDemandBuildAction.getSauceBuildAction(build);
+        ba.setRestEndpoint(restEndpoint);
+        return ba.getCredentials().getSauceREST();
     }
 
     /**

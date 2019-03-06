@@ -83,10 +83,13 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
     private String credentialsId;
 
+    private String restEndpoint;
+
     @DataBoundConstructor
     public SauceOnDemandBuildAction(Run build, String credentialsId) {
         this.credentialsId = credentialsId;
         this.build = build;
+        this.restEndpoint = null;
     }
 
     public Run getBuild() {
@@ -150,7 +153,6 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
         logger.fine("Using endpoint: " + sauceREST.getRESTURL());
-        logger.fine("getEnv: " + System.getenv("SAUCE_REST_ENDPOINT"));
         String jsonResponse = sauceREST.getBuild(buildNumber);
         if ("".equals(jsonResponse)) {
             logger.log(Level.WARNING, "Sauce REST API get build JSON Response was empty for " + buildNumber);
@@ -184,6 +186,10 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     @Exported(visibility=2)
     public List<JenkinsJobInformation> getJobs() {
         return getJobs(false);
+    }
+
+    public void setRestEndpoint(String restEndpoint) {
+        this.restEndpoint = restEndpoint;
     }
 
     // Get the list of running jobs and stop them all
@@ -314,11 +320,15 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         SauceCredentials creds = getCredentials();
         String username = creds != null ? creds.getUsername() : null;
         String accessKey = creds != null ? creds.getPassword().getPlainText() : null;
-        return new JenkinsSauceREST(username, accessKey);
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
+        if (this.restEndpoint != null) {
+            sauceREST.setServer(this.restEndpoint);
+        }
+        return sauceREST;
     }
 
     public SauceTestResultsById getById(String id) {
-        return new SauceTestResultsById(id, getCredentials());
+        return new SauceTestResultsById(id, getCredentials(), this.restEndpoint);
     }
 
     /**

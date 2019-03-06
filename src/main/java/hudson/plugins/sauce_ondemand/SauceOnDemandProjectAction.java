@@ -106,6 +106,14 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         return project != null ? SauceEnvironmentUtil.getBuildWrapper(project) : null;
     }
 
+    public String debug() {
+        String debug = "";
+        SauceOnDemandBuildWrapper bw = getBuildWrapper();
+        String restEndpoint = bw.getRestEndpoint();
+        debug = debug + "restEndpoint: [" + restEndpoint + "]";
+        return debug;
+    }
+
     /**
      *
      * @return boolean indicating whether the build is configured to include Sauce support

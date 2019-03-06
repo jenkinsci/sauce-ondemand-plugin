@@ -44,20 +44,6 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
     private DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);;
     private JSONObject mixpanelJSON;
 
-    /**
-     * The selected data center for rest endpoints
-     */
-    private String restEndpoint;
-
-    public String getRestEndpoint() {
-        return restEndpoint;
-    }
-
-    @DataBoundSetter
-    public void setRestEndpoint(String restEndpoint) {
-        this.restEndpoint = restEndpoint;
-    }
-
     @DataBoundConstructor
     public SauceOnDemandTestPublisher() {
         super();
