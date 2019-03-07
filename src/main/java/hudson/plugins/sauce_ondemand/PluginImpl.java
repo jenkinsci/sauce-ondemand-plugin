@@ -71,6 +71,11 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
      */
     @Deprecated
     private transient Secret apiKey;
+    /**
+     * Data center endpoint for Sauce OnDemand.
+     */
+    @Deprecated
+    private transient String restEndpoint;
 
     private boolean reuseSauceAuth;
 
@@ -202,6 +207,11 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     @Deprecated
     public Secret getApiKey() {
         return apiKey;
+    }
+
+    @Deprecated
+    public String getRestEndpoint() {
+        return restEndpoint;
     }
 
     @Extension

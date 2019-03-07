@@ -95,7 +95,7 @@ public class SauceBuildWrapperTest {
         SystemCredentialsProvider.getInstance().save();
         ToolInstallations.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
 
-        this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
         JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key");
         PluginImpl p = PluginImpl.get();
@@ -184,7 +184,7 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertTrue("Variable not resolved", options.equals("-i 1")); // should not pass in -x if no actual restEndpoint variable
+                assertTrue("Variable not resolved", options.equals("-i 1 -x https://saucelabs.com/rest/v1")); // null reverts to default US
                 return null;
             }
         };
@@ -212,7 +212,7 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertEquals("Variables are resolved correctly", options, "-i 1"); // should not pass in -x if no actual restEndpoint variable
+                assertEquals("Variables are resolved correctly", options, "-i 1 -x https://saucelabs.com/rest/v1"); // null reverts to default US
                 return null;
             }
         };
@@ -306,7 +306,7 @@ public class SauceBuildWrapperTest {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 //verify that SAUCE_ environment variables are populated
                 Map<String, String> envVars = build.getEnvironment(listener);
-                assertNotNull("Environment variable not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
+                assertNotNull("Environment variable SAUCE_ONDEMAND_BROWSERS not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
                 return super.perform(build, launcher, listener);
             }
         };
@@ -469,8 +469,8 @@ public class SauceBuildWrapperTest {
 
             Map<String, String> envVars = build.getEnvironment(listener);
 
-            assertEquals("Environment variable not found", credentials.getUsername(), envVars.get("SAUCE_USER_NAME"));
-            assertEquals("Environment variable not found", credentials.getApiKey().getPlainText(), envVars.get("SAUCE_API_KEY"));
+            assertEquals("Environment variable SAUCE_USER_NAME not found", credentials.getUsername(), envVars.get("SAUCE_USER_NAME"));
+            assertEquals("Environment variable SAUCE_USER_NAME not found", credentials.getApiKey().getPlainText(), envVars.get("SAUCE_API_KEY"));
 
             File destination = new File(build.getWorkspace().getRemote(), "test.xml");
             FileUtils.copyURLToFile(getClass().getResource(currentTestResultFile), destination);

@@ -42,7 +42,7 @@ public class SauceStepTest {
 
     @Test
     public void sauceTest() throws Exception {
-        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceTest");
         p.setDefinition(new CpsFlowDefinition(
             "node { sauce('" + credentialsId + "') { \n" +
@@ -59,7 +59,7 @@ public class SauceStepTest {
 
     @Test
     public void sauceJWTTest() throws Exception {
-        String credentialsId = SauceCredentials.migrateToCredentials("fakeJWTuser", "fakeJWTkey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeJWTuser", "fakeJWTkey", null, "unittest");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceJWTTest");
         SauceCredentials.getCredentialsById(p, credentialsId).setShortLivedConfig(new SauceCredentials.ShortLivedConfig(120));
 
@@ -85,7 +85,7 @@ public class SauceStepTest {
 
     @Test
     public void sauceConnectWithGlobalOptionsTest() throws Exception {
-        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
         SauceConnectFourManager sauceConnectFourManager = Mockito.mock(SauceConnectFourManager.class);
 
