@@ -97,11 +97,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private JSONObject mixpanelJSON;
 
     /**
-     * The selected data center for rest endpoints
-     */
-    private String restEndpoint = "unsetEndpoint";
-
-    /**
      * Constructs a new instance.
      */
     @DataBoundConstructor
@@ -123,15 +118,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @DataBoundSetter
     public void setJobVisibility(String jobVisibility) {
         this.jobVisibility = jobVisibility;
-    }
-
-    public String getRestEndpoint() {
-        return restEndpoint;
-    }
-
-    @DataBoundSetter
-    public void setRestEndpoint(String restEndpoint) {
-        this.restEndpoint = restEndpoint;
     }
 
     @Override
@@ -219,22 +205,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult, TaskListener listener) {
 
-        String restEndpoint = "pborestendpoint";
-        try {
-            BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) buildAction.getBuild().getParent();
-            SauceOnDemandBuildWrapper bw = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
-            restEndpoint = bw.getRestEndpoint();
-            listener.getLogger().println("was able to get buildWrapper: " + restEndpoint);
-        } catch (Exception e) {
-            listener.getLogger().println("could not getParent for buildWrapper: " + e);
-        }
-
-        JenkinsSauceREST sauceREST = getSauceREST(build, restEndpoint);
-        listener.getLogger().println("SauceRest REST URL with preset: " + sauceREST.getRESTURL());
-
-        sauceREST.setServer(restEndpoint);
-
-        listener.getLogger().println("SauceRest REST URL after fixing: " + sauceREST.getRESTURL());
+        JenkinsSauceREST sauceREST = getSauceREST(build);
+        //listener.getLogger().println("SauceRest REST URL with preset: " + sauceREST.getRESTURL());
 
         boolean failureMessageSent = false;
 
@@ -441,12 +413,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
     protected JenkinsSauceREST getSauceREST(Run build) {
         return SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials().getSauceREST();
-    }
-
-    protected JenkinsSauceREST getSauceREST(Run build, String restEndpoint) {
-        SauceOnDemandBuildAction ba = SauceOnDemandBuildAction.getSauceBuildAction(build);
-        ba.setRestEndpoint(restEndpoint);
-        return ba.getCredentials().getSauceREST();
     }
 
     /**

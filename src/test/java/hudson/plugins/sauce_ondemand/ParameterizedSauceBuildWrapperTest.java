@@ -101,7 +101,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
     @Before
     public void setUp() throws Exception {
-        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        String credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override

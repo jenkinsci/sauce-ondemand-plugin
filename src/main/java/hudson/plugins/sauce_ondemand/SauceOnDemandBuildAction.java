@@ -89,7 +89,6 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     public SauceOnDemandBuildAction(Run build, String credentialsId) {
         this.credentialsId = credentialsId;
         this.build = build;
-        this.restEndpoint = null;
     }
 
     public Run getBuild() {
@@ -186,10 +185,6 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     @Exported(visibility=2)
     public List<JenkinsJobInformation> getJobs() {
         return getJobs(false);
-    }
-
-    public void setRestEndpoint(String restEndpoint) {
-        this.restEndpoint = restEndpoint;
     }
 
     // Get the list of running jobs and stop them all
@@ -320,15 +315,17 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         SauceCredentials creds = getCredentials();
         String username = creds != null ? creds.getUsername() : null;
         String accessKey = creds != null ? creds.getPassword().getPlainText() : null;
+        String restEndpoint = creds != null ? creds.getRestEndpoint() : null;
+
         JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
-        if (this.restEndpoint != null) {
-            sauceREST.setServer(this.restEndpoint);
+        if (restEndpoint != null) {
+            sauceREST.setServer(restEndpoint);
         }
         return sauceREST;
     }
 
     public SauceTestResultsById getById(String id) {
-        return new SauceTestResultsById(id, getCredentials(), this.restEndpoint);
+        return new SauceTestResultsById(id, getCredentials());
     }
 
     /**

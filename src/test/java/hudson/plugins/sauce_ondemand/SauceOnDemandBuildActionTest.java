@@ -44,7 +44,7 @@ public class SauceOnDemandBuildActionTest {
 
         FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
         TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
-            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest")
         );
         bw.setEnableSauceConnect(false);
         freeStyleProject.getBuildWrappersList().add(bw);
@@ -52,6 +52,7 @@ public class SauceOnDemandBuildActionTest {
         SauceOnDemandBuildAction buildAction = new SauceOnDemandBuildAction(build, bw.getCredentialId()) {
             @Override
             protected JenkinsSauceREST getSauceREST() {
+                //mockSauceREST.setServer("http://localhost:61325"); not the failure
                 return mockSauceREST;
             }
         };
@@ -61,11 +62,10 @@ public class SauceOnDemandBuildActionTest {
         webClient.setJavaScriptEnabled(false);
         HtmlPage page = webClient.getPage(build, "sauce-ondemand-report/jobReport?jobId=1234");
         jenkins.assertGoodStatus(page);
-        DomElement scriptTag = getEmbedTag(page.getElementsByTagName("script"));
 
-        assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234.js"));
+        DomElement scriptTag = getEmbedTag(page.getElementsByTagName("iframe"));
+        assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234"));
         assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("auth="));
-
         verifyNoMoreInteractions(mockSauceREST);
     }
 
@@ -73,7 +73,7 @@ public class SauceOnDemandBuildActionTest {
     public void testGetSauceBuildAction () throws Exception {
         FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
         TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
-            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest")
         );
         bw.setEnableSauceConnect(false);
         freeStyleProject.getBuildWrappersList().add(bw);
@@ -88,7 +88,7 @@ public class SauceOnDemandBuildActionTest {
     public void testGetSauceBuildActionMavenBuild() throws Exception {
         MavenModuleSet project = jenkins.createProject(MavenModuleSet.class, "testGetSauceBuildActionMavenBuild");
         TestSauceOnDemandBuildWrapper bw = new TestSauceOnDemandBuildWrapper(
-            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest")
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest")
         );
         project.getBuildWrappersList().add(bw);
         project.setScm(new SingleFileSCM("pom.xml",getClass().getResource("/pom.xml")));

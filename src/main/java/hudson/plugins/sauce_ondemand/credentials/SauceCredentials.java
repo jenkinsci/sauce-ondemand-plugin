@@ -58,14 +58,20 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      */
     protected final Secret apiKey;
 
+    /**
+     * The data center endpoint
+     */
+    protected final String restEndpoint;
+
     protected ShortLivedConfig shortLivedConfig;
 
     @DataBoundConstructor
     public SauceCredentials(@CheckForNull CredentialsScope scope, @CheckForNull String id,
-                            @NonNull String username, @NonNull String apiKey, @CheckForNull String description) {
+                            @NonNull String username, @NonNull String apiKey, @NonNull String restEndpoint, @CheckForNull String description) {
         super(scope, id, description);
         this.apiKey = Secret.fromString(apiKey);
         this.username = username;
+        this.restEndpoint = restEndpoint;
     }
 
     public ShortLivedConfig getShortLivedConfig() {
@@ -126,6 +132,15 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     @NonNull
+    public String getRestEndpoint() {
+        // legacy support for older credentials without restEndpoint
+        if (this.restEndpoint == null || this.restEndpoint.isEmpty()) {
+            return "https://saucelabs.com/";
+        }
+        return this.restEndpoint;
+    }
+
+    @NonNull
     public String getUsername() { return this.username; }
 
     @Override
@@ -133,6 +148,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
         return "SauceCredentials{" +
             "apiKey=" + apiKey +
             ", username='" + username + '\'' +
+            ", restEndpoint='" + restEndpoint + '\'' +
             '}';
     }
 
@@ -142,7 +158,9 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public JenkinsSauceREST getSauceREST() {
-        return new JenkinsSauceREST(getUsername(), getPassword().getPlainText());
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText());
+        sauceREST.setServer(this.restEndpoint);
+        return sauceREST;
     }
 
     @Extension
@@ -171,7 +189,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
     public final static DomainRequirement DOMAIN_REQUIREMENT = new HostnamePortRequirement("saucelabs.com", 80);
 
-    public static String migrateToCredentials(String username, String accessKey, String migratedFrom) throws InterruptedException, IOException {
+    public static String migrateToCredentials(String username, String accessKey, String restEndpoint, String migratedFrom) throws InterruptedException, IOException {
         final List<SauceCredentials> credentialsForDomain = SauceCredentials.all((Item) null);
         final StandardUsernameCredentials existingCredentials = CredentialsMatchers.firstOrNull(
             credentialsForDomain,
@@ -189,6 +207,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
                     createdCredentialId,
                     username,
                     accessKey,
+                    restEndpoint,
                     "migrated from " + migratedFrom
                 );
             } else {

@@ -23,7 +23,7 @@ public class SauceOnDemandProjectActionTest {
 
     @Before
     public void setUp() throws Exception {
-        credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", "unittest");
+        credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
     }
 
     @Test

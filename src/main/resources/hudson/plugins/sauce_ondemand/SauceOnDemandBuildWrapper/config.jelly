@@ -13,12 +13,6 @@
             <f:entry title="${%Credentials}" field="credentialId">
                 <c:select xmlns:c="/lib/credentials"/>
             </f:entry>
-            <f:entry title="${%Sauce Data Center}" name="restEndpoint" field="restEndpoint">
-                <select name="restEndpoint">
-                    <option value="https://saucelabs.com/">US</option>
-                    <option value="https://eu-central-1.saucelabs.com/">EU</option>
-                </select>
-            </f:entry>
 
             <f:entry field="webDriverBrowsers" name="seleniumInformation" value="webDriver" title="${%WebDriver}">
                 <select id="webDriverBrowsers" name="webDriverBrowsers" multiple="multiple"

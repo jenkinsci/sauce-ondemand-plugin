@@ -49,7 +49,6 @@ public abstract class AbstractAction implements Action {
     public void doJobReport(StaplerRequest req, StaplerResponse rsp)
         throws IOException {
 
-        // this will default to US, can we figure out restEndpoint from here?
         SauceTestResultsById byId = new SauceTestResultsById(
             req.getParameter("jobId"),
             this.getCredentials()

@@ -218,10 +218,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private transient Credentials credentials;
 
     /**
-     * The selected data center for rest endpoints
-     */
-    private String restEndpoint;
-    /**
      * The browser information that is to be used for the build.
      */
     private SeleniumInformation seleniumInformation;
@@ -293,14 +289,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param nativeAppPackage          the path to the native app package to be tested
      * @param useGeneratedTunnelIdentifier indicated whether tunnel identifers and ports should be managed by the plugin
      * @param credentialId              Which credential a build should use
-     * @param restEndpoint              Which rest endpoint to use
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
         boolean enableSauceConnect,
         RunCondition condition,
         String credentialId,
-        String restEndpoint,
         SeleniumInformation seleniumInformation,
         String seleniumHost,
         String seleniumPort,
@@ -319,7 +313,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     ) {
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
-        this.restEndpoint = restEndpoint;
         this.seleniumHost = seleniumHost;
         this.seleniumPort = seleniumPort;
         this.options = options;
@@ -361,6 +354,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         final PluginImpl p = PluginImpl.get();
         final String apiKey = credentials.getPassword().getPlainText();
         final String username = credentials.getUsername();
+        final String restEndpoint = credentials.getRestEndpoint();
+
+        /* this should be unnecessary as the checks are done in getrestendpoint
+        final String restEndpoint;
+        if (credentials.getRestEndpoint() == null || credentials.getRestEndpoint().isEmpty()) {
+            listener.getLogger().println("restEndpoint was null or empty");
+            restEndpoint = "https://saucelabs.com/";
+        } else {
+            restEndpoint = credentials.getRestEndpoint();
+        }
+        */
 
         final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
         final SauceConnectHandler sauceConnectStarter;
@@ -377,10 +381,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 resolvedOptions = resolvedOptions + " --tunnel-identifier " + tunnelIdentifier;
             }
 
-            if (getRestEndpoint() != null && getRestEndpoint() != "") {
-                build.getBuildVariables().put(SAUCE_REST_ENDPOINT, restEndpoint);
-                resolvedOptions = resolvedOptions + " -x " + restEndpoint + "rest/v1";
-            }
+            build.getBuildVariables().put(SAUCE_REST_ENDPOINT, restEndpoint);
+            resolvedOptions = resolvedOptions + " -x " + restEndpoint + "rest/v1";
 
             try {
                 if (condition != null) {
@@ -848,14 +850,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.enableSauceConnect = enableSauceConnect;
     }
 
-    public String getRestEndpoint() {
-        return restEndpoint;
-    }
-
-    public void setRestEndpoint(String restEndpoint) {
-        this.restEndpoint = restEndpoint;
-    }
-
     public List<String> getWebDriverBrowsers() {
         return webDriverBrowsers;
     }
@@ -1189,6 +1183,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     this.credentialId = SauceCredentials.migrateToCredentials(
                         this.credentials.getUsername(),
                         this.credentials.getApiKey(),
+                        this.credentials.getRestEndpoint(),
                         project == null ? "Unknown" : project.getDisplayName()
                     );
                     return true;
@@ -1202,6 +1197,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 this.credentialId = SauceCredentials.migrateToCredentials(
                     PluginImpl.get().getUsername(),
                     PluginImpl.get().getApiKey().getPlainText(),
+                    PluginImpl.get().getRestEndpoint(), // maybe use default US instead
                     "Global"
                 );
                 return true;
