@@ -133,7 +133,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
     @NonNull
     public String getRestEndpoint() {
-        // legacy support for older credentials without restEndpoint
+        // legacy support for older credentials without restEndpoint set
         if (this.restEndpoint == null || this.restEndpoint.isEmpty()) {
             return "https://saucelabs.com/";
         }

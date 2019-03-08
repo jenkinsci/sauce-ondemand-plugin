@@ -216,7 +216,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Deprecated
     private transient Credentials credentials;
-
     /**
      * The browser information that is to be used for the build.
      */
@@ -356,16 +355,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         final String username = credentials.getUsername();
         final String restEndpoint = credentials.getRestEndpoint();
 
-        /* this should be unnecessary as the checks are done in getrestendpoint
-        final String restEndpoint;
-        if (credentials.getRestEndpoint() == null || credentials.getRestEndpoint().isEmpty()) {
-            listener.getLogger().println("restEndpoint was null or empty");
-            restEndpoint = "https://saucelabs.com/";
-        } else {
-            restEndpoint = credentials.getRestEndpoint();
-        }
-        */
-
         final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build.getProject().getName());
         final SauceConnectHandler sauceConnectStarter;
         if (isEnableSauceConnect()) {
@@ -478,7 +467,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public void buildEnvVars(Map<String, String> env) {
                 logger.fine("Creating Sauce environment variables");
-
                 if (verboseLogging)
                 {
                     listener.getLogger().println("The Sauce plugin has set the following environment variables:");
@@ -512,7 +500,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 if (buildVariables.containsKey(SELENIUM_PLATFORM)) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SELENIUM_PLATFORM, (String) buildVariables.get(SELENIUM_PLATFORM), true, verboseLogging, listener.getLogger());
                 }
-
 
                 /* Legacy Build Number */
                 SauceEnvironmentUtil.outputEnvironmentVariable(env, JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(build), true, verboseLogging, listener.getLogger());
@@ -578,7 +565,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
                 listener.getLogger().println("Starting post-build for Sauce Labs plugin");
-                listener.getLogger().println("DEBUG: restEndpoint: " + restEndpoint);
 
                 if (isEnableSauceConnect()) {
                     boolean shouldClose = true;
@@ -649,7 +635,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 Map<String, Object> customDataObj = new HashMap<String, Object>();
                 if (!isDisableUsageStats()) {
                     listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
-                    listener.getLogger().println("restEndpoint: " + restEndpoint);
 
                     Map<String, Object> customData = new HashMap<String, Object>();
                     customData.put("JENKINS_BUILD_NAME", build.getProject().getName());

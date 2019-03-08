@@ -17,7 +17,6 @@ import java.net.MalformedURLException;
 public class JenkinsSauceREST extends SauceREST {
 
     // TODO: May need EDS Urls in the future
-
     private static final String BASE_URL;
     static {
         if (System.getenv("SAUCE_REST_ENDPOINT") != null) {
@@ -36,7 +35,7 @@ public class JenkinsSauceREST extends SauceREST {
         super(username, accessKey);
     }
 
-    // DEBUGGING
+    // useful for debugging
     public String getRESTURL() {
         return this.buildURL("").toString();
     }
