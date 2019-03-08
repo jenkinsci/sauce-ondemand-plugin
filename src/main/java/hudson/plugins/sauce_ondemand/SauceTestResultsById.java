@@ -33,7 +33,7 @@ public class SauceTestResultsById {
             String jsonResponse = sauceREST.getJobInfo(id);
             JSONObject jsonObject = new JSONObject(jsonResponse);
             this.job.populateFromJson(jsonObject);
-        } catch (JSONException e) { // fallback for EU
+        } catch (JSONException e) {
             logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
         }
     }

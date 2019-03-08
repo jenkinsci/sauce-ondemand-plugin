@@ -123,7 +123,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     @Override
     public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
         try {
-            listener.getLogger().println("Starting Sauce Labs test publisher (ctd)");
+            listener.getLogger().println("Starting Sauce Labs test publisher");
+            logger.finer("Sauce Labs test publisher was started in contributeTestData method");
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(run);
             if (buildAction != null) {
                 processBuildOutput(run, buildAction, testResult, listener);
@@ -155,7 +156,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     public SauceOnDemandReportFactory getTestData(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, TestResult testResult) {
         try
         {
-            listener.getLogger().println("Starting Sauce Labs test publisher (gtd)");
+            listener.getLogger().println("Starting Sauce Labs test publisher");
+            logger.finer("Sauce Labs test publisher was started in getTestData method");
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
             if (buildAction != null) {
                 processBuildOutput(build, buildAction, testResult, listener);
@@ -206,7 +208,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult, TaskListener listener) {
 
         JenkinsSauceREST sauceREST = getSauceREST(build);
-        //listener.getLogger().println("SauceRest REST URL with preset: " + sauceREST.getRESTURL());
 
         boolean failureMessageSent = false;
 
@@ -224,7 +225,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
         } catch (JSONException e) {
             logger.finer("Exception during retrieveJobIdsFromSauce:" + e);
-            listener.getLogger().println("Exception during retrieveJobIdsFromSauce:" + e);
             onDemandTests = new LinkedHashMap<>();
 
             logger.severe(e.getMessage());
@@ -237,14 +237,12 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
             String line;
             logger.log(Level.FINE, "Parsing Sauce Session ids in stdout");
-            listener.getLogger().println("Parsing Sauce Session ids in stdout");
 
             while ((line = in.readLine()) != null) {
                 testIds.addAll(processSessionIds(true, line));
             }
         } catch (IOException e) {
             logger.finer("Exception while adding testIds ");
-            listener.getLogger().println("Exception while adding testIds " + e.getMessage());
             logger.severe(e.getMessage());
         } finally {
             if (in != null) {
@@ -259,7 +257,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         //try the stdout for the tests, but if build was aborted testResult will be null
         if (testResult != null) {
             logger.log(Level.FINE, "Parsing Sauce Session ids in test results");
-            listener.getLogger().println("Parsing Sauce Session ids in test results");
 
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
@@ -354,6 +351,8 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 listener.getLogger().println("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
+            } else {
+                listener.getLogger().println("No updates for " + jobInformation.getJobId());
             }
 
             // this *may* be causing problems with custom build names that don't match the jenkins-(job)-(number) convention

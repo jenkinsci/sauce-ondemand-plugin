@@ -67,6 +67,7 @@ public class SauceStep extends AbstractStepImpl {
             HashMap<String,String> overrides = new HashMap<String,String>();
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, credentials.getUsername());
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, credentials.getPassword().getPlainText());
+            overrides.put(SauceOnDemandBuildWrapper.SAUCE_REST_ENDPOINT, credentials.getRestEndpoint());
             overrides.put(SauceOnDemandBuildWrapper.JENKINS_BUILD_NUMBER, SauceEnvironmentUtil.getSanitizedBuildNumber(run));
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_BUILD_NAME, SauceEnvironmentUtil.getSanitizedBuildNumber(run));
 
