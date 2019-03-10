@@ -306,6 +306,7 @@ public class SauceBuildWrapperTest {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 //verify that SAUCE_ environment variables are populated
                 Map<String, String> envVars = build.getEnvironment(listener);
+                // TODO: this test will fail occasionally
                 assertNotNull("Environment variable SAUCE_ONDEMAND_BROWSERS not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
                 return super.perform(build, launcher, listener);
             }

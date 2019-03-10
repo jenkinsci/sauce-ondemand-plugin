@@ -34,8 +34,6 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.model.BuildableItemWithBuildWrappers;
-import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
@@ -257,10 +255,10 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         //try the stdout for the tests, but if build was aborted testResult will be null
         if (testResult != null) {
             logger.log(Level.FINE, "Parsing Sauce Session ids in test results");
+            logger.log(Level.FINER, "Test result pass/fail/skip: " + testResult.getPassCount() + "/" + testResult.getFailCount() + "/" + testResult.getSkipCount());
 
             for (SuiteResult sr : testResult.getSuites()) {
                 testIds.addAll(processSessionIds(false, sr.getStdout(), sr.getStderr()));
-
                 for (CaseResult cr : sr.getCases()) {
                     if (!Objects.equals(cr.getStdout(), sr.getStdout())) {
                         testIds.addAll(processSessionIds(false, cr.getStdout()));
@@ -349,7 +347,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
-                listener.getLogger().println("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
             } else {
                 listener.getLogger().println("No updates for " + jobInformation.getJobId());
@@ -456,7 +453,27 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                         //ignore and continue
                         logger.log(Level.WARNING, "Error parsing line, attempting to continue", e);
                     }
+                }
+            }
+        }
 
+        logger.log(Level.FINER, "No matches with suites, attempt to use passed tests");
+        for (CaseResult cr : testResult.getPassedTests()) {
+            if (job.getName() != null && job.getStatus() == null) {
+                try {
+                    Pattern jobNamePattern = Pattern.compile(MessageFormat.format(JOB_NAME_PATTERN, job.getName()));
+                    Matcher matcher = jobNamePattern.matcher(cr.getFullName());
+                    if (job.getName().equals(cr.getFullName()) //if job name equals full name of test
+                            || job.getName().contains(cr.getDisplayName()) //or if job name contains the test name
+                            || matcher.find()) { //or if the full name of the test contains the job name (matching whole words only)
+                        //then we have a match
+                        //check the pass/fail status of the
+                        return cr.getStatus().equals(CaseResult.Status.PASSED) ||
+                                cr.getStatus().equals(CaseResult.Status.FIXED);
+                    }
+                } catch (Exception e) {
+                    //ignore and continue
+                    logger.log(Level.WARNING, "Error parsing line, attempting to continue", e);
                 }
             }
         }
