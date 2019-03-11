@@ -77,4 +77,11 @@ public class JenkinsSauceREST extends SauceREST {
             Objects.equals(sauceobj.server, this.server) &&
             Objects.equals(sauceobj.BASE_URL, this.BASE_URL);
     }
+
+    // per findbugs documentation, this isn't going to be used
+    @Override
+    public int hashCode() {
+      assert false : "hashCode not designed";
+      return 42; // any arbitrary constant will do
+    }
 }
