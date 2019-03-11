@@ -1,6 +1,7 @@
 # Jenkins 1.181 - 2019-03-11
 
 * Add data center endpoint to sauce connect in pipeline builds
+* Remember data center selection in config
 * Reduce a bit of log spam
 
 # Jenkins 1.179 - 2019-03-10
