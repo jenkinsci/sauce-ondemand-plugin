@@ -1,6 +1,10 @@
+# Jenkins 1.180 - 2019-03-11
+
+* Reduce a bit of log spam
+
 # Jenkins 1.179 - 2019-03-10
 
-* Add option to selecd between US and EU Sauce Labs data centers
+* Add option to select between US and EU Sauce Labs data centers
 	* This config option needs to be set up in your Sauce Credentials in Jenkins
 	* The plugin will default older credentials without this to the US data center
 * Mitigate JEP-200 issue
