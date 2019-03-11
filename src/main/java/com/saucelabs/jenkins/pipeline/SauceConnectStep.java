@@ -236,9 +236,10 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             }
 
-            if (System.getenv("SAUCE_REST_ENDPOINT") != null && !"".equals(System.getenv("SAUCE_REST_ENDPOINT"))) {
-                options = options + " -x " + System.getenv("SAUCE_REST_ENDPOINT") + "/rest/v1";;
-            }
+            final String restEndpoint = sauceCredentials.getRestEndpoint();
+
+            overrides.put(SauceOnDemandBuildWrapper.SAUCE_REST_ENDPOINT, restEndpoint);
+            options = options + " -x " + restEndpoint + "rest/v1";;
 
             listener.getLogger().println("Starting sauce connect");
 
