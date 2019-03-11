@@ -64,4 +64,16 @@ public class JenkinsSauceREST extends SauceREST {
         HttpURLConnection hc = (HttpURLConnection) ProxyConfiguration.open(url);
         return hc;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof JenkinsSauceREST)) {
+            return super.equals(obj);
+        }
+        JenkinsSauceREST sauceobj = (JenkinsSauceREST) obj;
+        return Objects.equals(sauceobj.username, this.username) &&
+            Objects.equals(sauceobj.accessKey, this.accessKey) &&
+            Objects.equals(sauceobj.server, this.server) &&
+            Objects.equals(sauceobj.BASE_URL, this.BASE_URL);
+    }
 }

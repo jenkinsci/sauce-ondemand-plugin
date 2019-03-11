@@ -236,7 +236,7 @@ public class SauceConnectStep extends AbstractStepImpl {
 
             }
 
-            if (System.getenv("SAUCE_REST_ENDPOINT") != null && System.getenv("SAUCE_REST_ENDPOINT") != "") {
+            if (System.getenv("SAUCE_REST_ENDPOINT") != null && !"".equals(System.getenv("SAUCE_REST_ENDPOINT"))) {
                 options = options + " -x " + System.getenv("SAUCE_REST_ENDPOINT") + "/rest/v1";;
             }
 
