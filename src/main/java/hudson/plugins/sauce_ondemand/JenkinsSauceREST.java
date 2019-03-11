@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.Objects;
 
 /**
  * Jenkins-specific subclass which will open a URL connection using {@link hudson.ProxyConfiguration}.
