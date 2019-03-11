@@ -348,8 +348,6 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
                 sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
-            } else {
-                listener.getLogger().println("No updates for " + jobInformation.getJobId());
             }
 
             // this *may* be causing problems with custom build names that don't match the jenkins-(job)-(number) convention
