@@ -87,4 +87,5 @@
             </div>
         </j:if>
     </j:if>
+    <div class="page-reference" style="display: none;">SODProjectAction-jobMain</div>
 </j:jelly>

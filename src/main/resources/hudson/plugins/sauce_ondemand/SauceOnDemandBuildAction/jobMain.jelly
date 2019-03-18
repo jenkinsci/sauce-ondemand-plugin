@@ -48,4 +48,5 @@
             </div>
         </j:if>
     </j:if>
+    <div class="page-reference" style="display: none;">SODBuildAction-jobMain</div>
 </j:jelly>

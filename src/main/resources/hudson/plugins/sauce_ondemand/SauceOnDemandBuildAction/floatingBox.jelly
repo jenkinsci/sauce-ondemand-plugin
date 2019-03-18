@@ -67,4 +67,5 @@
             </table>
         </div>
     </j:if>
+    <div class="page-reference" style="display: none;">SODBuildAction-floatingBox</div>
 </j:jelly>
