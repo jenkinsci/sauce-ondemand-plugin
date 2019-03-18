@@ -1,3 +1,7 @@
+# Jenkins 1.182 - 2019-03-18
+
+* Minor UI fixes
+
 # Jenkins 1.181 - 2019-03-11
 
 * Add data center endpoint to sauce connect in pipeline builds
