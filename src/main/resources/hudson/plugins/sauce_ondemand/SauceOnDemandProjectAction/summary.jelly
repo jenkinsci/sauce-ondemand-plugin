@@ -28,7 +28,6 @@ THE SOFTWARE.
         <div>${it.server}job-embed/${it.id}.js?auth=${it.auth}</div>
         <div id="sauce_results"><!-- needed because applySubtree doesn't properly apply the style to the top node -->
             <iframe src="${it.server}job-embed/${it.id}?auth=${it.auth}" name="iframe_job_${it.id}" style="width: 1024px; height: 1000px;"></iframe>
-            <iframe src="https://app.eu-central-1.saucelabs.com/job-embed/${it.id}?auth=${it.auth}" name="iframe_job_${it.id}" style="width: 1024px; height: 1000px;"></iframe>
         </div>
         <div class="page-reference" style="display: none;">SauceTestResultsById</div>
 </j:jelly>
