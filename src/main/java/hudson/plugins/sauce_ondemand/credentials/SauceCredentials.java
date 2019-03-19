@@ -159,7 +159,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
     public JenkinsSauceREST getSauceREST() {
         JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText());
-        sauceREST.setServer(this.restEndpoint);
+        sauceREST.setServer(getRestEndpoint());
         return sauceREST;
     }
 

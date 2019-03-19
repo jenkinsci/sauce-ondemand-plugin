@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-        <div>${it.server}job-embed/${it.id}.js?auth=${it.auth}</div>
+        <h1><a href="${it.server}tests/${it.id}">Sauce OnDemand Report for ${it.id}</a></h1>
         <div id="sauce_results"><!-- needed because applySubtree doesn't properly apply the style to the top node -->
             <iframe src="${it.server}job-embed/${it.id}?auth=${it.auth}" name="iframe_job_${it.id}" style="width: 1024px; height: 1000px;"></iframe>
         </div>
