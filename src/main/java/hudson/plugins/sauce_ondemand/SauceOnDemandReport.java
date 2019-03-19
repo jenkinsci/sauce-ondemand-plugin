@@ -79,6 +79,10 @@ public class SauceOnDemandReport extends TestAction {
         return new SauceTestResultsById(getId(), SauceCredentials.getCredentials(getBuild())).getAuth();
     }
 
+    public String getServer() {
+        return new SauceTestResultsById(getId(), SauceCredentials.getCredentials(getBuild())).getServer();
+    }
+
     @Override
     public String getIconFileName() {
         return null;

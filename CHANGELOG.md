@@ -1,3 +1,7 @@
+# Jenkins 1.183 - 2019-03-19
+
+* Fix Sauce Result embedding when navigating through Jenkins Test Results
+
 # Jenkins 1.182 - 2019-03-18
 
 * Minor UI fixes
