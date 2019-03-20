@@ -1,3 +1,7 @@
+# Jenkins 1.184 - 2019-03-20
+
+* Fix Sauce Result embedding in pipeline builds
+
 # Jenkins 1.183 - 2019-03-19
 
 * Fix Sauce Result embedding when navigating through Jenkins Test Results

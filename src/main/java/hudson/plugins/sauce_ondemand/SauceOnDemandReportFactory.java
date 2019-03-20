@@ -78,6 +78,10 @@ public class SauceOnDemandReportFactory extends Data {
 
             AbstractBuild<?, ?> build = cr.getOwner();
             SauceOnDemandBuildAction buildAction = SauceOnDemandBuildAction.getSauceBuildAction(build);
+            if (buildAction == null) { //try run as well
+                logger.log(Level.FINER, "Unable to get build action from caseresult owner, try using run instead");
+                buildAction = SauceOnDemandBuildAction.getSauceBuildAction(cr.getRun());
+            }
             if (buildAction != null) {
                 List<JenkinsJobInformation> jobs = buildAction.getJobs();
                 for (JobInformation job : jobs) {
@@ -106,7 +110,8 @@ public class SauceOnDemandReportFactory extends Data {
 
             if (!ids.isEmpty()) {
                 logger.log(Level.FINE, "Final number of Sauce SessionIDs found: " + ids.size());
-                return Collections.singletonList(new SauceOnDemandReport(cr, ids));
+
+                return Collections.singletonList(new SauceOnDemandReport(buildAction, ids));
             }
 
         } else {

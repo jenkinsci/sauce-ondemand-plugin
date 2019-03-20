@@ -43,7 +43,6 @@ public class SauceOnDemandReport extends TestAction {
 
     private static final Logger logger = Logger.getLogger(SauceOnDemandReport.class.getName());
 
-    public final CaseResult parent;
     /**
      * Session IDs.
      */
@@ -53,34 +52,39 @@ public class SauceOnDemandReport extends TestAction {
     @Deprecated
     private final String apiKey = null;
 
-    public SauceOnDemandReport(CaseResult parent, List<String[]> ids) {
-        this.parent = parent;
+    private final String server;
+
+    public SauceOnDemandReport(SauceOnDemandBuildAction buildAction, List<String[]> ids) {
+        this.server = getBuildActionServer(buildAction);
         this.sessionIds = ids;
     }
 
-    public AbstractBuild<?, ?> getBuild() {
-        return parent.getOwner();
+    public String getBuildActionServer(SauceOnDemandBuildAction buildAction) {
+        if (buildAction != null) {
+            return buildAction.getCredentials().getRestEndpoint().replace("https://", "https://app.");
+        }
+        return "https://apps.saucelabs.com/";
     }
 
-    public List<String> getIDs() {
-        List<String> ids = new ArrayList<String>();
+    public List<String[]> getIDs() {
+        List<String[]> ids = new ArrayList<String[]>();
         for (String[] sessionId : sessionIds) {
-            ids.add(sessionId[0]);
+            ids.add(sessionId);
         }
         logger.fine("Retrieving Sauce job ids, found " + ids.toString());
         return Collections.unmodifiableList(ids);
     }
 
     public String getId() {
-        return getIDs().get(0);
+        return getIDs().get(0)[0];
     }
 
     public String getAuth() throws IOException {
-        return new SauceTestResultsById(getId(), SauceCredentials.getCredentials(getBuild())).getAuth();
+        return getIDs().get(0)[1];
     }
 
     public String getServer() {
-        return new SauceTestResultsById(getId(), SauceCredentials.getCredentials(getBuild())).getServer();
+        return server;
     }
 
     @Override
