@@ -1,2 +1,2 @@
-// Build on ci.jenkins.io; // https://wiki.jenkins.io/display/JENKINS/Hosting+Plugins
-buildPlugin()
+// Build on ci.jenkins.io; // https://github.com/jenkins-infra/pipeline-library/#buildplugin
+buildPlugin(platforms: ['linux'])
