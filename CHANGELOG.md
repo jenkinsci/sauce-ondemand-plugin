@@ -1,3 +1,7 @@
+# Jenkins 1.185 - 2019-07-09
+
+* Add us-east (sauce headless) data center support
+
 # Jenkins 1.184 - 2019-03-20
 
 * Fix Sauce Result embedding in pipeline builds

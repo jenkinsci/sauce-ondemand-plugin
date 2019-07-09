@@ -45,6 +45,11 @@
         <name>Yeh Fang</name>
         <email>yeh.fang@saucelabs.com</email>
       </developer>
+      <developer>
+        <id>seanenright</id>
+        <name>Sean Enright</name>
+        <email>sean@saucelabs.com</email>
+      </developer>
     </developers>
     <build>
         <plugins>
