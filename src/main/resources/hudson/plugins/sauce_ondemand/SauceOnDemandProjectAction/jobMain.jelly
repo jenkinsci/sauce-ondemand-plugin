@@ -55,15 +55,18 @@
                                                 <div class="dropdown-content">
                                                     ${job.getFailureMessage()}
                                                 </div>
-                                            </j:if>
+                                            </j:if >
                                         </div>
                                     </td>
                                     <td>${job.getPrettyDuration()}</td>
                                     <td>${job.getOs()}</td>
                                     <td>${job.getBrowser()} ${job.getVersion()}</td>
                                     <td>
-                                        <a href="${job.getVideoUrl()}">Watch</a>
-                                        -
+                                        <j:set var="logUrl" value="${job.getLogUrl()}"/>
+                                        <j:if test="${logUrl.indexOf('us-east-1') == -1}">
+                                            <a href="${job.getVideoUrl()}">Watch</a>
+                                            -
+                                        </j:if>
                                         <a href="${job.getLogUrl()}">Logs</a>
                                     </td>
                                 </tr>
