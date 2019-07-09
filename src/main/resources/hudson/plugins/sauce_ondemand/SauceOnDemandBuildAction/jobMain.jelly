@@ -23,8 +23,11 @@
                                     <td>${job.getOs()} ${job.getBrowser()} ${job.getVersion()}</td>
                                     <td>${job.getStatus()}</td>
                                     <td>
-                                        <a href="${job.getVideoUrl()}">Video</a>
-                                        -
+                                        <j:set var="logUrl" value="${job.getLogUrl()}"/>
+                                        <j:if test="${logUrl.indexOf('us-east-1') == -1}">
+                                            <a href="${job.getVideoUrl()}">Watch</a>
+                                            -
+                                        </j:if>
                                         <a href="${job.getLogUrl()}">Logs</a>
                                     </td>
                                 </tr>
