@@ -151,15 +151,30 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildNumber);
 
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
-        String jsonResponse = sauceREST.getBuild(buildNumber);
-        if ("".equals(jsonResponse)) {
-            logger.log(Level.WARNING, "Sauce REST API get build JSON Response was empty for " + buildNumber);
-            return buildInformation;
+
+        int retries = 0;
+        int maxRetries = 10;
+        String jsonResponse = "";
+
+        while (retries < maxRetries && "".equals(jsonResponse)) {
+            try {
+                jsonResponse = sauceREST.getBuild(buildNumber);
+                if (!"".equals(jsonResponse)) {
+                    JSONObject buildObj = new JSONObject(jsonResponse);
+                    buildInformation.populateFromJson(buildObj);
+                    break;
+                }
+            } catch (Exception e) {
+                jsonResponse = "";
+            }
+            logger.log(Level.WARNING, "Sauce REST API get build JSON Response was empty or threw an exception for " + buildNumber + ", waiting and retrying");
+            retries++;
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+            }
         }
 
-        JSONObject buildObj = new JSONObject(jsonResponse);
-
-        buildInformation.populateFromJson(buildObj);
         return buildInformation;
     }
 
