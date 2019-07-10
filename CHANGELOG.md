@@ -1,3 +1,7 @@
+# Jenkins 1.186 - 2019-07-11
+
+* Make additional attempts to fetch build information from the Saucelabs API if responses are invalid
+
 # Jenkins 1.185 - 2019-07-09
 
 * Add us-east (sauce headless) data center support
