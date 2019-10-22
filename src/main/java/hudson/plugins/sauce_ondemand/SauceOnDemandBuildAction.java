@@ -12,6 +12,7 @@ import hudson.maven.MavenBuild;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
+import jenkins.util.Timer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,9 +35,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.Map;
 import java.util.HashMap;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 class StopJobThread implements Runnable {
     private JobInformation job;
@@ -202,16 +202,20 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     }
 
     // Get the list of running jobs and stop them all
-    public void stopJobs() {
+    public void stopJobs() throws InterruptedException {
         JenkinsSauceREST sauceREST = getSauceREST();
         List<JenkinsJobInformation> jobs = getJobs();
-        ExecutorService executor = Executors.newFixedThreadPool(5);
+        List<Future<?>> futures = new ArrayList<>();
         for (JobInformation job : jobs) {
             Runnable worker = new StopJobThread(sauceREST, job);
-            executor.execute(worker);
+            futures.add(Timer.get().submit(worker));
         }
-        executor.shutdown();
-        while (!executor.isTerminated()) {
+        for (Future<?> f : futures) {
+            try {
+                f.get();
+            } catch (ExecutionException x) {
+                logger.log(Level.WARNING, "Could not stop a job", x);
+            }
         }
     }
 
