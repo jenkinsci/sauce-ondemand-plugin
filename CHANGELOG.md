@@ -1,3 +1,7 @@
+# Jenkins 1.187 - 2019-11-07
+
+* Reduce build fetch retry to once after 3 seconds to improve user experience
+
 # Jenkins 1.186 - 2019-07-11
 
 * Make additional attempts to fetch build information from the Saucelabs API if responses are invalid
