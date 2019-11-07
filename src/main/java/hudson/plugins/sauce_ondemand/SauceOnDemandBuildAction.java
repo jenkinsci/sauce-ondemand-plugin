@@ -154,7 +154,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         // A note on retry behaviour
         // This code was previously set to retry 10 times with 10 seconds pause in between - this resulted
-        // in de-facto hang behaviour in Jenkins on the status pages of builds if an error occurrec, which
+        // in de-facto hang behaviour in Jenkins on the status pages of builds if an error occurred, which
         // meant either that the page took over 100 seconds to load, or that the connection was killed by
         // a downstream proxy (e.g. an ELB) which had a connection timeout below 100 seconds. It has been
         // updated to retry one time with a 3 second pause to allow for recovery from brief blips while
