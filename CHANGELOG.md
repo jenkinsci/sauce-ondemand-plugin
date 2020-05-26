@@ -1,3 +1,7 @@
+# Jenkins 1.188 - 2020-05-27
+
+* Add Sauce Connect 4.6.2
+
 # Jenkins 1.187 - 2019-11-07
 
 * Reduce build fetch retry to once after 3 seconds to improve user experience
