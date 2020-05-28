@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.11</version>
+        <version>2.23</version>
         <relativePath />
     </parent>
     <properties>
@@ -294,6 +294,7 @@
             <artifactId>symbol-annotation</artifactId>
             <version>1.1</version>
         </dependency>
+
     </dependencies>
     <repositories>
         <repository>
