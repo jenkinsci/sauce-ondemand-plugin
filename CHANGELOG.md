@@ -1,3 +1,7 @@
+# Jenkins 1.189 - 2020-06-01
+
+* Update ci-sauce to 1.146 (with Sauce Connect 4.6.2)
+
 # Jenkins 1.188 - 2020-05-27
 
 * Fix command line handling for Sauce Connect v4.6+
