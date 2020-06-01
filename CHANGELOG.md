@@ -1,3 +1,8 @@
+# Jenkins 1.188 - 2020-05-27
+
+* Fix command line handling for Sauce Connect v4.6+
+* CI/CD pipeline fixes
+
 # Jenkins 1.187 - 2019-11-07
 
 * Reduce build fetch retry to once after 3 seconds to improve user experience
