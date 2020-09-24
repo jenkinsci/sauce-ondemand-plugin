@@ -281,7 +281,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
      * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
      * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
-     * @param useLatestSauceConnect.    indicates whether the latest version of Sauce Connect should always be used
+     * @param useLatestSauceConnect     indicates whether the latest version of Sauce Connect should always be used
      * @param forceCleanup              indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
      * @param webDriverBrowsers         which browser(s) should be used for web driver
      * @param appiumBrowsers            which browser(s) should be used for appium
@@ -1148,6 +1148,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
             return Collections.emptyMap();
+        }
+
+        /**
+         * @return Sauce Connect version
+         */
+        public String getSauceConnectVersion() {
+            return HudsonSauceConnectFourManager.CURRENT_SC_VERSION;
         }
 
         /**
