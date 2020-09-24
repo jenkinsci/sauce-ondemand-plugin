@@ -3,6 +3,7 @@ package com.saucelabs.jenkins;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import org.apache.commons.lang.StringUtils;
 
+
 /**
  * @author Ross Rowe
  */
