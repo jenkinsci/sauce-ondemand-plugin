@@ -1,3 +1,15 @@
+# Jenkins 1.191 - 2020-09-25
+
+* Fix displaying bundled sauce connect version
+
+# Jenkins 1.190 - 2020-08-19
+
+* Update ci-sauce to 1.149 - hide displaying credentials in logs
+
+# Jenkins 1.189 - 2020-07-28
+
+* Update ci-sauce to 1.148 - hide displaying credentials in logs
+
 # Jenkins 1.188 - 2020-05-27
 
 * Fix command line handling for Sauce Connect v4.6+
