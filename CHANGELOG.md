@@ -1,3 +1,7 @@
+# Jenkins 1.192 - 2020-09-25
+
+* Fix threads handling
+
 # Jenkins 1.191 - 2020-09-25
 
 * Fix displaying bundled sauce connect version
