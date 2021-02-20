@@ -1,3 +1,7 @@
+# Jenkins 1.193 - 2021-02-22
+
+* Update ci-sauce to 1.152 for Sauce Connect 4.6.4.
+
 # Jenkins 1.192 - 2020-09-25
 
 * Fix threads handling
