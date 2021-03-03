@@ -1,13 +1,48 @@
 # Sauce OnDemand
 
-[![codecov.io](https://codecov.io/github/saucelabs/jenkins-sauce-ondemand-plugin/coverage.svg?branch=master)](https://codecov.io/github/saucelabs/jenkins-sauce-ondemand-plugin?branch=master)
+This plugin allows you to integrate [Sauce Selenium Testing](https://saucelabs.com/platform/automation-tools/selenium) with Jenkins.
+Specifically, you can:
 
-To build and unit test the plugin, execute:
+-   Automate the setup and tear down of [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy)
+-   Integrate the Sauce Labs result videos per test
 
-	mvn package
+## Configuration
 
-To deploy a built version, execute
+After installing a plugin, specify your Sauce Labs access credentials in
+the system configuration page as follows:
 
-	mvn release:prepare release:perform
+![](docs/images/global.png)
 
-Defects/enhancements can be recorded at https://issues.jenkins-ci.org/browse/JENKINS-36053?jql=project%20%3D%20JENKINS%20AND%20component%20%3D%20sauce-ondemand-plugin
+Once this is set, on each job configuration page, you can tell Jenkins
+to launch a Sauce Connect instance for the duration of the build. For
+more details about the concept of SSH tunnel in the context of Sauce
+Labs, see [the documentation](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+
+### Embedded Test Reports
+
+You can show an embedded Sauce Labs test report on the test result
+pages in Jenkins. To enable this, check 'Embed Sauce OnDemand reports' as part
+of the 'Publish JUnit test result report section'.
+
+![](docs/images/embedded-report-configuration.png)
+
+In addition, you will need to output the following line to your for each
+test that is run using Sauce Labs:
+
+```shell
+SauceOnDemandSessionID=YOUR_SESSION_ID job-name=YOUR_JOB_NAME
+```
+
+where `YOUR_SESSION_ID` is the SeleniumRC/WebDriver session id and
+`YOUR_JOB_NAME` is the name of the test being executed.
+
+### Issue Tracking
+
+Please raise any issues you find with the plugin or requests for
+additional features within the plugin's
+[Jira](https://issues.jenkins.io/browse/JENKINS/component/15751)
+instance.
+
+### Changelog
+
+See <https://github.com/saucelabs/jenkins-sauce-ondemand-plugin/blob/master/CHANGELOG.md>
