@@ -9,9 +9,9 @@ Specifically, you can:
 ## Configuration
 
 After installing a plugin, specify your Sauce Labs access credentials in
-the system configuration page as follows:
+the Manage Credentials page as follows:
 
-![](docs/images/global.png)
+![](docs/images/credential.png)
 
 Once this is set, on each job configuration page, you can tell Jenkins
 to launch a Sauce Connect instance for the duration of the build. For
