@@ -24,11 +24,11 @@ import hudson.tasks.Maven;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
+import java.nio.charset.StandardCharsets;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -56,8 +56,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 
@@ -87,7 +87,6 @@ public class SauceBuildWrapperTest {
 
     public static final String DEFAULT_TEST_XML = "/hudson/plugins/sauce_ondemand/test-result.xml";
 
-    private String currentTestResultFile = DEFAULT_TEST_XML;
     private String credentialsId;
 
     @Before
@@ -107,43 +106,31 @@ public class SauceBuildWrapperTest {
         //create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
         spySauceRest = spy(sauceRest);
         restUpdates = new HashMap<String, Map>();
-        doAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                Object[] args = invocationOnMock.getArguments();
-                restUpdates.put((String) args[0], (Map) args[1]);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            restUpdates.put((String) args[0], (Map) args[1]);
+            return null;
         }).when(spySauceRest).updateJobInfo(anyString(), any(HashMap.class));
-        doAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return "{}";
-            }
-        }).when(spySauceRest).getJobInfo(anyString());
-        doAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return "{}";
-            }
-        }).when(spySauceRest).retrieveResults(anyString());
+        doAnswer(invocationOnMock -> "{}").when(spySauceRest).getJobInfo(anyString());
+        doAnswer(invocationOnMock -> "{}").when(spySauceRest).retrieveResults(anyString());
+
+        doAnswer(invocation -> "Mocked Rest API").when(spySauceRest).toString();
 
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"), "UTF-8");
+                return IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"), StandardCharsets.UTF_8);
             }
         }).when(spySauceRest).getSupportedPlatforms("webdriver");
 
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return IOUtils.toString(getClass().getResourceAsStream("/appium.json"), "UTF-8");
+                return IOUtils.toString(getClass().getResourceAsStream("/appium.json"), StandardCharsets.UTF_8);
             }
         }).when(spySauceRest).getSupportedPlatforms("appium");
 
-        doAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return "{}";
-            }
-        }).when(spySauceRest).retrieveResults(any(URL.class));
+        doAnswer(invocationOnMock -> "{}").when(spySauceRest).retrieveResults(any(URL.class));
 
         //store dummy implementations of Sauce Connect manager
 
@@ -301,16 +288,7 @@ public class SauceBuildWrapperTest {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setWebDriverBrowsers(Arrays.asList("Windows_2003internet_explorer7", "Linuxfirefox4", ""));
 
-        SauceBuilder sauceBuilder = new SauceBuilder() {
-            @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                //verify that SAUCE_ environment variables are populated
-                Map<String, String> envVars = build.getEnvironment(listener);
-                // TODO: this test will fail occasionally
-                assertNotNull("Environment variable SAUCE_ONDEMAND_BROWSERS not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
-                return super.perform(build, launcher, listener);
-            }
-        };
+        SauceBuilder sauceBuilder = new SauceBuilderBrowsersExtension();
 
         Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null, "multipleBrowsers");
         jenkinsRule.assertBuildStatusSuccess(build);
@@ -461,7 +439,7 @@ public class SauceBuildWrapperTest {
      * Dummy builder which is run by the unit tests.
      */
     @SuppressFBWarnings({"SE_BAD_FIELD_INNER_CLASS", "SE_NO_SERIALVERSIONID"})
-    private class SauceBuilder extends TestBuilder implements Serializable {
+    private static class SauceBuilder extends TestBuilder implements Serializable {
 
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -474,8 +452,19 @@ public class SauceBuildWrapperTest {
             assertEquals("Environment variable SAUCE_USER_NAME not found", credentials.getApiKey().getPlainText(), envVars.get("SAUCE_API_KEY"));
 
             File destination = new File(build.getWorkspace().getRemote(), "test.xml");
-            FileUtils.copyURLToFile(getClass().getResource(currentTestResultFile), destination);
+            FileUtils.copyURLToFile(getClass().getResource(DEFAULT_TEST_XML), destination);
             return true;
+        }
+    }
+
+    private static final class SauceBuilderBrowsersExtension extends SauceBuilder {
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            //verify that SAUCE_ environment variables are populated
+            Map<String, String> envVars = build.getEnvironment(listener);
+            // TODO: this test will fail occasionally
+            assertNotNull("Environment variable SAUCE_ONDEMAND_BROWSERS not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
+            return super.perform(build, launcher, listener);
         }
     }
 

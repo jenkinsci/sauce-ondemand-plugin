@@ -54,7 +54,7 @@ public class JenkinsSauceREST extends SauceREST {
     @Override
     protected URL buildURL(String endpoint) {
         try {
-            return new URL(new URL(this.server), "/rest/" + endpoint);
+            return new URL(new URL(this.server), "/rest/v1/" + endpoint);
         } catch (MalformedURLException e) {
             return null;
         }
@@ -74,14 +74,11 @@ public class JenkinsSauceREST extends SauceREST {
         JenkinsSauceREST sauceobj = (JenkinsSauceREST) obj;
         return Objects.equals(sauceobj.username, this.username) &&
             Objects.equals(sauceobj.accessKey, this.accessKey) &&
-            Objects.equals(sauceobj.server, this.server) &&
-            Objects.equals(sauceobj.BASE_URL, this.BASE_URL);
+            Objects.equals(sauceobj.server, this.server);
     }
 
-    // per findbugs documentation, this isn't going to be used
     @Override
     public int hashCode() {
-      assert false : "hashCode not designed";
-      return 42; // any arbitrary constant will do
+        return Objects.hash(server, username, accessKey);
     }
 }
