@@ -9,71 +9,69 @@
             <j:choose>
                 <j:when test="${from.hasSauceOnDemandResults()}">
                     <div>
-                        <j:set var="analytics" value="${from.getAnalytics()}"/>
-                        <table id="analytics">
-                            <tr>
-                                <th>Start Time</th>
-                                <td>${analytics.get("start")}</td>
-                                <td></td>
-                                <th><font color="black"># Of Tests</font></th>
-                                <th><font color="green">■ Pass Rate</font></th>
-                                <th><font color="#ec4047">■ Fail Rate</font></th>
-                                <th><font color="#f68d38">■ Error Rate</font></th>
-                                <th>Efficiency</th>
-                            </tr>
-                            <tr>
-                                <th>Duration</th>
-                                <td>${analytics.get("duration")}</td>
-                                <td></td>
-                                <td>${analytics.get("size")}</td>
-                                <td>${analytics.get("pass")}%</td>
-                                <td>${analytics.get("fail")}%</td>
-                                <td>${analytics.get("error")}%</td>
-                                <td>${analytics.get("efficiency")}</td>
-                            </tr>
-                        </table>
-                        <table id="results">
-                            <tr>
-                                <th>Job Name</th>
-                                <th>Status</th>
-                                <th>Duration</th>
-                                <th>OS</th>
-                                <th>Browser</th>
-                                <th>Job Links</th>
-                            </tr>
-                            <j:forEach var="job" items="${from.getJobsWithAuth()}" indexVar="indexA">
+                        <j:set var="analytics" value="${it.getAnalytics()}"/>
+
+                        <details>
+
+                            <summary>Sauce Labs statistics</summary>
+
+                            <div class="sauce-labs-statistics">
+                                <p>Start time: ${analytics.get("start")}</p>
+                                <p>Total time: ${analytics.get("duration")}</p>
+                                <p>Total tests: ${analytics.get("size")}</p>
+                                <p>Passed: ${analytics.get("pass")}%</p>
+                                <p>Failed: ${analytics.get("fail")}%</p>
+                                <p>Errored: ${analytics.get("error")}%</p>
+                                <p>Efficiency: ${analytics.get("efficiency")}</p>
+                            </div>
+
+                        </details>
+
+                        <table id="results" class="pane bigtable sortable stripped-odd">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <a href="${from.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <font color="${job.getStatusColor()}">${job.getStatus()}</font>
-                                            <j:if test="${job.hasFailureMessage()}">
-                                                <div class="divider"/>
-                                                <button onclick="dropdown(this)" class="dropdown-button">Info</button>
-                                                <div class="dropdown-content">
-                                                    ${job.getFailureMessage()}
-                                                </div>
-                                            </j:if >
-                                        </div>
-                                    </td>
-                                    <td>${job.getPrettyDuration()}</td>
-                                    <td>${job.getOs()}</td>
-                                    <td>${job.getBrowser()} ${job.getVersion()}</td>
-                                    <td>
-                                        <j:set var="logUrl" value="${job.getLogUrl()}"/>
-                                        <j:if test="${logUrl.indexOf('us-east-1') == -1}">
-                                            <a href="${job.getVideoUrl()}">Watch</a>
-                                            -
-                                        </j:if>
-                                        <a href="${job.getLogUrl()}">Logs</a>
-                                    </td>
+                                    <th>Job Name</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>OS</th>
+                                    <th>Browser</th>
+                                    <th>Job Links</th>
                                 </tr>
-                            </j:forEach>
+                            </thead>
+                            <tbody>
+                                <j:forEach var="job" items="${it.getJobsWithAuth()}" indexVar="indexA">
+                                    <tr>
+                                        <td>
+                                            <a href="${it.urlName}/jobReport?jobId=${job.getJobId()}">${job.getName()}</a>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <font color="${job.getStatusColor()}">${job.getStatus()}</font>
+                                                <j:if test="${job.hasFailureMessage()}">
+                                                    <div class="divider"/>
+                                                    <button onclick="dropdown(this)" class="dropdown-button">Info</button>
+                                                    <div class="dropdown-content">
+                                                        ${job.getFailureMessage()}
+                                                    </div>
+                                                </j:if>
+                                            </div>
+                                        </td>
+                                        <td>${job.getPrettyDuration()}</td>
+                                        <td>${job.getOs()}</td>
+                                        <td>${job.getBrowser()} ${job.getVersion()}</td>
+                                        <td>
+                                            <j:set var="logUrl" value="${job.getLogUrl()}"/>
+                                            <j:if test="${logUrl.indexOf('us-east-1') == -1}">
+                                                <a href="${job.getVideoUrl()}">Watch</a>
+                                                -
+                                            </j:if>
+                                            <a href="${job.getLogUrl()}">Logs</a>
+                                        </td>
+                                    </tr>
+                                </j:forEach>
+                            </tbody>
                         </table>
                     </div>
-
                 </j:when>
                 <j:otherwise>
                     <div>
@@ -83,7 +81,6 @@
             </j:choose>
 
         </div>
-        <hr />
         <j:if test="${h.hasPermission(from.project, from.project.CONFIGURE)}">
             <div >
                 <a id="generateSauceReport" href="${from.urlName}/generateSupportZip">Generate Sauce Support Zip</a>

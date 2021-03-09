@@ -1,42 +1,41 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core">
     <link rel="stylesheet" href="${resURL}/plugin/sauce-ondemand/css/analytics.css"></link>
+
     <j:if test="${it.hasSauceOnDemandResults()}">
         <script type="text/javascript" src="${resURL}/plugin/sauce-ondemand/js/dropdown.js"/>
         <h2>Sauce Labs results</h2>
         <div>
             <j:set var="analytics" value="${it.getAnalytics()}"/>
-            <table id="analytics">
-                <tr>
-                    <th>Start Time</th>
-                    <td>${analytics.get("start")}</td>
-                    <td></td>
-                    <th><font color="black"># Of Tests</font></th>
-                    <th><font color="green">■ Pass Rate</font></th>
-                    <th><font color="#ec4047">■ Fail Rate</font></th>
-                    <th><font color="#f68d38">■ Error Rate</font></th>
-                    <th>Efficiency</th>
-                </tr>
-                <tr>
-                    <th>Duration</th>
-                    <td>${analytics.get("duration")}</td>
-                    <td></td>
-                    <td>${analytics.get("size")}</td>
-                    <td>${analytics.get("pass")}%</td>
-                    <td>${analytics.get("fail")}%</td>
-                    <td>${analytics.get("error")}%</td>
-                    <td>${analytics.get("efficiency")}</td>
-                </tr>
-            </table>
-            <table id="results">
-                <tr>
-                    <th>Job Name</th>
-                    <th>Status</th>
-                    <th>Duration</th>
-                    <th>OS</th>
-                    <th>Browser</th>
-                    <th>Job Links</th>
-                </tr>
+
+            <details>
+
+                <summary>Sauce Labs statistics</summary>
+
+            <div class="sauce-labs-statistics">
+                <p>Start time: ${analytics.get("start")}</p>
+                <p>Total time: ${analytics.get("duration")}</p>
+                <p>Total tests: ${analytics.get("size")}</p>
+                <p>Passed: ${analytics.get("pass")}%</p>
+                <p>Failed: ${analytics.get("fail")}%</p>
+                <p>Errored: ${analytics.get("error")}%</p>
+                <p>Efficiency: ${analytics.get("efficiency")}</p>
+            </div>
+
+            </details>
+
+            <table id="results" class="pane bigtable sortable stripped-odd">
+                <thead>
+                    <tr>
+                        <th>Job Name</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>OS</th>
+                        <th>Browser</th>
+                        <th>Job Links</th>
+                    </tr>
+                </thead>
+                <tbody>
                 <j:forEach var="job" items="${it.getJobsWithAuth()}" indexVar="indexA">
                     <tr>
                         <td>
@@ -67,6 +66,7 @@
                         </td>
                     </tr>
                 </j:forEach>
+                </tbody>
             </table>
         </div>
     </j:if>
