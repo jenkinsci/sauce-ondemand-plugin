@@ -257,7 +257,7 @@ public class SauceConnectStep extends AbstractStepImpl {
             body = getContext().newBodyInvoker()
                 .withContext(EnvironmentExpander.merge(getContext().get(EnvironmentExpander.class), new ExpanderImpl(overrides)))
                 .withCallback(new Callback(sauceCredentials, options))
-                .withDisplayName(null)
+                .withDisplayName("Sauce Connect")
                 .start();
 
             return false;

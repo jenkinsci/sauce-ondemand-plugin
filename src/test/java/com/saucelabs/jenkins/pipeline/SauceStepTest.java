@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 
+import static org.mockito.ArgumentMatchers.isNull;
+
 public class SauceStepTest {
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
@@ -120,11 +122,11 @@ public class SauceStepTest {
             Mockito.eq("fakeuser"),
             Mockito.eq("fakekey"),
             Mockito.anyInt(),
-            Mockito.any(File.class),
+            isNull(),
             Mockito.matches("-i gavin -vv -i tunnel-ident --tunnel-identifier [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
             Mockito.any(PrintStream.class),
             Mockito.eq(true),
-            Mockito.anyString()
+            isNull()
         );
     }
 
