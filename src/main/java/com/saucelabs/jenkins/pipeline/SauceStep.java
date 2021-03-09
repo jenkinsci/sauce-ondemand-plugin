@@ -2,6 +2,7 @@ package com.saucelabs.jenkins.pipeline;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
@@ -20,7 +21,11 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.BodyExecution;
 import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
 import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -31,8 +36,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 @ExportedBean
-public class SauceStep extends AbstractStepImpl {
-    private String credentialsId;
+public class SauceStep extends Step {
+    private final String credentialsId;
 
     @DataBoundConstructor
     public SauceStep(String credentialsId) {
@@ -43,21 +48,32 @@ public class SauceStep extends AbstractStepImpl {
         return credentialsId;
     }
 
-    public static class Execution extends AbstractStepExecutionImpl {
+    @Override
+    public StepExecution start(StepContext context) throws Exception {
+        return new Execution(context, credentialsId);
+    }
+
+    public static class Execution extends StepExecution {
         private static final long serialVersionUID = 1;
 
-        @Inject(optional=true) private transient SauceStep step;
-        @StepContextParameter private transient Run<?,?> run;
+        private final String credentialsId;
+
+        public Execution(@Nonnull StepContext context, String credentialsId) {
+            super(context);
+            this.credentialsId = credentialsId;
+        }
 
         private BodyExecution body;
 
         @Override public boolean start() throws Exception {
+            Run<?, ?> run = getContext().get(Run.class);
+
             Job<?,?> job = run.getParent();
             if (!(job instanceof TopLevelItem)) {
                 throw new Exception(job + " must be a top-level job");
             }
 
-            SauceCredentials credentials = SauceCredentials.getCredentialsById(job, step.getCredentialsId());
+            SauceCredentials credentials = SauceCredentials.getCredentialsById(job, credentialsId);
             if (credentials == null) {
                 throw new Exception("no credentials provided");
             }
@@ -96,9 +112,11 @@ public class SauceStep extends AbstractStepImpl {
 
 
     @Extension
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-        public DescriptorImpl() {
-            super(Execution.class);
+    public static final class DescriptorImpl extends StepDescriptor {
+
+        @Override
+        public Set<? extends Class<?>> getRequiredContext() {
+            return ImmutableSet.of(Run.class);
         }
 
         @Override public String getDisplayName() {
