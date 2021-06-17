@@ -24,6 +24,7 @@
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
+    <description>A Jenkins plugin to help create and teardown Sauce Labs tests and Sauce Connect sessions</description>
     <url>https://github.com/jenkinsci/sauce-ondemand-plugin</url>
 
     <scm>
@@ -33,18 +34,29 @@
         <tag>${scmTag}</tag>
     </scm>
 
+    <organization>
+        <name>Sauce Labs</name>
+        <url>https://community.saucelabs.com</url>
+    </organization>
+
     <developers>
       <developer>
-        <id>yfangsl</id>
-        <name>Yeh Fang</name>
-        <email>yeh.fang@saucelabs.com</email>
+        <id>dlacey</id>
+        <name>Dylan Lacey</name>
+        <email>dylan.lacey@saucelabs.com</email>
       </developer>
       <developer>
-        <id>seanenright</id>
-        <name>Sean Enright</name>
-        <email>sean@saucelabs.com</email>
+        <id>murbanski</id>
+        <name>Maciej Urbanski</name>
+        <email>maciej.urbanski@saucelabs.com</email>
       </developer>
     </developers>
+
+    <issueManagement>
+        <system>Support Hub</system>
+        <url>https://community.saucelabs.com</url>
+    </issueManagement>
+
     <build>
         <plugins>
             <plugin>
