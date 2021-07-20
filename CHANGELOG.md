@@ -1,3 +1,7 @@
+# Jenkins 1.194 - 2021-07-19
+
+* Update ci-sauce to 1.153 for Sauce Connect 4.6.5.
+
 # Jenkins 1.193 - 2021-02-22
 
 * Update ci-sauce to 1.152 for Sauce Connect 4.6.4.
