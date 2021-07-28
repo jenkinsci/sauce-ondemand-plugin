@@ -7,7 +7,7 @@
         <relativePath />
     </parent>
     <properties>
-        <revision>1.195</revision>
+        <revision>1.196</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/sauce-ondemand-plugin</gitHubRepo>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
