@@ -27,7 +27,7 @@ THE SOFTWARE.
          xmlns:l="/lib/layout">
   <l:layout title="Video and Server Log - ${it.parent.displayName}">
     <l:side-panel>
-      <l:task href=".." title="${%Back}" icon="images/24x24/up.gif" />
+      <l:task href=".." title="${%Back}" icon="icon-up icon-md" />
     </l:side-panel>
     <l:main-panel>
       <h1>Sauce OnDemand Reports</h1>
