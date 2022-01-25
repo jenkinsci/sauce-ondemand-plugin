@@ -43,6 +43,9 @@ additional features within the plugin's
 [Jira](https://issues.jenkins.io/browse/JENKINS/component/15751)
 instance.
 
+### Contributing
+Refer to our [contribution guidelines](./CONTRIBUTING.md).
+
 ### Changelog
 
 See <https://github.com/saucelabs/jenkins-sauce-ondemand-plugin/blob/master/CHANGELOG.md>
