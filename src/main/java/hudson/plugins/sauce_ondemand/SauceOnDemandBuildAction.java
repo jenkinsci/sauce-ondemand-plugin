@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
+import com.saucelabs.saucerest.JobSource;
 import hudson.Util;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
@@ -148,8 +149,6 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * @throws JSONException Not json returned properly
      */
     public static JenkinsBuildInformation retrieveBuildFromSauce(JenkinsSauceREST sauceREST, String buildNumber) throws JSONException {
-        JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildNumber);
-
         logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
 
         // A note on retry behaviour
@@ -165,11 +164,9 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
 
         while (retries < maxRetries && "".equals(jsonResponse)) {
             try {
-                jsonResponse = sauceREST.getBuild(buildNumber);
-                if (!"".equals(jsonResponse)) {
-                    JSONObject buildObj = new JSONObject(jsonResponse);
-                    buildInformation.populateFromJson(buildObj);
-                    break;
+                JenkinsBuildInformation buildInformation = retrieveBuildInformationFromSauce(sauceREST, buildNumber);
+                if (!"".equals(buildInformation.getBuildId())) {
+                    return buildInformation;
                 }
             } catch (Exception e) {
                 jsonResponse = "";
@@ -182,6 +179,40 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
             }
         }
 
+        return new JenkinsBuildInformation("");
+    }
+
+    /**
+     * Invokes the Sauce REST API to retrieve the build information.
+     * @param sauceREST    Sauce Rest object/credentials to use
+     * @param buildNumber  The build name on Sauce or sanitized build number from Jenkins
+     * @return Jenkins build information
+     * @throws JSONException Unable to parse json
+     */
+    public static JenkinsBuildInformation retrieveBuildInformationFromSauce(
+            JenkinsSauceREST sauceREST, String buildNumber)
+            throws JSONException {
+        logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
+
+        String response;
+        try {
+            response = sauceREST.getBuildsByName(JobSource.VDC, buildNumber, 1);
+        } catch (java.io.UnsupportedEncodingException e) {
+            return new JenkinsBuildInformation("");
+        }
+        if ("".equals(response)) {
+            return new JenkinsBuildInformation("");
+        }
+        JSONObject jsonResponse = new JSONObject(response);
+        JSONArray jsonBuilds = jsonResponse.getJSONArray("builds");
+        if (jsonBuilds == null || jsonBuilds.length() == 0) {
+            logger.warning("Unable to find build for name: `" + buildNumber + "`");
+            return new JenkinsBuildInformation("");
+        }
+        JSONObject buildData = jsonBuilds.getJSONObject(0);
+        String buildId = buildData.getString("id");
+        JenkinsBuildInformation buildInformation = new JenkinsBuildInformation(buildId);
+        buildInformation.populateFromJson(buildData);
         return buildInformation;
     }
 
@@ -253,7 +284,9 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
      * @return List of processed job information
      * @throws JSONException Not json returned properly
      */
-    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(JenkinsSauceREST sauceREST, Run build) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(
+            JenkinsSauceREST sauceREST, Run build)
+            throws JSONException {
         SauceCredentials credentials = getSauceBuildAction(build).getCredentials();
         return retrieveJobIdsFromSauce(sauceREST, build, credentials);
     }
@@ -277,36 +310,81 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
     }
 
 
-    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(JenkinsSauceREST sauceREST, Run build, SauceCredentials credentials) throws JSONException {
+    public static LinkedHashMap<String, JenkinsJobInformation> retrieveJobIdsFromSauce(
+            JenkinsSauceREST sauceREST, Run build, SauceCredentials credentials)
+            throws JSONException {
         //invoke Sauce Rest API to find plan results with those values
         LinkedHashMap<String, JenkinsJobInformation> jobInformation = new LinkedHashMap<String, JenkinsJobInformation>();
 
         String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
-        logger.fine("Performing Sauce REST retrieve results for " + buildNumber);
-        String jsonResponse = sauceREST.getBuildFullJobs(buildNumber, 5000);
-        JSONObject job = new JSONObject(jsonResponse);
-        JSONArray jobResults = job.getJSONArray("jobs");
-        if (jobResults == null) {
-            logger.log(Level.WARNING, "Unable to find job data for " + buildNumber);
+        JenkinsBuildInformation buildInformation = SauceOnDemandBuildAction.retrieveBuildInformationFromSauce(sauceREST, buildNumber);
+        String buildId = buildInformation.getBuildId();
+        if ("".equals(buildId))
+            return jobInformation;
+        List<String> jobIds = SauceOnDemandBuildAction.getJobIdsForBuild(sauceREST, buildId);
+        Map<String, JenkinsJobInformation> jobs = SauceOnDemandBuildAction.getJobsInformation(sauceREST, credentials, jobIds);
+        for (String jobId: jobIds) {
+            JenkinsJobInformation information = jobs.get(jobId);
+            if (information != null) {
+                jobInformation.put(jobId, information);
+            }
+        }
+        return jobInformation;
+    }
 
-        } else {
-            //the list of results retrieved from the Sauce REST API is last-first, so reverse the list
-            for (int i = jobResults.length() - 1; i >= 0; i--) {
-                //check custom data to find job that was for build
+    protected static List<String> getJobIdsForBuild(JenkinsSauceREST sauceREST, String buildId) {
+        List<String> jobIds = new ArrayList<String>();
+        String response = sauceREST.getBuildJobs(JobSource.VDC, buildId);
+        JSONObject jsonResponse = new JSONObject(response);
+        JSONArray jsonBuildJobs = jsonResponse.getJSONArray("jobs");
+        if (jsonBuildJobs == null || jsonBuildJobs.length() == 0) {
+            logger.log(Level.WARNING, "Build without jobs id=`" + buildId + "`");
+            return jobIds;
+        }
+        for (int i = 0; i < jsonBuildJobs.length(); i++) {
+            JSONObject jobData = jsonBuildJobs.getJSONObject(i);
+            String jobId = jobData.getString("id");
+            jobIds.add(jobId);
+        }
+        return jobIds;
+    }
+
+    protected static Map<String, JenkinsJobInformation> getJobsInformation(
+            JenkinsSauceREST sauceREST, SauceCredentials credentials, Iterable<String> jobIds)
+            throws JSONException {
+        Map<String, JenkinsJobInformation> jobs = new HashMap<String, JenkinsJobInformation>();
+        List<List<String>> slicedIds = SauceOnDemandBuildAction.slice(jobIds, 20);
+        for (List<String> slice: slicedIds) {
+            String response = sauceREST.getFullJobsByIds(slice);
+            JSONArray jobResults = new JSONArray(response);
+            for (int i = 0; i < jobResults.length(); i++) {
                 JSONObject jobData = jobResults.getJSONObject(i);
                 String jobId = jobData.getString("id");
                 JenkinsJobInformation information = new JenkinsJobInformation(jobId, credentials.getHMAC(jobId));
                 try {
                     information.populateFromJson(jobData);
-                    jobInformation.put(information.getJobId(), information);
                 } catch (JSONException e) {
                     logger.finer("Exception with populatefromJson:" + e);
                     logger.finer("jobData: " + jobData.toString());
                     throw e;
                 }
+                jobs.put(information.getJobId(), information);
             }
         }
-        return jobInformation;
+        return jobs;
+    }
+
+    protected static List<List<String>> slice(Iterable<String> strings, int sliceSize) {
+        List<List<String>> sliced = new ArrayList<List<String>>();
+        List<String> current = null;
+        for (String s: strings) {
+            if (current == null || current.size() >= sliceSize) {
+                current = new ArrayList<String>();
+                sliced.add(current);
+            }
+            current.add(s);
+        }
+        return sliced;
     }
 
     public Map<String,String> getAnalytics() {

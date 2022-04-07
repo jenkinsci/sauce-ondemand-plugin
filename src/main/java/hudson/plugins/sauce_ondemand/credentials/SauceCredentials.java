@@ -16,7 +16,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import com.google.common.base.Strings;
-import com.saucelabs.saucerest.SecurityUtils;
+import com.saucelabs.saucerest.SauceShareableLink;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
@@ -278,8 +278,11 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      *
      */
     public String getHMAC(String jobId) {
-        String key = username + ":" + getPassword().getPlainText();
-        return SecurityUtils.hmacEncode(HMAC_KEY, jobId, key);
+        try {
+            return SauceShareableLink.getJobAuthDigest(username, getPassword().getPlainText(), jobId);
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
+            return "";
+        }
     }
 
     public static final class ShortLivedConfig extends AbstractDescribableImpl<ShortLivedConfig> implements Serializable {

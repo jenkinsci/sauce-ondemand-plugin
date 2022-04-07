@@ -1,0 +1,31 @@
+{
+	"builds":[
+		{
+			"creation_time":1646748603,
+			"deletion_time":null,
+			"end_time":1646748751,
+			"group_id":null,
+			"id":"4a9e620d09543f428177d87fdd5a1451",
+			"jobs":{
+				"completed":0,
+				"errored":0,
+				"failed":1,
+				"finished":2,
+				"passed":1,
+				"public":0,
+				"queued":0,
+				"running":0
+			},
+			"modification_time":1646748740,
+			"name":"build-rdc-test-20220308-141001",
+			"org_id":"4cc95cd249234be19f0509d96e269aa8",
+			"owner_id":"90a6e444fbc04e54b997b04ff17e0e7c",
+			"passed":null,
+			"public":false,
+			"run":0,
+			"start_time":1646748603,
+			"status":"failed",
+			"team_id":"0167a85c614446deb9401698c803ad7a"
+		}
+	]
+}
