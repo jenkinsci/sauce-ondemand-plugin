@@ -7,7 +7,7 @@
         <relativePath />
     </parent>
     <properties>
-        <revision>1.200</revision>
+        <revision>1.201</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/sauce-ondemand-plugin</gitHubRepo>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -21,7 +21,7 @@
 
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.200</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <description>A Jenkins plugin to help create and teardown Sauce Labs tests and Sauce Connect sessions</description>
@@ -31,7 +31,7 @@
         <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
-	<tag>sauce-ondemand-1.200</tag>
+	<tag>${scmTag}</tag>
     </scm>
 
     <organization>
