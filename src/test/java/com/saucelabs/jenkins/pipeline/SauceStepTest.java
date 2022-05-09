@@ -123,7 +123,7 @@ public class SauceStepTest {
             Mockito.eq("fakekey"),
             Mockito.anyInt(),
             isNull(),
-            Mockito.matches("-i gavin -vv -i tunnel-ident --tunnel-identifier [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
+            Mockito.matches("-i gavin -vv -i tunnel-ident --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
             Mockito.any(PrintStream.class),
             Mockito.eq(true),
             isNull()

@@ -228,8 +228,8 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                // Match that it starts with tunnel-identifier, because timestamp
-                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-identifier runFreestyleBuild-resolvedOptionsOrder-"));
+                // Match that it starts with tunnel-name, because timestamp
+                assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-name runFreestyleBuild-resolvedOptionsOrder-"));
                 return null;
             }
         };

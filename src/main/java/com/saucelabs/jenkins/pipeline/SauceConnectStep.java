@@ -269,7 +269,7 @@ public class SauceConnectStep extends Step {
             if (useGeneratedTunnelIdentifier) {
                 final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(job.getName());
                 overrides.put(SauceOnDemandBuildWrapper.TUNNEL_IDENTIFIER, tunnelIdentifier);
-                options = options + " --tunnel-identifier " + tunnelIdentifier;
+                options = options + " --tunnel-name " + tunnelIdentifier;
 
             }
 

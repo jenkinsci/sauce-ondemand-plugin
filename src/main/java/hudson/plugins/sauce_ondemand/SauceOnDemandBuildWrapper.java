@@ -367,7 +367,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
             if (isUseGeneratedTunnelIdentifier()) {
                 build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
-                resolvedOptions = resolvedOptions + " --tunnel-identifier " + tunnelIdentifier;
+                resolvedOptions = resolvedOptions + " --tunnel-name " + tunnelIdentifier;
             }
 
             build.getBuildVariables().put(SAUCE_REST_ENDPOINT, restEndpoint);
@@ -403,11 +403,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 );
 
                 if (launchSauceConnectOnSlave) {
-                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+                    listener.getLogger().println("Starting Sauce Connect on slave node using tunnel identifier: " + AbstractSauceTunnelManager.getTunnelName(resolvedOptions, "default"));
                     Computer.currentComputer().getChannel().call(sauceConnectStarter);
 
                 } else {
-                    listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelIdentifier(resolvedOptions, "default"));
+                    listener.getLogger().println("Starting Sauce Connect on master node using identifier: " + AbstractSauceTunnelManager.getTunnelName(resolvedOptions, "default"));
                     //launch Sauce Connect on the master
                     sauceConnectStarter.call();
 
@@ -582,7 +582,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
                         if (isUseGeneratedTunnelIdentifier()) {
                             build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
-                            resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+                            resolvedOptions = "--tunnel-name " + tunnelIdentifier + " " + resolvedOptions;
                         }
 
                         if (launchSauceConnectOnSlave) {
