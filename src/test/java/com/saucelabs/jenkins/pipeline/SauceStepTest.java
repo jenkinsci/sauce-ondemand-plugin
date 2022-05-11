@@ -108,7 +108,7 @@ public class SauceStepTest {
 
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithGlobalOptionsTest");
         p.setDefinition(new CpsFlowDefinition(
-            "node { sauce('" + credentialsId + "') { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true, options: '-i tunnel-ident') { \n" +
+            "node { sauce('" + credentialsId + "') { sauceconnect(useGeneratedTunnelName: true, verboseLogging: true, options: '-i tunnel-name') { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
                 "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n" +
                 "}}}",
@@ -123,7 +123,7 @@ public class SauceStepTest {
             Mockito.eq("fakekey"),
             Mockito.anyInt(),
             isNull(),
-            Mockito.matches("-i gavin -vv -i tunnel-ident --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
+            Mockito.matches("-i gavin -vv -i tunnel-name --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
             Mockito.any(PrintStream.class),
             Mockito.eq(true),
             isNull()
@@ -134,7 +134,7 @@ public class SauceStepTest {
     public void sauceConnectWithoutSauceTest() throws Exception {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithoutSauceTest");
         p.setDefinition(new CpsFlowDefinition(
-            "node { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true) { \n" +
+            "node { sauceconnect(useGeneratedTunnelName: true, verboseLogging: true) { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
                 "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n" +
                 "}}",

@@ -237,7 +237,7 @@ public class SauceBuildWrapperTest {
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         PluginImpl.get().setSauceConnectOptions("--global");
         sauceBuildWrapper.setOptions("--build -i 1");
-        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+        sauceBuildWrapper.setUseGeneratedTunnelName(true);
 
         Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "resolvedOptionsOrder");
         jenkinsRule.assertBuildStatusSuccess(build);
@@ -307,7 +307,7 @@ public class SauceBuildWrapperTest {
 
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setEnableSauceConnect(true);
-        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+        sauceBuildWrapper.setUseGeneratedTunnelName(true);
 
         final JSONObject holder = new JSONObject();
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
@@ -352,7 +352,7 @@ public class SauceBuildWrapperTest {
 
         SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
         sauceBuildWrapper.setEnableSauceConnect(true);
-        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
+        sauceBuildWrapper.setUseGeneratedTunnelName(true);
         sauceBuildWrapper.setSeleniumPort("$TEST_PORT_VARIABLE_4321");
 
         final JSONObject holder = new JSONObject();
