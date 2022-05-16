@@ -119,8 +119,6 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             } catch (JWTCreationException e){
                 //Invalid Signing configuration / Couldn't convert Claims.
                 e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
             }
         }
         return this.getApiKey();
