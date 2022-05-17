@@ -15,7 +15,7 @@
         <!-- Java Level to use. Java 7 required when using core >= 1.612 -->
         <java.level>8</java.level>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
-        <ci-sauce.version>1.156</ci-sauce.version>
+        <ci-sauce.version>1.157</ci-sauce.version>
         <saucerest.version>1.1.8</saucerest.version>
     </properties>
 
