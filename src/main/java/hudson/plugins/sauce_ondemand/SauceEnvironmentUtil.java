@@ -231,7 +231,7 @@ public final class SauceEnvironmentUtil {
         return builder.toString();
     }
 
-    public static String generateTunnelIdentifier(final String projectName) {
+    public static String generateTunnelName(final String projectName) {
         //String rawName = build.getProject().getName();
         String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_CHARS, "_");
         return sanitizedName + "-" + System.currentTimeMillis();

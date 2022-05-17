@@ -10,30 +10,30 @@ import static org.hamcrest.Matchers.lessThan;
 public class SauceEnvironmentUtilTest {
 
     @Test
-    public void generateTunnelIdentifier_should_use_the_project_name_in_the_tunnel_id(){
+    public void generateTunnelName_should_use_the_project_name_in_the_tunnel_id(){
         String expectedProjectName = "My_Project_Name";
 
-        assertThat(SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName), containsString(expectedProjectName));
+        assertThat(SauceEnvironmentUtil.generateTunnelName(expectedProjectName), containsString(expectedProjectName));
     }
 
     @Test
-    public void generateTunnelIdentifier_should_sanitize_the_project_name(){
+    public void generateTunnelName_should_sanitize_the_project_name(){
         String expectedProjectName = "My Project!@#$%&*()Name-012345689";
 
-        assertThat(SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName), containsString("My_Project_Name-012345689"));
+        assertThat(SauceEnvironmentUtil.generateTunnelName(expectedProjectName), containsString("My_Project_Name-012345689"));
     }
 
     @Test
-    public void generateTunnelIdentifier_should_include_an_epoch_timestamp(){
+    public void generateTunnelName_should_include_an_epoch_timestamp(){
         String expectedProjectName = "My Project";
 
-        String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(expectedProjectName);
+        String tunnelName = SauceEnvironmentUtil.generateTunnelName(expectedProjectName);
 
-        String epochTimeMSStr = tunnelIdentifier.split("-")[1];
+        String epochTimeMSStr = tunnelName.split("-")[1];
         long epochTimeMS = Long.parseLong(epochTimeMSStr);
         long now = System.currentTimeMillis();
-        int deltaBetweenNowAndTunnelIdentifier = (int) (now - epochTimeMS);
+        int deltaBetweenNowAndTunnelName = (int) (now - epochTimeMS);
 
-        assertThat(deltaBetweenNowAndTunnelIdentifier, is(lessThan(12)));
+        assertThat(deltaBetweenNowAndTunnelName, is(lessThan(12)));
     }
 }

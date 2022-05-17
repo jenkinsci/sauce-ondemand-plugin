@@ -7,7 +7,7 @@
     <f:entry field="options" title="${%Sauce Connect Options}">
         <f:textbox/>
     </f:entry>
-    <f:entry field="useGeneratedTunnelIdentifier">
+    <f:entry field="useGeneratedTunnelName">
         <f:checkbox title="${%Create a new unique Sauce Connect tunnel per build}"/>
     </f:entry>
     <f:entry field="useLatestSauceConnect"

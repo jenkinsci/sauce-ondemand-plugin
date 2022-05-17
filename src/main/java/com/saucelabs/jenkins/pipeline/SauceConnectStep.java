@@ -43,7 +43,7 @@ import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepEx
 public class SauceConnectStep extends Step {
     private Boolean verboseLogging = false;
     private Boolean useLatestSauceConnect = false;
-    private Boolean useGeneratedTunnelIdentifier = false;
+    private Boolean useGeneratedTunnelName = false;
     private String options;
     private String sauceConnectPath;
 
@@ -51,10 +51,10 @@ public class SauceConnectStep extends Step {
     public SauceConnectStep() {
     }
 
-    public SauceConnectStep(String options, Boolean verboseLogging, Boolean useLatestSauceConnect, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
+    public SauceConnectStep(String options, Boolean verboseLogging, Boolean useLatestSauceConnect, Boolean useGeneratedTunnelName, String sauceConnectPath) {
         this.verboseLogging = verboseLogging;
         this.useLatestSauceConnect = useLatestSauceConnect;
-        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
+        this.useGeneratedTunnelName = useGeneratedTunnelName;
         this.sauceConnectPath = Util.fixEmptyAndTrim(sauceConnectPath);
         this.options = StringUtils.trimToEmpty(options);
     }
@@ -64,7 +64,7 @@ public class SauceConnectStep extends Step {
         return new SauceConnectStepExecution(context,
             PluginImpl.get().getSauceConnectOptions(),
             options,
-            useGeneratedTunnelIdentifier,
+            useGeneratedTunnelName,
             verboseLogging,
             sauceConnectPath,
             useLatestSauceConnect
@@ -90,13 +90,13 @@ public class SauceConnectStep extends Step {
         this.sauceConnectPath = sauceConnectPath;
     }
 
-    public Boolean getUseGeneratedTunnelIdentifier() {
-        return useGeneratedTunnelIdentifier;
+    public Boolean getUseGeneratedTunnelName() {
+        return useGeneratedTunnelName;
     }
 
     @DataBoundSetter
-    public void setUseGeneratedTunnelIdentifier(Boolean useGeneratedTunnelIdentifier) {
-        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
+    public void setUseGeneratedTunnelName(Boolean useGeneratedTunnelName) {
+        this.useGeneratedTunnelName = useGeneratedTunnelName;
     }
 
     public Boolean getUseLatestSauceConnect() {
@@ -211,7 +211,7 @@ public class SauceConnectStep extends Step {
     public static class SauceConnectStepExecution extends StepExecution {
         private final String globalOptions;
         private final String options;
-        private final boolean useGeneratedTunnelIdentifier;
+        private final boolean useGeneratedTunnelName;
         private final boolean verboseLogging;
         private final String sauceConnectPath;
         private final boolean useLatestSauceConnect;
@@ -224,7 +224,7 @@ public class SauceConnectStep extends Step {
             @Nonnull StepContext context,
             String globalOptions,
             String options,
-            boolean useGeneratedTunnelIdentifier,
+            boolean useGeneratedTunnelName,
             boolean verboseLogging,
             String sauceConnectPath,
             boolean useLatestSauceConnect
@@ -232,7 +232,7 @@ public class SauceConnectStep extends Step {
             super(context);
             this.globalOptions = globalOptions;
             this.options = options;
-            this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
+            this.useGeneratedTunnelName = useGeneratedTunnelName;
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
             this.useLatestSauceConnect = useLatestSauceConnect;
@@ -266,10 +266,10 @@ public class SauceConnectStep extends Step {
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_PORT, String.valueOf(port));
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_HOST, "localhost");
 
-            if (useGeneratedTunnelIdentifier) {
-                final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(job.getName());
-                overrides.put(SauceOnDemandBuildWrapper.TUNNEL_IDENTIFIER, tunnelIdentifier);
-                options = options + " --tunnel-identifier " + tunnelIdentifier;
+            if (useGeneratedTunnelName) {
+                final String tunnelName = SauceEnvironmentUtil.generateTunnelName(job.getName());
+                overrides.put(SauceOnDemandBuildWrapper.TUNNEL_NAME, tunnelName);
+                options = options + " --tunnel-name " + tunnelName;
 
             }
 
