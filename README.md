@@ -3,7 +3,7 @@
 This plugin allows you to integrate [Sauce Selenium Testing](https://saucelabs.com/platform/automation-tools/selenium) with Jenkins.
 Specifically, you can:
 
--   Automate the setup and tear down of [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy)
+-   Automate the setup and tear down of [Sauce Connect](https://docs.saucelabs.com/secure-connections/sauce-connect/)
 -   Integrate the Sauce Labs result videos per test
 
 ## Configuration
@@ -13,10 +13,10 @@ the Manage Credentials page as follows:
 
 ![](docs/images/credential.png)
 
-Once this is set, on each job configuration page, you can tell Jenkins
-to launch a Sauce Connect instance for the duration of the build. For
-more details about the concept of SSH tunnel in the context of Sauce
-Labs, see [the documentation](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+Once this is set, on each job configuration page, you can tell Jenkins to
+launch a [Sauce Connect Proxy](https://docs.saucelabs.com/secure-connections/sauce-connect/)
+instance for the duration of the build. For more details about the concept
+of secure connection in the context of Sauce Labs, see [the documentation](https://docs.saucelabs.com/secure-connections/sauce-connect/).
 
 ### Embedded Test Reports
 
