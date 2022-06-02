@@ -108,7 +108,7 @@ public class SauceStepTest {
 
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithGlobalOptionsTest");
         p.setDefinition(new CpsFlowDefinition(
-            "node { sauce('" + credentialsId + "') { sauceconnect(useGeneratedTunnelName: true, verboseLogging: true, options: '-i tunnel-name') { \n" +
+            "node { sauce('" + credentialsId + "') { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true, options: '-i tunnel-name') { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
                 "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n" +
                 "}}}",
@@ -134,7 +134,7 @@ public class SauceStepTest {
     public void sauceConnectWithoutSauceTest() throws Exception {
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithoutSauceTest");
         p.setDefinition(new CpsFlowDefinition(
-            "node { sauceconnect(useGeneratedTunnelName: true, verboseLogging: true) { \n" +
+            "node { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true) { \n" +
                 "echo 'USERNAME=' + env.SAUCE_USERNAME\n" +
                 "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n" +
                 "}}",

@@ -48,7 +48,7 @@ public class ParameterizedSauceBuildWrapperTest {
     public ParameterizedSauceBuildWrapperTest(
             boolean enableSauceConnect,
             boolean launchSauceConnectOnSlave,
-            boolean useGeneratedTunnelName,
+            boolean useGeneratedTunnelIdentifier,
             boolean verboseLogging,
             boolean useLatestVersion,
             boolean forceCleanup,
@@ -59,7 +59,7 @@ public class ParameterizedSauceBuildWrapperTest {
         sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(null);
         sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
         sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
-        sauceBuildWrapper.setUseGeneratedTunnelName(useGeneratedTunnelName);
+        sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
         sauceBuildWrapper.setVerboseLogging(verboseLogging);
         sauceBuildWrapper.setUseLatestVersion(useLatestVersion);
         sauceBuildWrapper.setForceCleanup(forceCleanup);
@@ -72,7 +72,7 @@ public class ParameterizedSauceBuildWrapperTest {
         ArrayList<Object[]> list = new ArrayList<Object[]>();
         for(boolean enableSauceConnect : new boolean[] {true, false }) {
             for(boolean launchSauceConnectOnSlave : new boolean[] { true, false }) {
-                for (boolean useGeneratedTunnelName : new boolean[]{true, false}) {
+                for (boolean useGeneratedTunnelIdentifier : new boolean[]{true, false}) {
                     for (boolean verboseLogging : new boolean[]{true, false}) {
                         for (boolean useLatestVersion : new boolean[]{true, false}) {
                             for (boolean forceCleanup : new boolean[]{false}) { // set this to {true, false} for proper testing.  But it will increase test times by about 20m
@@ -81,7 +81,7 @@ public class ParameterizedSauceBuildWrapperTest {
                                         list.add(new Object[]{
                                                 enableSauceConnect,
                                                 launchSauceConnectOnSlave,
-                                                useGeneratedTunnelName,
+                                                useGeneratedTunnelIdentifier,
                                                 verboseLogging,
                                                 useLatestVersion,
                                                 forceCleanup,
@@ -206,7 +206,7 @@ public class ParameterizedSauceBuildWrapperTest {
         } else {
             assertThat("SAUCE_NATIVE_APP is set when native package is set", envVars.get("SAUCE_NATIVE_APP"), not(isEmptyOrNullString()));
         }
-        if (sauceBuildWrapper.isEnableSauceConnect() && sauceBuildWrapper.isUseGeneratedTunnelName()) {
+        if (sauceBuildWrapper.isEnableSauceConnect() && sauceBuildWrapper.isUseGeneratedTunnelIdentifier()) {
             assertThat("TUNNEL_NAME is set when we are managing it", envVars.get("TUNNEL_NAME"), not(isEmptyOrNullString()));
 
         } else {
