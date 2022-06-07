@@ -172,7 +172,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     private static final String SAUCE_USE_CHROME = "SAUCE_USE_CHROME";
 
-    private boolean useGeneratedTunnelName;
+    private boolean useGeneratedTunnelIdentifier;
 
     private static final long serialVersionUID = 1L;
     /**
@@ -271,23 +271,23 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     /**
      * Constructs a new instance using data entered on the job configuration screen.
-     * @param enableSauceConnect        indicates whether Sauce Connect should be started as part of the build.
-     * @param condition                 allows users to define rules which enable Sauce Connect
-     * @param seleniumInformation       the browser information that is to be used for the build.
-     * @param seleniumHost              host location of the selenium server.
-     * @param seleniumPort              port location of the selenium server.
-     * @param options                   the Sauce Connect command line options to be used
-     * @param sauceConnectPath          Path to sauce connect
-     * @param launchSauceConnectOnSlave indicates whether Sauce Connect should be launched on the slave or master node
-     * @param verboseLogging            indicates whether the Sauce Connect output should be written to the Jenkins job output
-     * @param useLatestVersion          indicates whether the latest version of the selected browser(s) should be used
-     * @param useLatestSauceConnect     indicates whether the latest version of Sauce Connect should always be used
-     * @param forceCleanup              indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
-     * @param webDriverBrowsers         which browser(s) should be used for web driver
-     * @param appiumBrowsers            which browser(s) should be used for appium
-     * @param nativeAppPackage          the path to the native app package to be tested
-     * @param useGeneratedTunnelName    indicated whether tunnel names and ports should be managed by the plugin
-     * @param credentialId              Which credential a build should use
+     * @param enableSauceConnect              indicates whether Sauce Connect should be started as part of the build.
+     * @param condition                       allows users to define rules which enable Sauce Connect
+     * @param seleniumInformation             the browser information that is to be used for the build.
+     * @param seleniumHost                    host location of the selenium server.
+     * @param seleniumPort                    port location of the selenium server.
+     * @param options                         the Sauce Connect command line options to be used
+     * @param sauceConnectPath                Path to sauce connect
+     * @param launchSauceConnectOnSlave       indicates whether Sauce Connect should be launched on the slave or master node
+     * @param verboseLogging                  indicates whether the Sauce Connect output should be written to the Jenkins job output
+     * @param useLatestVersion                indicates whether the latest version of the selected browser(s) should be used
+     * @param useLatestSauceConnect           indicates whether the latest version of Sauce Connect should always be used
+     * @param forceCleanup                    indicates whether to force cleanup for jobs/tunnels instead of waiting for timeout
+     * @param webDriverBrowsers               which browser(s) should be used for web driver
+     * @param appiumBrowsers                  which browser(s) should be used for appium
+     * @param nativeAppPackage                the path to the native app package to be tested
+     * @param useGeneratedTunnelIdentifier    indicated whether tunnel names and ports should be managed by the plugin
+     * @param credentialId                    Which credential a build should use
      */
     @DataBoundConstructor
     public SauceOnDemandBuildWrapper(
@@ -308,7 +308,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         List<String> appiumBrowsers,
         String nativeAppPackage,
 //            boolean useChromeForAndroid,
-        boolean useGeneratedTunnelName
+        boolean useGeneratedTunnelIdentifier
     ) {
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -330,7 +330,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.sauceConnectPath = sauceConnectPath;
         this.nativeAppPackage = nativeAppPackage;
 //        this.useChromeForAndroid = useChromeForAndroid;
-        this.useGeneratedTunnelName = useGeneratedTunnelName;
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
         this.credentialId = credentialId;
     }
 
@@ -365,7 +365,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             String retryWaitTime = p != null ? p.getSauceConnectRetryWaitTime() : null;
             String resolvedOptions = getCommandLineOptions(build, listener);
 
-            if (isUseGeneratedTunnelName()) {
+            if (isUseGeneratedTunnelIdentifier()) {
                 build.getBuildVariables().put(TUNNEL_NAME, tunnelName);
                 resolvedOptions = resolvedOptions + " --tunnel-name " + tunnelName;
             }
@@ -435,7 +435,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     props.put("plugin", "jenkins");
                     props.put("enableSauceConnect", enableSauceConnect);
                     props.put("verboseLogging", verboseLogging);
-                    props.put("useGeneratedTunnelName", useGeneratedTunnelName);
+                    props.put("useGeneratedTunnelIdentifier", useGeneratedTunnelIdentifier);
                     props.put("launchSauceConnectOnSlave", launchSauceConnectOnSlave);
                     props.put("webDriverBrowsers", webDriverBrowsers);
                     props.put("appiumBrowsers", appiumBrowsers);
@@ -521,7 +521,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, SAUCE_NATIVE_APP, getNativeAppPackage(), true, verboseLogging, listener.getLogger());
                 }
 
-                if (isEnableSauceConnect() && isUseGeneratedTunnelName()) {
+                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                     SauceEnvironmentUtil.outputEnvironmentVariable(env, TUNNEL_NAME, tunnelName, true, verboseLogging, listener.getLogger());
                 }
 
@@ -580,7 +580,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                         listener.getLogger().println("Shutting down Sauce Connect");
                         String resolvedOptions = getCommandLineOptions(build, listener);
 
-                        if (isUseGeneratedTunnelName()) {
+                        if (isUseGeneratedTunnelIdentifier()) {
                             build.getBuildVariables().put(TUNNEL_NAME, tunnelName);
                             resolvedOptions = "--tunnel-name " + tunnelName + " " + resolvedOptions;
                         }
@@ -610,7 +610,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     // this is needed as aborting during tunnel creation will prevent it from closing properly above
                     SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
                     JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
-                    if (isEnableSauceConnect() && isUseGeneratedTunnelName()) {
+                    if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                         try {
                             String listResponse = sauceREST.getTunnels();
                             JSONArray tunnels = new JSONArray(listResponse);
@@ -774,7 +774,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
         } else {
             if (isEnableSauceConnect()) {
-                if (isUseGeneratedTunnelName()) {
+                if (isUseGeneratedTunnelIdentifier()) {
                     try {
                         if (launchSauceConnectOnSlave) {
                             return Computer.currentComputer().getChannel().call(new GetAvailablePort());
@@ -867,12 +867,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.useLatestSauceConnect = useLatestSauceConnect;
     }
 
-    public boolean isUseGeneratedTunnelName() {
-        return useGeneratedTunnelName;
+    public boolean isUseGeneratedTunnelIdentifier() {
+        return useGeneratedTunnelIdentifier;
     }
 
-    public void setUseGeneratedTunnelName(boolean useGeneratedTunnelName) {
-        this.useGeneratedTunnelName = useGeneratedTunnelName;
+    public void setUseGeneratedTunnelIdentifier(boolean useGeneratedTunnelIdentifier) {
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
     public boolean isVerboseLogging() {
