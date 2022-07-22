@@ -2,15 +2,14 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
          xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
-    <f:entry title="${it.name}" description="${it.description}">
-        <div name="parameter" description="${it.description}">
+    <f:entry title="${h.escape(it.name)}" description="${h.escape(it.description)}">
+        <div name="parameter" description="${h.escape(it.description)}">
             <input type="hidden" name="name" value="${it.name}"/>
             <select name="webDriverBrowsers" multiple="multiple" style="height: 160px; width: 600px;">
                 <j:forEach var="b" items="${it.webDriverBrowsers}">
-                    <option value="${b.key}">${b.name}</option>
+                    <option value="${h.escape(b.key)}">${h.escape(b.name)}</option>
                 </j:forEach>
             </select>
         </div>
     </f:entry>
-
 </j:jelly>
