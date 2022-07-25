@@ -355,8 +355,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         final String username = credentials.getUsername();
         final String restEndpoint = credentials.getRestEndpoint();
 
-        final String tunnelName = SauceEnvironmentUtil.generateTunnelName(build.getProject().getName());
+        final String tunnelName = SauceEnvironmentUtil.generateTunnelName(build.getProject().getName(), build.getNumber());
         final SauceConnectHandler sauceConnectStarter;
+
         if (isEnableSauceConnect()) {
 
             boolean canRun = true;

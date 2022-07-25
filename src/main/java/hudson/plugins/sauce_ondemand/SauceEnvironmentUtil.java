@@ -231,10 +231,9 @@ public final class SauceEnvironmentUtil {
         return builder.toString();
     }
 
-    public static String generateTunnelName(final String projectName) {
-        //String rawName = build.getProject().getName();
+    public static String generateTunnelName(final String projectName, int buildNumber) {
         String sanitizedName = projectName.replaceAll(PATTERN_DISALLOWED_CHARS, "_");
-        return sanitizedName + "-" + System.currentTimeMillis();
+        return sanitizedName + "-" + buildNumber + "-" + System.currentTimeMillis();
     }
 
     // the buildNumber variable returned from the API uses hyphens, so we should sanitize with hyphens here
