@@ -399,7 +399,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     this, env, listener,
                     workingDirectory, useLatestSauceConnect, resolvedOptions,
                     null,
-                    username, credentials.getApiKey().getPlainText(),
+                    username, credentials.getApiKey().getPlainText(), credentials.getRestEndpointName(),
                     maxRetries, retryWaitTime
                 );
 
@@ -960,7 +960,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             try {
                 if (!StringUtils.isBlank(username)) {
                     getSauceTunnelManager().closeTunnelsForPlan(username, options, listener.getLogger());
-
                 }
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
@@ -978,6 +977,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private final boolean useLatestSauceConnect;
         private final String username;
         private final String key;
+        private final String dataCenter;
         private int maxRetries;
         private int retryWaitTime;
 
@@ -997,6 +997,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             File sauceConnectJar,
             String username,
             String apiKey,
+            String dataCenter,
             String maxRetries,
             String retryWaitTime
         ) {
@@ -1006,6 +1007,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             this.listener = listener;
             this.username = username;
             this.key = apiKey;
+            this.dataCenter = dataCenter;
             this.port = sauceOnDemandBuildWrapper.getPort(env);
             this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
             this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
@@ -1043,12 +1045,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setWorkingDirectory(workingDirectory);
                     ((HudsonSauceConnectFourManager) sauceTunnelManager).setUseLatestSauceConnect(useLatestSauceConnect);
                 }
-                sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key));
+                sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key, dataCenter));
                 if (StringUtils.isBlank(username)) {
                     listener.getLogger().println("Username not set, not starting Sauce Connect");
-
                 } else if (StringUtils.isBlank(key)) {
                     listener.getLogger().println("Access key not set, not starting Sauce Connect");
+                } else if (StringUtils.isBlank(dataCenter)) {
+                    listener.getLogger().println("Data center not set, not starting Sauce Connect");
                 }
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
@@ -1058,7 +1061,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 int retryCount = 0;
                 while (retryCount < maxRetries) {
                     try {
-                        sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
+                        sauceTunnelManager.openConnection(username, key, dataCenter, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
                         return this;
                     } catch (AbstractSauceTunnelManager.SauceConnectDidNotStartException e) {
                         retryCount++;
@@ -1075,7 +1078,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     }
                 }
             } else {
-                sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
+                sauceTunnelManager.openConnection(username, key, dataCenter, port, sauceConnectJar, options, listener.getLogger(), verboseLogging, sauceConnectPath);
             }
             return this;
         }
@@ -1186,6 +1189,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     e.printStackTrace();
                 }
             }
+
             try {
                 this.credentialId = SauceCredentials.migrateToCredentials(
                     PluginImpl.get().getUsername(),

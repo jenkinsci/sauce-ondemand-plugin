@@ -105,7 +105,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
         };
@@ -153,7 +153,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 holder.element("scProvidedPort", port);
                 return null;
             }

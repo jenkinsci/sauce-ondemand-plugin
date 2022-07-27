@@ -27,8 +27,7 @@ public class SauceTestResultsById {
         this.credentials = credentials;
         this.job = new JenkinsJobInformation(id, credentials.getHMAC(id));
         this.server = credentials.getRestEndpoint().replace("https://","https://app.");
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(credentials.getUsername(), credentials.getPassword().getPlainText());
-        sauceREST.setServer(credentials.getRestEndpoint());
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(credentials.getUsername(), credentials.getPassword().getPlainText(), credentials.getRestEndpointName());
 
         try {
             String jsonResponse = sauceREST.getJobInfo(id);

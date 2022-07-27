@@ -418,12 +418,9 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         SauceCredentials creds = getCredentials();
         String username = creds != null ? creds.getUsername() : null;
         String accessKey = creds != null ? creds.getPassword().getPlainText() : null;
-        String restEndpoint = creds != null ? creds.getRestEndpoint() : null;
+        String dataCenter = creds != null ? creds.getRestEndpointName() : null;
 
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, accessKey);
-        if (restEndpoint != null) {
-            sauceREST.setServer(restEndpoint);
-        }
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, accessKey, dataCenter);
         return sauceREST;
     }
 

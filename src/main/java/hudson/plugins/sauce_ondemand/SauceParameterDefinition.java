@@ -27,7 +27,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, null));
 
     @DataBoundConstructor
     public SauceParameterDefinition() {

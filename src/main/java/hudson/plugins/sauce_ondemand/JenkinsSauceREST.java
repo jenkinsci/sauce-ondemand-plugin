@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.DataCenter;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 
@@ -17,23 +18,29 @@ import java.util.Objects;
  */
 public class JenkinsSauceREST extends SauceREST {
 
-    // TODO: May need EDS Urls in the future
-    private static final String BASE_URL;
-    static {
-        if (System.getenv("SAUCE_REST_ENDPOINT") != null) {
-            BASE_URL = System.getenv("SAUCE_REST_ENDPOINT");
-        } else {
-            BASE_URL = System.getProperty("saucerest-java.base_url", "https://saucelabs.com/");
-        }
-    }
-    private String server = BASE_URL;
+    private String server;
 
     static {
         SauceREST.setExtraUserAgent("Jenkins/" + Jenkins.VERSION + " " +
             "JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion());
     }
-    public JenkinsSauceREST(String username, String accessKey) {
-        super(username, accessKey);
+
+    // TODO: May need EDS Urls in the future
+    public JenkinsSauceREST(String username, String accessKey, String dataCenter) {
+        super(username, accessKey, dataCenter);
+
+        // Set the server address according to the data center, but allow it to be
+        // overridden in the config or an env var.
+        final String configBase = System.getProperty("saucerest-java.base_url");
+
+        if (System.getenv("SAUCE_REST_ENDPOINT") != null) {
+            server = System.getenv("SAUCE_REST_ENDPOINT");
+        } else if (configBase != null) {
+            server = configBase;
+        } else {
+            DataCenter dc = DataCenter.fromString(dataCenter);
+            server = dc.server();
+        }
     }
 
     // useful for debugging

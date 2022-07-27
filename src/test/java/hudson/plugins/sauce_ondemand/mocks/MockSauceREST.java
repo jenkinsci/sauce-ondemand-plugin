@@ -8,7 +8,7 @@ import java.net.URL;
 public class MockSauceREST extends JenkinsSauceREST {
 
     public MockSauceREST() {
-        super("fake", "");
+        super("fake", "", "US");
     }
 
     @Override

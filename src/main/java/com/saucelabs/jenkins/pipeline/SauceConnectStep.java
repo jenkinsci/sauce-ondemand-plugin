@@ -172,6 +172,7 @@ public class SauceConnectStep extends Step {
             sauceTunnelManager.openConnection(
                 sauceCredentials.getUsername(),
                 sauceCredentials.getApiKey().getPlainText(),
+                sauceCredentials.getRestEndpointName(),
                 port,
                 null, /*sauceConnectJar,*/
                 options,
