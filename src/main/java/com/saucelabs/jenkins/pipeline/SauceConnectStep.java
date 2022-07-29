@@ -267,10 +267,9 @@ public class SauceConnectStep extends Step {
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_HOST, "localhost");
 
             if (useGeneratedTunnelIdentifier) {
-                final String tunnelName = SauceEnvironmentUtil.generateTunnelName(job.getName());
+                final String tunnelName = SauceEnvironmentUtil.generateTunnelName(job.getName(), run.number);
                 overrides.put(SauceOnDemandBuildWrapper.TUNNEL_NAME, tunnelName);
                 options = options + " --tunnel-name " + tunnelName;
-
             }
 
             SauceCredentials sauceCredentials = getContext().get(SauceCredentials.class);
