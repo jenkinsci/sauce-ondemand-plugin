@@ -96,7 +96,7 @@ public class SauceBuildWrapperTest {
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key");
+        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", "US");
         PluginImpl p = PluginImpl.get();
         if (p != null) {
             // Reset connection string every run
@@ -136,7 +136,7 @@ public class SauceBuildWrapperTest {
 
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 return null;
             }
         };
@@ -170,7 +170,7 @@ public class SauceBuildWrapperTest {
     public void resolveVariables() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertTrue("Variable not resolved", options.equals("-i 1 -x https://saucelabs.com/rest/v1")); // null reverts to default US
                 return null;
             }
@@ -198,7 +198,7 @@ public class SauceBuildWrapperTest {
     public void commonOptions() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 assertEquals("Variables are resolved correctly", options, "-i 1 -x https://saucelabs.com/rest/v1"); // null reverts to default US
                 return null;
             }
@@ -227,7 +227,7 @@ public class SauceBuildWrapperTest {
     public void resolvedOptionsOrder() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 // Match that it starts with tunnel-name, because timestamp
                 assertThat("Variables are resolved correctly", options, CoreMatchers.containsString("--global --build -i 1 --tunnel-name runFreestyleBuild-resolvedOptionsOrder-"));
                 return null;
@@ -253,7 +253,7 @@ public class SauceBuildWrapperTest {
     public void sauceConnectTimeOut() throws Exception {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 throw new SauceConnectDidNotStartException("Sauce Connect failed to start");
             }
         };
@@ -312,7 +312,7 @@ public class SauceBuildWrapperTest {
         final JSONObject holder = new JSONObject();
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 holder.element("scProvidedPort", port);
                 return null;
             }
@@ -358,7 +358,7 @@ public class SauceBuildWrapperTest {
         final JSONObject holder = new JSONObject();
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
-            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
                 holder.element("scProvidedPort", Integer.toString(port,10));
                 return null;
             }

@@ -17,6 +17,7 @@ import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import com.google.common.base.Strings;
 import com.saucelabs.saucerest.SauceShareableLink;
+import com.saucelabs.saucerest.DataCenter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
@@ -139,6 +140,23 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     @NonNull
+    public String getRestEndpointName() {
+        if (this.restEndpoint == null) {
+            return "US";
+        }
+
+        switch (this.restEndpoint) {
+            case "https://eu-central-1.saucelabs.com/":
+                return "US";
+            case "https://us-east-1.saucelabs.com/":
+                return "US_EAST";
+            default:
+            case "https://saucelabs.com/":
+                return "US";
+        }
+    }
+
+    @NonNull
     public String getUsername() { return this.username; }
 
     @Override
@@ -156,8 +174,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public JenkinsSauceREST getSauceREST() {
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText());
-        sauceREST.setServer(getRestEndpoint());
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText(), getRestEndpointName());
         return sauceREST;
     }
 
@@ -170,8 +187,8 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
         }
 
         @SuppressWarnings("unused") // used by stapler
-        public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username) {
-            JenkinsSauceREST rest = new JenkinsSauceREST(username, value);
+        public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username, @QueryParameter String dataCenter) {
+            JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dataCenter);
             // If unauthorized getUser returns an empty string.
             if (rest.getUser().equals("")) {
                 return FormValidation.error("Bad username or Access key");

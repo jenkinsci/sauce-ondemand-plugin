@@ -97,6 +97,7 @@ public class SauceStepTest {
         Mockito.when(sauceConnectFourManager.openConnection(
             Mockito.anyString(),
             Mockito.anyString(),
+            Mockito.anyString(),
             Mockito.anyInt(),
             Mockito.any(File.class),
             Mockito.anyString(),
@@ -121,6 +122,7 @@ public class SauceStepTest {
         Mockito.verify(sauceConnectFourManager).openConnection(
             Mockito.eq("fakeuser"),
             Mockito.eq("fakekey"),
+            Mockito.eq("US"),
             Mockito.anyInt(),
             isNull(),
             Mockito.matches("-i gavin -vv -i tunnel-name --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
