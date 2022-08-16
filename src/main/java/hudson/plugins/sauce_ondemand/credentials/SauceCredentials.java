@@ -147,7 +147,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         switch (this.restEndpoint) {
             case "https://eu-central-1.saucelabs.com/":
-                return "US";
+                return "EU";
             case "https://us-east-1.saucelabs.com/":
                 return "US_EAST";
             default:
