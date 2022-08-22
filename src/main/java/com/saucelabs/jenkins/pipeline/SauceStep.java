@@ -2,8 +2,6 @@ package com.saucelabs.jenkins.pipeline;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
@@ -30,7 +28,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
@@ -58,7 +56,7 @@ public class SauceStep extends Step {
 
         private final String credentialsId;
 
-        public Execution(@Nonnull StepContext context, String credentialsId) {
+        public Execution(@NonNull StepContext context, String credentialsId) {
             super(context);
             this.credentialsId = credentialsId;
         }
@@ -101,7 +99,7 @@ public class SauceStep extends Step {
             return false;
         }
 
-        @Override public void stop(@Nonnull Throwable cause) throws Exception {
+        @Override public void stop(@NonNull Throwable cause) throws Exception {
             // should be no need to do anything special (but verify in JENKINS-26148)
             if (body!=null) {
                 body.cancel(cause);
@@ -116,7 +114,7 @@ public class SauceStep extends Step {
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return ImmutableSet.of(Run.class);
+            return Collections.singleton(Run.class);
         }
 
         @Override public String getDisplayName() {

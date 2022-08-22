@@ -24,7 +24,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
@@ -46,7 +45,7 @@ import org.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -119,7 +118,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     }
 
     @Override
-    public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
+    public TestResultAction.Data contributeTestData(Run<?, ?> run, @NonNull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
         try {
             listener.getLogger().println("Starting Sauce Labs test publisher");
             logger.finer("Sauce Labs test publisher was started in contributeTestData method");
@@ -313,7 +312,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                 updates.put("build", jobInformation.getBuild());
             }
 
-            if (!Strings.isNullOrEmpty(getJobVisibility())) {
+            if (getJobVisibility() != null && !getJobVisibility().isEmpty()) {
                 updates.put("public", getJobVisibility());
             }
 

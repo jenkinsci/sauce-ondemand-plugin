@@ -21,7 +21,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,7 +64,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
      * Created for implementing SimpleBuildStep / pipeline
      */
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull TaskListener listener) throws InterruptedException, IOException {
         TestResultAction report = run.getAction(TestResultAction.class);
         if (report != null) {
             List<TestResultAction.Data> data = new ArrayList<TestResultAction.Data>();
@@ -209,7 +209,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
         );
     }*/
 
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }

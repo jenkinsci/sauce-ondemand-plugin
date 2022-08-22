@@ -4,7 +4,7 @@ import com.saucelabs.ci.BuildInformation;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.text.DecimalFormat;

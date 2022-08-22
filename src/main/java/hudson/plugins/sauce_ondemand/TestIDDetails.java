@@ -1,6 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +18,7 @@ public class TestIDDetails {
         this.jobName = jobName;
     }
 
-    public static TestIDDetails processString(@Nonnull String line) {
+    public static TestIDDetails processString(@NonNull String line) {
         Matcher m = SESSION_ID_PATTERN.matcher(line);
         if (!m.find()) { return null; }
         TestIDDetails details = new TestIDDetails(

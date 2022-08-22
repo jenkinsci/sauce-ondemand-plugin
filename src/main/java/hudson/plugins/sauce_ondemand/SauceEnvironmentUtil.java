@@ -10,7 +10,7 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
@@ -213,7 +213,7 @@ public final class SauceEnvironmentUtil {
      * @param build the Jenkins build
      * @return String representing the Jenkins build
      */
-    @Nonnull
+    @NonNull
     public static String getBuildName(Run<?, ?> build) {
         while (build != null && build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
             build = ((MavenBuild) build).getParentBuild();
