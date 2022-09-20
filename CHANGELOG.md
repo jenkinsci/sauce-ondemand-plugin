@@ -1,3 +1,7 @@
+# Jenkins 1.206 - 2022-09-20
+
+* Bump saucerest from 1.1.8 to 1.1.9
+
 # Jenkins 1.205 - 2022-07-22
 
 * Update ci-sauce to 1.159 - fixes error when cleaning up tunnel at the end of a job
