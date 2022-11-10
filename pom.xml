@@ -21,7 +21,7 @@
 
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>1.208</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <description>A Jenkins plugin to help create and teardown Sauce Labs tests and Sauce Connect sessions</description>
@@ -31,7 +31,7 @@
         <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
-	<tag>${scmTag}</tag>
+	<tag>sauce-ondemand-1.208</tag>
     </scm>
 
     <organization>
