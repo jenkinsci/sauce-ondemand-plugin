@@ -15,8 +15,8 @@
         <!-- Java Level to use. Java 7 required when using core >= 1.612 -->
         <java.level>8</java.level>
         <plugins.run-condition.version>1.0</plugins.run-condition.version>
-        <ci-sauce.version>1.163</ci-sauce.version>
-        <saucerest.version>1.1.9</saucerest.version>
+        <ci-sauce.version>1.164</ci-sauce.version>
+        <saucerest.version>1.2.0</saucerest.version>
     </properties>
 
 
@@ -286,19 +286,19 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220320</version>
+            <version>20220924</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.36</version>
+            <version>2.0.5</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.36</version>
+            <version>2.0.5</version>
         </dependency>
 
         <dependency>
