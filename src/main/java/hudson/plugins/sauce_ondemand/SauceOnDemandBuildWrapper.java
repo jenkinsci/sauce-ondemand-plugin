@@ -25,7 +25,6 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.google.common.base.Strings;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
@@ -1173,7 +1172,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     protected boolean migrateCredentials(AbstractProject project) {
-        if (Strings.isNullOrEmpty(this.credentialId)) {
+        if (this.credentialId == null || this.credentialId.isEmpty()) {
             if (this.credentials != null) {
                 try {
                     this.credentialId = SauceCredentials.migrateToCredentials(

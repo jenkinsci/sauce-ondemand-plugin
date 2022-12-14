@@ -3,7 +3,7 @@ package com.saucelabs.jenkins.pipeline;
 import hudson.EnvVars;
 import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ final class ExpanderImpl extends EnvironmentExpander {
     }
 
     @Override
-    public void expand(@Nonnull EnvVars env) throws IOException, InterruptedException {
+    public void expand(@NonNull EnvVars env) throws IOException, InterruptedException {
         env.overrideAll(overrides);
     }
 }

@@ -15,7 +15,6 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
-import com.google.common.base.Strings;
 import com.saucelabs.saucerest.SauceShareableLink;
 import com.saucelabs.saucerest.DataCenter;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -38,7 +37,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -216,7 +215,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             String createdCredentialId = UUID.randomUUID().toString();
 
             final StandardUsernameCredentials credentialsToCreate;
-            if (!Strings.isNullOrEmpty(accessKey)) {
+            if (accessKey != null && !accessKey.isEmpty()) {
                 credentialsToCreate = new SauceCredentials(
                     CredentialsScope.GLOBAL,
                     createdCredentialId,

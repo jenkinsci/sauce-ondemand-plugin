@@ -1,7 +1,6 @@
 package com.saucelabs.jenkins.pipeline;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.google.common.collect.ImmutableSet;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
@@ -19,6 +18,7 @@ import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
+import java.util.HashSet;
 import java.util.Set;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
@@ -33,7 +33,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -127,7 +127,9 @@ public class SauceConnectStep extends Step {
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return ImmutableSet.of(Run.class, Computer.class, TaskListener.class, SauceCredentials.class);
+            Set<Class<?>> context = new HashSet<>();
+            Collections.addAll(context, Run.class, Computer.class, TaskListener.class, SauceCredentials.class);
+            return Collections.unmodifiableSet(context);
         }
 
         @Override public String getFunctionName() {
@@ -222,7 +224,7 @@ public class SauceConnectStep extends Step {
         private BodyExecution body;
 
         public SauceConnectStepExecution(
-            @Nonnull StepContext context,
+            @NonNull StepContext context,
             String globalOptions,
             String options,
             boolean useGeneratedTunnelIdentifier,
@@ -303,7 +305,7 @@ public class SauceConnectStep extends Step {
         }
 
         @Override
-        public void stop(@Nonnull Throwable cause) throws Exception {
+        public void stop(@NonNull Throwable cause) throws Exception {
             if (body!=null) {
                 body.cancel(cause);
             }
