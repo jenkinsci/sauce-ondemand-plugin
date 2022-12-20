@@ -620,7 +620,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                 JSONObject tunnelObj = new JSONObject(jsonResponse);
                                 if (tunnelObj.getString("tunnel_identifier").equals(tunnelName)) {
                                     listener.getLogger().println("Closing tunnel with uniquely generated ID: " + tunnelName);
-                                    sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                                    try {
+                                        sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                                    } catch (NullPointerException e) {
+                                        listener.getLogger().println("Unknown error while closing tunnel");
+                                    }
                                 }
                             }
                         } catch (JSONException e) {
