@@ -4,6 +4,9 @@ import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Launcher;
+import hudson.PluginManager;
+import hudson.PluginWrapper;
+import hudson.Plugin;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
@@ -126,7 +129,10 @@ public class ParameterizedSauceBuildWrapperTest {
 
         sauceBuildWrapper.setCredentialId(credentialsId);
 
-        jenkinsRule.getPluginManager().getPlugin("sauce-ondemand").getPlugin().configure(null, pluginConfig);
+        PluginManager manager = jenkinsRule.getPluginManager();
+        PluginWrapper plugin = manager.getPlugin("sauce-ondemand");
+        Plugin p2 = plugin.getPlugin();
+        p2.configure(null, pluginConfig);
 
     }
 

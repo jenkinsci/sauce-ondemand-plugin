@@ -2,6 +2,8 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
+import com.saucelabs.saucerest.model.platform.Platform;
+import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
@@ -47,7 +49,9 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +64,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Ross Rowe
@@ -96,7 +102,7 @@ public class SauceBuildWrapperTest {
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", "US");
+        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", "US_WEST");
         PluginImpl p = PluginImpl.get();
         if (p != null) {
             // Reset connection string every run
@@ -105,6 +111,8 @@ public class SauceBuildWrapperTest {
 
         //create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
         spySauceRest = spy(sauceRest);
+        com.saucelabs.saucerest.api.Platform mockPlatform = mock(com.saucelabs.saucerest.api.Platform.class);
+
         restUpdates = new HashMap<String, Map>();
         doAnswer(invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
@@ -116,19 +124,17 @@ public class SauceBuildWrapperTest {
 
         doAnswer(invocation -> "Mocked Rest API").when(spySauceRest).toString();
 
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"), StandardCharsets.UTF_8);
-            }
-        }).when(spySauceRest).getSupportedPlatforms("webdriver");
+        List<Platform> appiumPlatforms = new ArrayList<Platform>();
+        List<Platform> webdriverPlatforms = new ArrayList<Platform>();
+        when(mockPlatform.getSupportedPlatforms("appium")).thenReturn(new SupportedPlatforms(appiumPlatforms));
+        when(mockPlatform.getSupportedPlatforms("webdriver")).thenReturn(new SupportedPlatforms(webdriverPlatforms));
 
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return IOUtils.toString(getClass().getResourceAsStream("/appium.json"), StandardCharsets.UTF_8);
+                return mockPlatform;
             }
-        }).when(spySauceRest).getSupportedPlatforms("appium");
+        }).when(spySauceRest).getPlatform();
 
         doAnswer(invocationOnMock -> "{}").when(spySauceRest).retrieveResults(any(URL.class));
 
@@ -154,8 +160,8 @@ public class SauceBuildWrapperTest {
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
-	    HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
-		Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
+        HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
+        Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
         field.setAccessible(true);
         field.set(factory, sauceConnectFourManager);
 
@@ -171,7 +177,7 @@ public class SauceBuildWrapperTest {
         SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
             @Override
             public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-                assertTrue("Variable not resolved", options.equals("-i 1 -x https://saucelabs.com/rest/v1")); // null reverts to default US
+                assertTrue("Variable not resolved", options.equals("-i 1 -x https://saucelabs.com/rest/v1")); // null reverts to default US_WEST
                 return null;
             }
         };

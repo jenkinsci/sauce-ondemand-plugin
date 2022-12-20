@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -11,6 +12,7 @@ import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,7 +29,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, null));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
 
     @DataBoundConstructor
     public SauceParameterDefinition() {
@@ -50,6 +52,8 @@ public class SauceParameterDefinition extends ParameterDefinition {
     public List<Browser> getWebDriverBrowsers() {
         try {
             return BROWSER_FACTORY.getWebDriverBrowsers();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error retrieving response", e);
         } catch (JSONException e) {
             logger.log(Level.SEVERE, "Error parsing JSON response", e);
         }

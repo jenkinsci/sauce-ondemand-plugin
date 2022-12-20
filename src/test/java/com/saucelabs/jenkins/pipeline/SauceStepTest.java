@@ -122,7 +122,7 @@ public class SauceStepTest {
         Mockito.verify(sauceConnectFourManager).openConnection(
             Mockito.eq("fakeuser"),
             Mockito.eq("fakekey"),
-            Mockito.eq("US"),
+            Mockito.eq("US_WEST"),
             Mockito.anyInt(),
             isNull(),
             Mockito.matches("-i gavin -vv -i tunnel-name --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),

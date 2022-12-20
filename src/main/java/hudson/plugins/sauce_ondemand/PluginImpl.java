@@ -56,21 +56,24 @@ import java.util.logging.Logger;
 public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
+
     /**
      * Handles the retrieval of browsers from Sauce Labs.
      */
-    static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, null));
+    static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
 
     /**
      * User name to access Sauce OnDemand.
      */
     @Deprecated
     private transient String username;
+
     /**
      * Password for Sauce OnDemand.
      */
     @Deprecated
     private transient Secret apiKey;
+
     /**
      * Data center endpoint for Sauce OnDemand.
      */
