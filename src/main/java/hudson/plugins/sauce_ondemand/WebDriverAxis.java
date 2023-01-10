@@ -6,6 +6,7 @@ import hudson.matrix.AxisDescriptor;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,6 +59,8 @@ public class WebDriverAxis extends BrowserAxis {
         public List<Browser> getBrowsers() {
             try {
                 return BROWSER_FACTORY.getWebDriverBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error retrieving response", e);
             } catch (JSONException e) {
                 logger.log(Level.WARNING, "Error parsing JSON response", e);
             }

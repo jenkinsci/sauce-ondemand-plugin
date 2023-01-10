@@ -121,14 +121,14 @@ public class SauceBuildWrapperTest {
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"), StandardCharsets.UTF_8);
             }
-        }).when(spySauceRest).getSupportedPlatforms("webdriver");
+        }).when(spySauceRest).getPlatform().getSupportedPlatforms("webdriver");
 
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return IOUtils.toString(getClass().getResourceAsStream("/appium.json"), StandardCharsets.UTF_8);
             }
-        }).when(spySauceRest).getSupportedPlatforms("appium");
+        }).when(spySauceRest).getPlatform().getSupportedPlatforms("appium");
 
         doAnswer(invocationOnMock -> "{}").when(spySauceRest).retrieveResults(any(URL.class));
 
@@ -154,8 +154,8 @@ public class SauceBuildWrapperTest {
     }
 
     private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
-	    HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
-		Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
+        HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
+        Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
         field.setAccessible(true);
         field.set(factory, sauceConnectFourManager);
 

@@ -29,6 +29,7 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
+import com.saucelabs.saucerest.SauceException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.*;
 import hudson.model.*;
@@ -622,8 +623,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                     listener.getLogger().println("Closing tunnel with uniquely generated ID: " + tunnelName);
                                     try {
                                         sauceREST.deleteTunnel(tunnelObj.getString("id"));
-                                    } catch (NullPointerException e) {
-                                        listener.getLogger().println("Unknown error while closing tunnel");
+                                    } catch (SauceException.UnknownError e) {
+                                        listener.getLogger().println("Unknown error while closing tunnel: " + e);
                                     }
                                 }
                             }
@@ -1118,6 +1119,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public List<Browser> getAppiumBrowsers() {
             try {
                 return PluginImpl.BROWSER_FACTORY.getAppiumBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error retreiving response", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
@@ -1130,6 +1133,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public List<Browser> getWebDriverBrowsers() {
             try {
                 return PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error retreiving response", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
@@ -1151,6 +1156,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     browsers.add(browser);
                 }
                 return map;
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error retreiving response", e);
             } catch (JSONException e) {
                 logger.log(Level.SEVERE, "Error parsing JSON response", e);
             }
