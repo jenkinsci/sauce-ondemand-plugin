@@ -26,7 +26,6 @@ package hudson.plugins.sauce_ondemand;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;

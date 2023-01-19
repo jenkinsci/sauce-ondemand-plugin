@@ -1,8 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
-import com.saucelabs.ci.BrowserFactory;
-import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.Extension;
 import hudson.matrix.AxisDescriptor;
 import org.json.JSONException;
