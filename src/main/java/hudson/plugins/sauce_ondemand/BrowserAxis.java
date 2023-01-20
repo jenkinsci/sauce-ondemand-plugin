@@ -42,7 +42,7 @@ import java.util.Map;
 public abstract class BrowserAxis extends Axis {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, null));
+    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
     private transient MatrixProject project;
 
     public BrowserAxis(List<String> values) {

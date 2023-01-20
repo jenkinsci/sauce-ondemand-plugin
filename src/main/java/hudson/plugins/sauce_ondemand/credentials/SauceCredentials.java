@@ -141,17 +141,17 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     @NonNull
     public String getRestEndpointName() {
         if (this.restEndpoint == null) {
-            return "US";
+            return "US_WEST";
         }
 
         switch (this.restEndpoint) {
             case "https://eu-central-1.saucelabs.com/":
-                return "EU";
+                return "EU_CENTRAL";
             case "https://us-east-1.saucelabs.com/":
                 return "US_EAST";
             default:
             case "https://saucelabs.com/":
-                return "US";
+                return "US_WEST";
         }
     }
 
@@ -187,6 +187,10 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         @SuppressWarnings("unused") // used by stapler
         public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username, @QueryParameter String dataCenter) {
+            if (dataCenter == null) {
+                dataCenter = "US_WEST";
+            }
+
             JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dataCenter);
             // If unauthorized getUser returns an empty string.
             if (rest.getUser().equals("")) {
