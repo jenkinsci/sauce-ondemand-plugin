@@ -8,7 +8,7 @@
         <relativePath />
     </parent>
     <properties>
-        <revision>1.210</revision>
+        <revision>1.211</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
