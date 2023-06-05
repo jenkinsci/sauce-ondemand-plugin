@@ -1,9 +1,9 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.DomNodeList;
+import org.htmlunit.html.HtmlPage;
 import com.saucelabs.saucerest.JobSource;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.maven.MavenBuild;
