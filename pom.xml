@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.51</version>
+        <version>4.71</version>
         <relativePath />
     </parent>
     <properties>
@@ -12,9 +12,9 @@
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
-        <jenkins.version>2.249.1</jenkins.version>
+        <jenkins.version>2.387.3</jenkins.version>
         <ci-sauce.version>1.170</ci-sauce.version>
-        <saucerest.version>2.0.3</saucerest.version>
+        <saucerest.version>2.0.5</saucerest.version>
     </properties>
 
 
@@ -93,8 +93,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.249.x</artifactId>
-                <version>984.vb5eaac999a7e</version>
+                <artifactId>bom-2.387.x</artifactId>
+                <version>2329.v078520e55c19</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -118,6 +118,12 @@
             <groupId>com.mixpanel</groupId>
             <artifactId>mixpanel-java</artifactId>
             <version>1.5.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.saucelabs</groupId>
@@ -160,6 +166,10 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-jdk14</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -176,58 +186,57 @@
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.junit.jupiter</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>okhttp-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-engine</artifactId>
-            <version>1.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-commons</artifactId>
-            <version>1.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>3.8</version>
             <exclusions>
-                <!-- Avoid requireUpperBoundDeps conflict -->
                 <exclusion>
-                    <groupId>javax.ejb</groupId>
-                    <artifactId>ejb</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                </exclusion>
-                <!-- Provided by core -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
+                    <groupId>javax.annotation</groupId>
+                    <artifactId>javax.annotation-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-lang3-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -248,7 +257,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>run-condition</artifactId>
-            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -272,13 +280,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220924</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>1.7.0</version>
+            <version>20230618</version>
         </dependency>
 
         <dependency>
