@@ -176,7 +176,6 @@
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
             <version>${saucerest.version}</version>
-            <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <groupId>commons-codec</groupId>
@@ -193,6 +192,10 @@
                 <exclusion>
                     <groupId>com.squareup.okhttp3</groupId>
                     <artifactId>okhttp</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
