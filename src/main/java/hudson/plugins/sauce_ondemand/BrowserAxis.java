@@ -23,6 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import hudson.matrix.Axis;
@@ -42,7 +43,7 @@ import java.util.Map;
 public abstract class BrowserAxis extends Axis {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
+    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
     private transient MatrixProject project;
 
     public BrowserAxis(List<String> values) {

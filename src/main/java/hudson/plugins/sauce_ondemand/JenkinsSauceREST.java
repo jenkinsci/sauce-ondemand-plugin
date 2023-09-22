@@ -38,8 +38,7 @@ public class JenkinsSauceREST extends SauceREST {
         } else if (configBase != null) {
             server = configBase;
         } else {
-            DataCenter dc = DataCenter.fromString(dataCenter);
-            server = dc.server();
+            server = dataCenter.server();
         }
     }
 
@@ -58,7 +57,6 @@ public class JenkinsSauceREST extends SauceREST {
         }
     }
 
-    @Override
     protected URL buildURL(String endpoint) {
         try {
             return new URL(new URL(this.server), "/rest/v1/" + endpoint);

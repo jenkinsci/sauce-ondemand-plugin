@@ -24,6 +24,10 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.saucelabs.saucerest.api.JobsEndpoint;
+import com.saucelabs.saucerest.model.jobs.Job;
+import com.saucelabs.saucerest.model.jobs.UpdateJobParameter;
+import com.saucelabs.saucerest.JobVisibility;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
@@ -205,12 +209,13 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     private void processBuildOutput(Run build, SauceOnDemandBuildAction buildAction, TestResult testResult, TaskListener listener) {
 
         JenkinsSauceREST sauceREST = getSauceREST(build);
+        JobsEndpoint jobs = sauceREST.getJobsEndpoint();
 
         boolean failureMessageSent = false;
 
         LinkedHashMap<String, JenkinsJobInformation> onDemandTests;
         List<CaseResult> failedTests;
-        HashMap failedTestsMap = new HashMap();
+        HashMap<String, String> failedTestsMap = new HashMap<String, String>();
 
         /**
          * sanitizedBuildNumber is not valid if users set a custom build name
@@ -220,7 +225,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
 
         try {
             onDemandTests = buildAction.retrieveJobIdsFromSauce(sauceREST, build);
-        } catch (JSONException e) {
+        } catch (JSONException|IOException e) {
             logger.finer("Exception during retrieveJobIdsFromSauce:" + e);
             onDemandTests = new LinkedHashMap<>();
 
@@ -284,16 +289,16 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
             } else {
                 jobInformation = new JenkinsJobInformation(details.getJobId(), "");
                 try {
-                    jobInformation.populateFromJson(
-                        new JSONObject(sauceREST.getJobInfo(details.getJobId()))
-                    );
-                    onDemandTests.put(jobInformation.getJobId(), jobInformation);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    continue;
+                    Job job = jobs.getJobDetails(details.getJobId());
+                    jobInformation.populate(job);
+                } catch (IOException e) {
+                    logger.warning("Unable to get job details");
                 }
+                onDemandTests.put(jobInformation.getJobId(), jobInformation);
             }
             Map<String, Object> updates = jobInformation.getChanges();
+            UpdateJobParameter.Builder builder = new UpdateJobParameter.Builder();
+
             //only store passed/name values if they haven't already been set
             if (jobInformation.getStatus() == null) {
                 Boolean buildResult = hasTestPassed(testResult, jobInformation);
@@ -301,39 +306,41 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     //set the status to passed if the test was successful
                     jobInformation.setStatus(buildResult.booleanValue() ? "Passed" : "Failed");
                     updates.put("passed", buildResult);
+                    builder.setPassed(buildResult);
                 }
             }
             if (!jobInformation.hasJobName()) {
                 jobInformation.setName(details.getJobName());
                 updates.put("name", details.getJobName());
+                builder.setName(details.getJobName());
             }
             if (!jobInformation.hasBuild()) {
                 jobInformation.setBuild(SauceEnvironmentUtil.getSanitizedBuildNumber(build));
                 updates.put("build", jobInformation.getBuild());
+                builder.setBuild(jobInformation.getBuild());
             }
 
             if (getJobVisibility() != null && !getJobVisibility().isEmpty()) {
                 updates.put("public", getJobVisibility());
+                builder.setVisibility(JobVisibility.valueOf(getJobVisibility()));
             }
 
             // add the failure message to custom data IF we're sending data, also there may be other custom data we want to preserve
             if (!isDisableUsageStats() && testResult != null && "Failed".equals(jobInformation.getStatus())) {
-                Map<String, Object> customData = new HashMap<String, Object>();
+                Map<String, String> customData = new HashMap<String, String>();
 
                 // preserve any existing custom data
                 try {
-                    JSONObject jobDetails = new JSONObject(sauceREST.getJobInfo(details.getJobId()));
-                    if (jobDetails.has("custom-data") && !jobDetails.isNull("custom-data")) {
-                        JSONObject existingCustomData = jobDetails.getJSONObject("custom-data");
-                        Iterator<String> customDataKeys = existingCustomData.keys();
+                    Job job = jobs.getJobDetails(details.getJobId());
+                    if (job.customData.size() > 0) {
+                        Iterator<String> customDataKeys = job.customData.keySet().iterator();
                         while (customDataKeys.hasNext()) {
                             String customDataKey = customDataKeys.next();
-                            customData.put(customDataKey, existingCustomData.getString(customDataKey));
+                            customData.put(customDataKey, job.customData.get(customDataKey));
                         }
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    logger.fine("Error reading existing custom data: " + e.getMessage());
+                } catch (IOException e) {
+                    logger.warning("Unable to get job details for " + details.getJobId());
                 }
 
                 // see if failedTests contains the job name
@@ -342,11 +349,17 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
                     failureMessageSent = true;
                 }
                 updates.put("custom-data", customData);
+                builder.setCustomData(customData);
             }
 
             if (!updates.isEmpty()) {
                 logger.fine("Performing Sauce REST update for " + jobInformation.getJobId());
-                sauceREST.updateJobInfo(jobInformation.getJobId(), updates);
+
+                try {
+                    jobs.updateJob(jobInformation.getJobId(), builder.build());
+                } catch (IOException e) {
+                    logger.warning("Unable to update job information for " + jobInformation.getJobId());
+                }
             }
 
             // this *may* be causing problems with custom build names that don't match the jenkins-(job)-(number) convention

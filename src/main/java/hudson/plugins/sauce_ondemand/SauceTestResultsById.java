@@ -1,5 +1,8 @@
 package hudson.plugins.sauce_ondemand;
 
+import com.saucelabs.saucerest.DataCenter;
+import com.saucelabs.saucerest.api.JobsEndpoint;
+import com.saucelabs.saucerest.model.jobs.Job;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 
 import java.io.IOException;
@@ -27,13 +30,14 @@ public class SauceTestResultsById {
         this.credentials = credentials;
         this.job = new JenkinsJobInformation(id, credentials.getHMAC(id));
         this.server = credentials.getRestEndpoint().replace("https://","https://app.");
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(credentials.getUsername(), credentials.getPassword().getPlainText(), credentials.getRestEndpointName());
+        DataCenter dc = DataCenter.fromString(credentials.getRestEndpointName());
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(credentials.getUsername(), credentials.getPassword().getPlainText(), dc);
+        JobsEndpoint jobs = sauceREST.getJobsEndpoint();
 
         try {
-            String jsonResponse = sauceREST.getJobInfo(id);
-            JSONObject jsonObject = new JSONObject(jsonResponse);
-            this.job.populateFromJson(jsonObject);
-        } catch (JSONException e) {
+            Job job = jobs.getJobDetails(id);
+            this.job.populate(job);
+        } catch (JSONException|IOException e) {
             logger.log(Level.WARNING, "Unable to retrieve Job data from Sauce Labs", e);
         }
     }

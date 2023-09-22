@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.BuildInformation;
+import com.saucelabs.saucerest.model.builds.Build;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -17,6 +18,10 @@ public class JenkinsBuildInformation extends BuildInformation {
 
     public JenkinsBuildInformation(String buildId) {
         super(buildId);
+    }
+
+    public JenkinsBuildInformation(Build build) {
+        super(build);
     }
 
     @Override

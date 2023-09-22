@@ -25,6 +25,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.saucerest.DataCenter;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.*;
@@ -60,7 +61,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     /**
      * Handles the retrieval of browsers from Sauce Labs.
      */
-    static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
+    static transient final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
 
     /**
      * User name to access Sauce OnDemand.

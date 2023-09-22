@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
+import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.model.platform.Platform;
 import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
@@ -102,7 +103,7 @@ public class SauceBuildWrapperTest {
 
         this.credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", "US_WEST");
+        JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", DataCenter.US_WEST);
         PluginImpl p = PluginImpl.get();
         if (p != null) {
             // Reset connection string every run
@@ -111,7 +112,7 @@ public class SauceBuildWrapperTest {
 
         //create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
         spySauceRest = spy(sauceRest);
-        com.saucelabs.saucerest.api.Platform mockPlatform = mock(com.saucelabs.saucerest.api.Platform.class);
+        com.saucelabs.saucerest.api.PlatformEndpoint mockPlatform = mock(com.saucelabs.saucerest.api.PlatformEndpoint.class);
 
         restUpdates = new HashMap<String, Map>();
         doAnswer(invocationOnMock -> {
@@ -134,7 +135,7 @@ public class SauceBuildWrapperTest {
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return mockPlatform;
             }
-        }).when(spySauceRest).getPlatform();
+        }).when(spySauceRest).getPlatformEndpoint();
 
         doAnswer(invocationOnMock -> "{}").when(spySauceRest).retrieveResults(any(URL.class));
 

@@ -29,7 +29,10 @@ import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
+import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
+import com.saucelabs.saucerest.api.SauceConnectEndpoint;
+import com.saucelabs.saucerest.model.sauceconnect.TunnelInformation;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.*;
 import hudson.model.*;
@@ -395,11 +398,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             }
 
             if (canRun) {
+		DataCenter dc = DataCenter.fromString(credentials.getRestEndpointName());
                 sauceConnectStarter = new SauceConnectHandler(
                     this, env, listener,
                     workingDirectory, useLatestSauceConnect, resolvedOptions,
                     null,
-                    username, credentials.getApiKey().getPlainText(), credentials.getRestEndpointName(),
+                    username, credentials.getApiKey().getPlainText(), dc,
                     maxRetries, retryWaitTime
                 );
 
@@ -423,10 +427,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
         if (!isDisableUsageStats()) {
-            JenkinsSauceREST sauceREST = credentials.getSauceREST();
             try {
                 logger.fine("Reporting usage stats");
-                sauceREST.recordCI("jenkins", Jenkins.VERSION);
 
                 // send usage stats so we know what features our customers actually use
                 try {
@@ -612,18 +614,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     // this is needed as aborting during tunnel creation will prevent it from closing properly above
                     SauceCredentials credentials = SauceCredentials.getSauceCredentials(build, SauceOnDemandBuildWrapper.this); // get credentials
                     JenkinsSauceREST sauceREST = credentials.getSauceREST(); // use credentials to get sauceRest
+		    SauceConnectEndpoint ep = sauceREST.getSauceConnectEndpoint();
+
                     if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                         try {
-                            String listResponse = sauceREST.getTunnels();
-                            JSONArray tunnels = new JSONArray(listResponse);
-                            for (int i = 0; i < tunnels.length(); i++) {
-                                String tunnel = tunnels.getString(i);
-                                String jsonResponse = sauceREST.getTunnelInformation(tunnel);
-                                JSONObject tunnelObj = new JSONObject(jsonResponse);
-                                if (tunnelObj.getString("tunnel_identifier").equals(tunnelName)) {
+                            List<String> tunnels = ep.getTunnelsForAUser();
+                            for (int i = 0; i < tunnels.size(); i++) {
+                                String tunnel = tunnels.get(i);
+                                TunnelInformation info = ep.getTunnelInformation(tunnel);
+                                if (info.tunnelIdentifier.equals(tunnelName)) {
                                     listener.getLogger().println("Closing tunnel with uniquely generated ID: " + tunnelName);
                                     try {
-                                        sauceREST.deleteTunnel(tunnelObj.getString("id"));
+                                        ep.stopTunnel(info.id);
                                     } catch (SauceException.UnknownError e) {
                                         listener.getLogger().println("Unknown error while closing tunnel: " + e);
                                     }
@@ -638,18 +640,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 }
 
                 // if usage stats is allowed we will fill in the custom data field in the jobs with Jenkins build info for analytics
-                Map<String, Object> customDataObj = new HashMap<String, Object>();
+                Map<String, String> customData = new HashMap<String, String>();
                 if (!isDisableUsageStats()) {
                     listener.getLogger().println("Updating the custom data field for jobs with Jenkins build info for analytics");
 
-                    Map<String, Object> customData = new HashMap<String, Object>();
                     customData.put("JENKINS_BUILD_NAME", build.getProject().getName());
-                    customData.put("BUILD_NUMBER", build.getNumber());
+                    customData.put("BUILD_NUMBER", String.valueOf(build.getNumber()));
                     customData.put("GIT_COMMIT", build.getEnvironment().get("GIT_COMMIT"));
-                    customDataObj.put("custom-data", customData);
 
                     buildAction = new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
-                    buildAction.updateJobs(customDataObj);
+                    buildAction.updateJobs(customData);
                 }
 
                 // Wait up to 5s and see if # of jobs changes, if it does, stop them again and reset wait time
@@ -665,7 +665,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                 buildAction.stopJobs();
                             }
                             if (!isDisableUsageStats()) {
-                                buildAction.updateJobs(customDataObj);
+                                buildAction.updateJobs(customData);
                             }
                             numJobs = jobs.size();
                             waitCount = -1;
@@ -982,7 +982,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         private final boolean useLatestSauceConnect;
         private final String username;
         private final String key;
-        private final String dataCenter;
+        private final DataCenter dataCenter;
         private int maxRetries;
         private int retryWaitTime;
 
@@ -1002,7 +1002,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             File sauceConnectJar,
             String username,
             String apiKey,
-            String dataCenter,
+            DataCenter dataCenter,
             String maxRetries,
             String retryWaitTime
         ) {
@@ -1055,7 +1055,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     listener.getLogger().println("Username not set, not starting Sauce Connect");
                 } else if (StringUtils.isBlank(key)) {
                     listener.getLogger().println("Access key not set, not starting Sauce Connect");
-                } else if (StringUtils.isBlank(dataCenter)) {
+                } else if (StringUtils.isBlank(dataCenter.server)) {
                     listener.getLogger().println("Data center not set, not starting Sauce Connect");
                 }
             } catch (ComponentLookupException e) {
