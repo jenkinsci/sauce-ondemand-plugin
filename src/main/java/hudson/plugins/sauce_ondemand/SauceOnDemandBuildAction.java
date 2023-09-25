@@ -355,8 +355,8 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
                 return jobIds;
             }
 
-            for (int i = 0; i < jobs.size(); i++) {
-                jobIds.add(jobs.get(i).id);
+            for (com.saucelabs.saucerest.model.jobs.Job job: jobs) {
+                jobIds.add(job.id);
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to retrieve jobs for build " + buildId);
@@ -377,9 +377,7 @@ public class SauceOnDemandBuildAction extends AbstractAction implements Serializ
         for (List<String> slice: slicedIds) {
             List<com.saucelabs.saucerest.model.jobs.Job> jobResults = jobsEndpoint.getJobDetails(slice);
 
-            for (int i = 0; i < jobResults.size(); i++) {
-                com.saucelabs.saucerest.model.jobs.Job job = jobResults.get(i);
-
+            for (com.saucelabs.saucerest.model.jobs.Job job: jobResults) {
                 JenkinsJobInformation information = new JenkinsJobInformation(job.id, credentials.getHMAC(job.id));
                 information.populate(job);
                 jobs.put(information.getJobId(), information);

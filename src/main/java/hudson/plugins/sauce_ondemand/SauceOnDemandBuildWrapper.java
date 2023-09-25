@@ -616,8 +616,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                     if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
                         try {
                             List<String> tunnels = ep.getTunnelsForAUser();
-                            for (int i = 0; i < tunnels.size(); i++) {
-                                String tunnel = tunnels.get(i);
+                            for (String tunnel: tunnels) {
                                 TunnelInformation info = ep.getTunnelInformation(tunnel);
                                 if (info.tunnelIdentifier.equals(tunnelName)) {
                                     listener.getLogger().println("Closing tunnel with uniquely generated ID: " + tunnelName);
