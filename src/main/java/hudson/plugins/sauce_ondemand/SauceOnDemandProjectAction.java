@@ -15,15 +15,6 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.remoting.VirtualChannel;
 import hudson.security.AccessControlled;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-
-import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -31,6 +22,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
+import javax.servlet.ServletException;
+import jenkins.model.Jenkins;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Backing logic for the Sauce UI component displayed on the Jenkins project page.

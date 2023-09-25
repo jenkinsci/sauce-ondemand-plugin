@@ -24,10 +24,11 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.saucelabs.saucerest.JobVisibility;
 import com.saucelabs.saucerest.api.JobsEndpoint;
 import com.saucelabs.saucerest.model.jobs.Job;
 import com.saucelabs.saucerest.model.jobs.UpdateJobParameter;
-import com.saucelabs.saucerest.JobVisibility;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
@@ -44,30 +45,25 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.util.ListBoxModel;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import java.util.List;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import hudson.plugins.sauce_ondemand.SauceOnDemandBuildAction;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Associates Sauce OnDemand session ID to unit tests.

@@ -6,17 +6,15 @@ import com.saucelabs.saucerest.DataCenter;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import org.json.JSONException;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Allows users to select Sauce browsers as parameters for a Jenkins build.

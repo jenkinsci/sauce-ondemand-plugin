@@ -1,7 +1,6 @@
 package com.saucelabs.jenkins;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 

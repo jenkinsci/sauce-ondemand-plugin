@@ -23,14 +23,13 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.saucerest.DataCenter;
 import hudson.matrix.Axis;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
-
 import java.util.List;
 import java.util.Map;
 

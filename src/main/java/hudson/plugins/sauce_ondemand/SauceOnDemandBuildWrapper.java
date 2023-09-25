@@ -25,6 +25,9 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.mixpanel.mixpanelapi.ClientDelivery;
+import com.mixpanel.mixpanelapi.MessageBuilder;
+import com.mixpanel.mixpanelapi.MixpanelAPI;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
@@ -41,17 +44,6 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.BuildWrapper;
 import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.jenkins_ci.plugins.run_condition.RunCondition;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONException;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -61,10 +53,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.mixpanel.mixpanelapi.ClientDelivery;
-import com.mixpanel.mixpanelapi.MessageBuilder;
-import com.mixpanel.mixpanelapi.MixpanelAPI;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.jenkins_ci.plugins.run_condition.RunCondition;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel and populates environment variables which

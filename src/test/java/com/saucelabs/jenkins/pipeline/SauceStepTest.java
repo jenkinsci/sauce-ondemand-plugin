@@ -1,5 +1,7 @@
 package com.saucelabs.jenkins.pipeline;
 
+import static org.mockito.ArgumentMatchers.isNull;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
@@ -7,6 +9,9 @@ import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.model.Result;
 import hudson.plugins.sauce_ondemand.PluginImpl;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
+import java.io.File;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -16,12 +21,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
-
-import java.io.File;
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-
-import static org.mockito.ArgumentMatchers.isNull;
 
 public class SauceStepTest {
     @ClassRule

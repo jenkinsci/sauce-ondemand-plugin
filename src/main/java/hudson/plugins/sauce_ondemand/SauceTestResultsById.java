@@ -4,12 +4,10 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.api.JobsEndpoint;
 import com.saucelabs.saucerest.model.jobs.Job;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
-
 import java.io.IOException;
-import org.json.JSONObject;
-import org.json.JSONException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
 
 /**
  *

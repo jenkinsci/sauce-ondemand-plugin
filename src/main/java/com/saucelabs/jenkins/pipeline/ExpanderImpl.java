@@ -1,12 +1,11 @@
 package com.saucelabs.jenkins.pipeline;
 
-import hudson.EnvVars;
-import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 
 final class ExpanderImpl extends EnvironmentExpander {
     private static final long serialVersionUID = 1;

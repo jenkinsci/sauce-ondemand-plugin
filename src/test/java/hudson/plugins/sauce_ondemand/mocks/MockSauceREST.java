@@ -1,8 +1,6 @@
 package hudson.plugins.sauce_ondemand.mocks;
 
-import com.saucelabs.saucerest.SauceREST;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
-
 import java.net.URL;
 
 public class MockSauceREST extends JenkinsSauceREST {

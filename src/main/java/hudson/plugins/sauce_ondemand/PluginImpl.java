@@ -32,20 +32,16 @@ import hudson.model.*;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import java.io.IOException;
+import java.util.logging.Logger;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.jenkins.ui.icon.Icon;
 import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconType;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Persists the access credentials and common options for the Sauce plugin.

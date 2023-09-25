@@ -1,5 +1,9 @@
 package hudson.plugins.sauce_ondemand;
 
+import com.mixpanel.mixpanelapi.ClientDelivery;
+import com.mixpanel.mixpanelapi.MessageBuilder;
+import com.mixpanel.mixpanelapi.MixpanelAPI;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -14,23 +18,17 @@ import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResultAction;
 import hudson.util.DescribableList;
-import jenkins.tasks.SimpleBuildStep;
-import org.json.JSONObject;
-import org.json.JSONException;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.mixpanel.mixpanelapi.ClientDelivery;
-import com.mixpanel.mixpanelapi.MessageBuilder;
-import com.mixpanel.mixpanelapi.MixpanelAPI;
+import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Reimplementation of {@link hudson.maven.MavenTestDataPublisher} in order to add

@@ -1,33 +1,31 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.DataCenter;
+import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.AccountsEndpoint;
 import com.saucelabs.saucerest.api.BuildsEndpoint;
 import com.saucelabs.saucerest.api.InsightsEndpoint;
 import com.saucelabs.saucerest.api.JobsEndpoint;
-import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.api.PerformanceEndpoint;
+import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.api.RealDevicesEndpoint;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
 import com.saucelabs.saucerest.api.StorageEndpoint;
 import hudson.ProxyConfiguration;
-import jenkins.model.Jenkins;
-import okhttp3.OkHttpClient;
-import okhttp3.Authenticator;
-import okhttp3.Credentials;
-import okhttp3.Interceptor;
-import okhttp3.Route;
-import okhttp3.Request;
-import okhttp3.Response;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
+import jenkins.model.Jenkins;
+import okhttp3.Authenticator;
+import okhttp3.Credentials;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Route;
 
 /**
  * Jenkins-specific subclass which will open a URL connection using {@link hudson.ProxyConfiguration}.

@@ -1,18 +1,17 @@
 package hudson.plugins.sauce_ondemand;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.gargoylesoftware.htmlunit.Page;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.PresetData;
-
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertNotNull;
 
 public class SauceOnDemandProjectActionTest {
 
