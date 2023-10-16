@@ -109,7 +109,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
             delivery.addMessage(sentEvent);
             MixpanelAPI mixpanel = new MixpanelAPI();
             mixpanel.deliver(delivery);
-        } catch (JSONException e) {
+        } catch (JSONException | java.net.SocketTimeoutException e) {
             listener.getLogger().println("Could not send junit status: " + e.getMessage());
         }
 
