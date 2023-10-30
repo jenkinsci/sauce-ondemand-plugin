@@ -497,7 +497,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
               .getLogger()
               .println("The Sauce plugin has set the following environment variables:");
         }
-        List<Browser> browsers = new ArrayList<Browser>();
+        List<Browser> browsers = new ArrayList<>();
         if (webDriverBrowsers != null) {
           for (String webDriverBrowser : webDriverBrowsers) {
             Browser browser = PluginImpl.BROWSER_FACTORY.webDriverBrowserForKey(webDriverBrowser);

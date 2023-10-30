@@ -289,7 +289,7 @@ public class SauceBuildWrapperTest {
 
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     sauceBuildWrapper.setWebDriverBrowsers(
-        Arrays.asList("Windows_2003internet_explorer7", "Linuxfirefox4", ""));
+        Arrays.asList("Windows_11MicrosoftEdge115", "Mac_10_15firefox100", ""));
 
     SauceBuilder sauceBuilder = new SauceBuilderBrowsersExtension();
 
