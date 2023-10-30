@@ -1,10 +1,9 @@
 package hudson.plugins.sauce_ondemand;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -17,8 +16,11 @@ import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.JobSource;
+import com.saucelabs.saucerest.api.BuildsEndpoint;
+import com.saucelabs.saucerest.api.JobsEndpoint;
 import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.model.builds.LookupBuildsParameters;
+import com.saucelabs.saucerest.model.jobs.Job;
 import com.saucelabs.saucerest.model.jobs.UpdateJobParameter;
 import com.saucelabs.saucerest.model.platform.Platform;
 import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
@@ -28,21 +30,14 @@ import hudson.Launcher;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
-import hudson.model.Build;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Node;
 import hudson.model.Result;
-import hudson.model.Run;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
-import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestDataPublisher;
-import hudson.util.DescribableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -50,7 +45,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -73,19 +67,9 @@ import org.jvnet.hudson.test.ToolInstallations;
 public class SauceBuildWrapperTest {
 
   public static final String DEFAULT_TEST_XML = "/hudson/plugins/sauce_ondemand/test-result.xml";
-  private static final String DEFAULT_SESSION_ID = "0123345abc";
 
   /** JUnit rule which instantiates a local Jenkins instance with our plugin installed. */
   @ClassRule public static JenkinsRule jenkinsRule = new JenkinsRule();
-
-  /**
-   * Mockito spy of the Sauce REST instance, used to capture REST requests without sending them to
-   * Sauce Labs.
-   */
-  private JenkinsSauceREST spySauceRest;
-
-  /** Map of data sent over REST, keyed on Sauce Job id. */
-  private HashMap<String, Map> restUpdates = new HashMap<String, Map>();
 
   private String credentialsId;
 
@@ -98,35 +82,27 @@ public class SauceBuildWrapperTest {
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
     JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", DataCenter.US_WEST);
-    PluginImpl p = PluginImpl.get();
-    if (p != null) {
-      // Reset connection string every run
-      p.setSauceConnectOptions("");
-    }
+    PluginImpl plugin = PluginImpl.get();
+    assertNotNull(plugin);
+    // Reset connection string every run
+    plugin.setSauceConnectOptions("");
+    plugin.setDisableUsageStats(true);
+
+    JobsEndpoint mockJobsEndpoint = mock(JobsEndpoint.class);
+    when(mockJobsEndpoint.updateJob(anyString(), any(UpdateJobParameter.class)))
+        .thenReturn(new Job());
+    when(mockJobsEndpoint.getJobDetails(anyString())).thenReturn(new Job());
+
+    BuildsEndpoint mockBuildsEndpoint = mock(BuildsEndpoint.class);
+    when(mockBuildsEndpoint.lookupBuilds(any(JobSource.class), any(LookupBuildsParameters.class)))
+        .thenReturn(new ArrayList<>());
 
     // create a Mockito spy of the sauceREST instance, to capture REST updates sent by the tests
-    spySauceRest = spy(sauceRest);
+    JenkinsSauceREST spySauceRest = spy(sauceRest);
     PlatformEndpoint mockPlatform = mock(PlatformEndpoint.class);
 
-    restUpdates = new HashMap<>();
-    doAnswer(
-            invocationOnMock -> {
-              Object[] args = invocationOnMock.getArguments();
-              restUpdates.put((String) args[0], (Map) args[1]);
-              return null;
-            })
-        .when(spySauceRest)
-        .getJobsEndpoint()
-        .updateJob(anyString(), any(UpdateJobParameter.class));
-    doAnswer(invocationOnMock -> "{}")
-        .when(spySauceRest)
-        .getJobsEndpoint()
-        .getJobDetails(anyString());
-    doAnswer(invocationOnMock -> "{}")
-        .when(spySauceRest)
-        .getBuildsEndpoint()
-        .lookupBuilds(any(JobSource.class), any(LookupBuildsParameters.class));
-
+    doAnswer(invocationOnMock -> mockJobsEndpoint).when(spySauceRest).getJobsEndpoint();
+    doAnswer(invocationOnMock -> mockBuildsEndpoint).when(spySauceRest).getBuildsEndpoint();
     doAnswer(invocation -> "Mocked Rest API").when(spySauceRest).toString();
 
     List<Platform> appiumPlatforms = new ArrayList<>();
@@ -138,11 +114,6 @@ public class SauceBuildWrapperTest {
 
     doAnswer(invocationOnMock -> mockPlatform).when(spySauceRest).getPlatformEndpoint();
 
-    doAnswer(invocationOnMock -> "{}")
-        .when(spySauceRest)
-        .getBuildsEndpoint()
-        .lookupBuilds(any(JobSource.class), any(LookupBuildsParameters.class));
-
     // store dummy implementations of Sauce Connect manager
 
     SauceConnectFourManager sauceConnectFourManager =
@@ -151,14 +122,13 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
+              String sauceConnectPath) {
             return null;
           }
         };
@@ -167,7 +137,7 @@ public class SauceBuildWrapperTest {
     EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
     EnvVars envVars = prop.getEnvVars();
     envVars.put("TEST_PORT_VARIABLE_4321", "4321");
-    this.jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
+    jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
   }
 
   @After
@@ -182,11 +152,7 @@ public class SauceBuildWrapperTest {
     field.set(factory, sauceConnectFourManager);
   }
 
-  /**
-   * Verifies that environment variables are resolved for the Sauce Connect options.
-   *
-   * @throws Exception
-   */
+  /** Verifies that environment variables are resolved for the Sauce Connect options. */
   @Test
   public void resolveVariables() throws Exception {
     SauceConnectFourManager sauceConnectFourManager =
@@ -195,18 +161,17 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
-            assertTrue(
+              String sauceConnectPath) {
+            assertEquals(
                 "Variable not resolved",
-                options.equals(
-                    "-i 1 -x https://saucelabs.com/rest/v1")); // null reverts to default US_WEST
+                "-i 1 -x https://saucelabs.com/rest/v1",
+                options); // null reverts to default US_WEST
             return null;
           }
         };
@@ -214,20 +179,11 @@ public class SauceBuildWrapperTest {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
 
-    Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "resolveVariables");
+    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "resolveVariables");
     jenkinsRule.assertBuildStatusSuccess(build);
-
-    // assert that the Sauce REST API was invoked for the Sauce job id
-    //        assertNotNull(restUpdates.get(currentSessionId));
-    // TODO verify that test results of build include Sauce results
-
   }
 
-  /**
-   * Verifies that common options are set when the build is run.
-   *
-   * @throws Exception
-   */
+  /** Verifies that common options are set when the build is run. */
   @Test
   public void commonOptions() throws Exception {
     SauceConnectFourManager sauceConnectFourManager =
@@ -236,14 +192,13 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
+              String sauceConnectPath) {
             assertEquals(
                 "Variables are resolved correctly",
                 options,
@@ -253,23 +208,16 @@ public class SauceBuildWrapperTest {
         };
     storeDummyManager(sauceConnectFourManager);
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-    PluginImpl.get().setSauceConnectOptions("-i ${BUILD_NUMBER}");
+    PluginImpl plugin = PluginImpl.get();
+    assertNotNull(plugin);
+    plugin.setSauceConnectOptions("-i ${BUILD_NUMBER}");
     sauceBuildWrapper.setOptions("");
 
-    Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "commonOptions");
+    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "commonOptions");
     jenkinsRule.assertBuildStatusSuccess(build);
-
-    // assert that the Sauce REST API was invoked for the Sauce job id
-    // assertNotNull(restUpdates.get(currentSessionId));
-    // TODO verify that test results of build include Sauce results
-
   }
 
-  /**
-   * Verifies that the options should be common/admin => build => generated
-   *
-   * @throws Exception
-   */
+  /** Verifies that the options should be common/admin => build => generated */
   @Test
   public void resolvedOptionsOrder() throws Exception {
     SauceConnectFourManager sauceConnectFourManager =
@@ -278,14 +226,13 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
+              String sauceConnectPath) {
             // Match that it starts with tunnel-name, because timestamp
             assertThat(
                 "Variables are resolved correctly",
@@ -297,19 +244,17 @@ public class SauceBuildWrapperTest {
         };
     storeDummyManager(sauceConnectFourManager);
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-    PluginImpl.get().setSauceConnectOptions("--global");
+    PluginImpl plugin = PluginImpl.get();
+    assertNotNull(plugin);
+    plugin.setSauceConnectOptions("--global");
     sauceBuildWrapper.setOptions("--build -i 1");
     sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
 
-    Build build = runFreestyleBuild(sauceBuildWrapper, null, null, "resolvedOptionsOrder");
+    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "resolvedOptionsOrder");
     jenkinsRule.assertBuildStatusSuccess(build);
   }
 
-  /**
-   * Simulates the handling of a Sauce Connect time out.
-   *
-   * @throws Exception
-   */
+  /** Simulates the handling of a Sauce Connect time out. */
   @Test
   public void sauceConnectTimeOut() throws Exception {
     SauceConnectFourManager sauceConnectFourManager =
@@ -318,7 +263,7 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
@@ -332,21 +277,9 @@ public class SauceBuildWrapperTest {
     storeDummyManager(sauceConnectFourManager);
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
 
-    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, null, "sauceConnectTimeOut");
+    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "sauceConnectTimeOut");
     jenkinsRule.assertBuildStatus(Result.FAILURE, build);
   }
-
-  /** Runs a basic build on the slave */
-  /*@Test
-  @Ignore("sauceBuildWrapper looses stubs on the slave")
-  public void runSlaveBuild() throws Exception {
-      SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-
-      DumbSlave s = jenkinsRule.createOnlineSlave();
-      sauceBuildWrapper.setLaunchSauceConnectOnSlave(true);
-      Build build = runFreestyleBuild(sauceBuildWrapper, null, s, "runSlaveBuild");
-      jenkinsRule.assertBuildStatusSuccess(build);
-  }*/
 
   /**
    * @throws Exception thrown if an unexpected error occurs
@@ -360,13 +293,8 @@ public class SauceBuildWrapperTest {
 
     SauceBuilder sauceBuilder = new SauceBuilderBrowsersExtension();
 
-    Build build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, null, "multipleBrowsers");
+    FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder, "multipleBrowsers");
     jenkinsRule.assertBuildStatusSuccess(build);
-
-    // assert that the Sauce REST API was invoked for the Sauce job id
-    //        assertNotNull(restUpdates.get(currentSessionId));
-    // TODO verify that test results of build include Sauce results
-
   }
 
   /**
@@ -386,14 +314,13 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
+              String sauceConnectPath) {
             holder.element("scProvidedPort", port);
             return null;
           }
@@ -415,7 +342,7 @@ public class SauceBuildWrapperTest {
 
     FreeStyleBuild build =
         runFreestyleBuild(
-            sauceBuildWrapper, sauceBuilder, null, "newPortIsGeneratedWhenManagingSauceConnect");
+            sauceBuildWrapper, sauceBuilder, "newPortIsGeneratedWhenManagingSauceConnect");
     jenkinsRule.assertBuildStatusSuccess(build);
 
     assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
@@ -424,11 +351,6 @@ public class SauceBuildWrapperTest {
         holder.getInt("scProvidedPort"),
         holder.getInt("port"));
     assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
-
-    // assert that the Sauce REST API was invoked for the Sauce job id
-    //        assertNotNull(restUpdates.get(currentSessionId));
-    // TODO verify that test results of build include Sauce results
-
   }
 
   /**
@@ -451,14 +373,13 @@ public class SauceBuildWrapperTest {
           public Process openConnection(
               String username,
               String apiKey,
-              String dataCenter,
+              DataCenter dataCenter,
               int port,
               File sauceConnectJar,
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
-              throws SauceConnectException {
+              String sauceConnectPath) {
             holder.element("scProvidedPort", Integer.toString(port, 10));
             return null;
           }
@@ -479,10 +400,7 @@ public class SauceBuildWrapperTest {
 
     FreeStyleBuild build =
         runFreestyleBuild(
-            sauceBuildWrapper,
-            sauceBuilder,
-            null,
-            "providingPortWithEnvVariableStartsUpOnThatPort");
+            sauceBuildWrapper, sauceBuilder, "providingPortWithEnvVariableStartsUpOnThatPort");
     jenkinsRule.assertBuildStatusSuccess(build);
     assertEquals(
         "Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
@@ -513,38 +431,19 @@ public class SauceBuildWrapperTest {
 
   /* FIXME - move to setup() */
   private FreeStyleBuild runFreestyleBuild(
-      SauceOnDemandBuildWrapper sauceBuildWrapper,
-      TestBuilder builder,
-      Node node,
-      String projectName)
+      SauceOnDemandBuildWrapper sauceBuildWrapper, TestBuilder builder, String projectName)
       throws Exception {
 
     if (builder == null) {
       builder = new SauceBuilder();
     }
+
     FreeStyleProject freeStyleProject =
         jenkinsRule.jenkins.createProject(
             FreeStyleProject.class, "runFreestyleBuild-" + projectName);
-    if (node != null) {
-      freeStyleProject.setAssignedNode(node);
-    }
     freeStyleProject.getBuildWrappersList().add(sauceBuildWrapper);
     freeStyleProject.getBuildersList().add(builder);
-    SauceOnDemandReportPublisher publisher =
-        new SauceOnDemandReportPublisher() {
-          @Override
-          protected JenkinsSauceREST getSauceREST(Run build) {
-            return spySauceRest;
-          }
-        };
-    DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers =
-        new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(freeStyleProject);
-    testDataPublishers.add(publisher);
-    JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml");
-    resultArchiver.setKeepLongStdio(false);
-    //        JUnitResultArchiver resultArchiver = new JUnitResultArchiver("*.xml", false,
-    // testDataPublishers);
-    //        freeStyleProject.getPublishersList().add(resultArchiver);
+
     QueueTaskFuture<FreeStyleBuild> future = freeStyleProject.scheduleBuild2(0);
 
     FreeStyleBuild build = future.get(1, TimeUnit.MINUTES);

@@ -73,7 +73,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
   @Parameterized.Parameters
   public static Collection sauceOnDemandBuildWrapperValues() {
-    ArrayList<Object[]> list = new ArrayList<Object[]>();
+    ArrayList<Object[]> list = new ArrayList<>();
     for (boolean enableSauceConnect : new boolean[] {true, false}) {
       for (boolean launchSauceConnectOnSlave : new boolean[] {true, false}) {
         for (boolean useGeneratedTunnelIdentifier : new boolean[] {true, false}) {

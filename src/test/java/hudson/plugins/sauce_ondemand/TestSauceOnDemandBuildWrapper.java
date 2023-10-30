@@ -5,10 +5,6 @@ import hudson.Extension;
 
 @SuppressFBWarnings("SE_NO_SERIALVERSIONID")
 class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
-    @Extension
-    public static class DescriptorImpl extends SauceOnDemandBuildWrapper.DescriptorImpl {
-    }
-
     public TestSauceOnDemandBuildWrapper(String credentialId) {
         super(
                 true,
@@ -27,7 +23,10 @@ class TestSauceOnDemandBuildWrapper extends SauceOnDemandBuildWrapper {
                 null,
                 null,
                 null,
-//                false,
                 false);
+    }
+
+    @Extension
+    public static class DescriptorImpl extends SauceOnDemandBuildWrapper.DescriptorImpl {
     }
 }

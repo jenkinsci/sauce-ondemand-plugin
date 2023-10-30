@@ -73,18 +73,18 @@ public class SauceOnDemandBuildActionTest {
     when(mockSauceREST.getSauceConnectEndpoint().getTunnelsForAUser())
         .thenReturn(Collections.emptyList());
 
-    FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
     TestSauceOnDemandBuildWrapper bw =
         new TestSauceOnDemandBuildWrapper(
             SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest"));
     bw.setEnableSauceConnect(false);
+
+    FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
     freeStyleProject.getBuildWrappersList().add(bw);
     Build build = freeStyleProject.scheduleBuild2(0).get();
     SauceOnDemandBuildAction buildAction =
         new SauceOnDemandBuildAction(build, bw.getCredentialId()) {
           @Override
           protected JenkinsSauceREST getSauceREST() {
-            // mockSauceREST.setServer("http://localhost:61325"); not the failure
             return mockSauceREST;
           }
         };
