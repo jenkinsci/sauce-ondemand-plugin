@@ -218,11 +218,8 @@ public class SauceOnDemandBuildAction extends AbstractAction
       JenkinsSauceREST sauceREST, Run build, SauceCredentials credentials)
       throws JSONException, IOException {
 
-    logger.log(Level.WARNING, "In retrieveJobIdsFromSauce: " + build);
-
     // invoke Sauce Rest API to find plan results with those values
-    LinkedHashMap<String, JenkinsJobInformation> jobInformation =
-        new LinkedHashMap<String, JenkinsJobInformation>();
+    LinkedHashMap<String, JenkinsJobInformation> jobInformation = new LinkedHashMap<>();
 
     String buildNumber = SauceEnvironmentUtil.getSanitizedBuildNumber(build);
     JenkinsBuildInformation buildInformation =
