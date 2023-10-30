@@ -113,15 +113,12 @@ public class SauceOnDemandBuildAction extends AbstractAction
 
     // A note on retry behaviour
     // This code was previously set to retry 10 times with 10 seconds pause in between - this
-    // resulted
-    // in de-facto hang behaviour in Jenkins on the status pages of builds if an error occurred,
-    // which
-    // meant either that the page took over 100 seconds to load, or that the connection was killed
-    // by
-    // a downstream proxy (e.g. an ELB) which had a connection timeout below 100 seconds. It has
-    // been
-    // updated to retry one time with a 3 second pause to allow for recovery from brief blips while
-    // not stalling page load for more than a few seconds to ensure a good user experience.
+    // resulted in de-facto hang behaviour in Jenkins on the status pages of builds if an error
+    // occurred, which meant either that the page took over 100 seconds to load, or that the
+    // connection was killed by a downstream proxy (e.g. an ELB) which had a connection timeout
+    // below 100 seconds. It has been updated to retry one time with a 3 seconds pause to allow for
+    // recovery from brief blips while not stalling page load for more than a few seconds to ensure
+    // a good user experience.
     int retries = 0;
     int maxRetries = 1;
     String jsonResponse = "";
@@ -433,15 +430,14 @@ public class SauceOnDemandBuildAction extends AbstractAction
   }
 
   protected JenkinsSauceREST getSauceREST() {
-    SauceCredentials creds = getCredentials();
-    String username = creds != null ? creds.getUsername() : null;
-    String accessKey = creds != null ? creds.getPassword().getPlainText() : null;
-    String dataCenter = creds != null ? creds.getRestEndpointName() : null;
+    SauceCredentials credentials = getCredentials();
+    String username = credentials != null ? credentials.getUsername() : null;
+    String accessKey = credentials != null ? credentials.getPassword().getPlainText() : null;
+    String dataCenter = credentials != null ? credentials.getRestEndpointName() : null;
 
     DataCenter dc = DataCenter.fromString(dataCenter);
 
-    JenkinsSauceREST sauceREST = new JenkinsSauceREST(username, accessKey, dc);
-    return sauceREST;
+    return new JenkinsSauceREST(username, accessKey, dc);
   }
 
   public SauceTestResultsById getById(String id) {
