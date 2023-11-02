@@ -15,8 +15,8 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
     <jenkins.version>2.249.1</jenkins.version>
-    <ci-sauce.version>1.175</ci-sauce.version>
-    <saucerest.version>2.3.1</saucerest.version>
+    <ci-sauce.version>1.179</ci-sauce.version>
+    <saucerest.version>2.3.3</saucerest.version>
   </properties>
 
 
@@ -182,6 +182,10 @@
           <groupId>commons-io</groupId>
           <artifactId>commons-io</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -292,12 +296,6 @@
       <artifactId>jenkins-test-harness-tools</artifactId>
       <version>2.2</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>2.0.9</version>
     </dependency>
 
     <dependency>
