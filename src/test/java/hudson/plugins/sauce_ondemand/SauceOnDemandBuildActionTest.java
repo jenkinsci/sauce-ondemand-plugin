@@ -1,30 +1,37 @@
 package hudson.plugins.sauce_ondemand;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.saucelabs.saucerest.JobSource;
+import com.saucelabs.saucerest.api.BuildsEndpoint;
+import com.saucelabs.saucerest.api.JobsEndpoint;
+import com.saucelabs.saucerest.api.SauceConnectEndpoint;
+import com.saucelabs.saucerest.model.builds.Build;
+import com.saucelabs.saucerest.model.builds.JobInBuild;
+import com.saucelabs.saucerest.model.builds.JobsInBuild;
+import com.saucelabs.saucerest.model.builds.LookupBuildsParameters;
 import com.saucelabs.saucerest.model.builds.LookupJobsParameters;
 import com.saucelabs.saucerest.model.jobs.Job;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.MavenModuleSetBuild;
-import hudson.model.Build;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
@@ -54,33 +61,26 @@ public class SauceOnDemandBuildActionTest {
   @Test
   public void doJobReportTest() throws Exception {
     final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
-    try (InputStream resourceAsStream =
-        SauceOnDemandProjectActionTest.class.getResourceAsStream("/build_jobs.json")) {
-      String buildJobs =
-          IOUtils.toString(Objects.requireNonNull(resourceAsStream), StandardCharsets.UTF_8);
-      ObjectMapper mapper = new ObjectMapper();
-      List<Job> jobs =
-          mapper.readValue(
-              buildJobs,
-              TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-      when(mockSauceREST
-              .getBuildsEndpoint()
-              .lookupJobsForBuild(
-                  any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
-          .thenReturn(jobs);
-    }
+    final JobsEndpoint mockJobsEndpoint = mock(JobsEndpoint.class);
+    final SauceConnectEndpoint mockSauceConnectEndpoint = mock(SauceConnectEndpoint.class);
 
-    when(mockSauceREST.getSauceConnectEndpoint().getTunnelsForAUser())
-        .thenReturn(Collections.emptyList());
+    List<Job> jobs = makeBuildJobsResponse();
+    when(mockJobsEndpoint.getJobDetails(anyList())).thenReturn(jobs);
+    when(mockJobsEndpoint.getJobDetails(anyString())).thenReturn(jobs.get(0));
+    when(mockSauceConnectEndpoint.getTunnelsForAUser()).thenReturn(Collections.emptyList());
+
+    when(mockSauceREST.getJobsEndpoint()).thenReturn(mockJobsEndpoint);
+    when(mockSauceREST.getSauceConnectEndpoint()).thenReturn(mockSauceConnectEndpoint);
 
     TestSauceOnDemandBuildWrapper bw =
         new TestSauceOnDemandBuildWrapper(
-            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest"));
+            SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest"),
+            mockSauceREST);
     bw.setEnableSauceConnect(false);
 
     FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
     freeStyleProject.getBuildWrappersList().add(bw);
-    Build build = freeStyleProject.scheduleBuild2(0).get();
+    FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
     SauceOnDemandBuildAction buildAction =
         new SauceOnDemandBuildAction(build, bw.getCredentialId()) {
           @Override
@@ -90,15 +90,21 @@ public class SauceOnDemandBuildActionTest {
         };
     build.addAction(buildAction);
 
-    JenkinsRule.WebClient webClient = jenkins.createWebClient();
-    webClient.setJavaScriptEnabled(false);
-    HtmlPage page = webClient.getPage(build, "sauce-ondemand-report/jobReport?jobId=1234");
+    HtmlPage page;
+    try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
+      webClient.setJavaScriptEnabled(false);
+      page =
+          webClient.getPage(
+              build, "sauce-ondemand-report/jobReport?jobId=5f119101b8b14db89b25250bf33341d7");
+    }
     jenkins.assertGoodStatus(page);
 
     DomElement scriptTag = getEmbedTag(page.getElementsByTagName("iframe"));
-    assertThat(new URL(scriptTag.getAttribute("src")).getPath(), endsWith("/job-embed/1234"));
+    assertNotNull(scriptTag);
+    assertThat(
+        new URL(scriptTag.getAttribute("src")).getPath(),
+        endsWith("/job-embed/5f119101b8b14db89b25250bf33341d7"));
     assertThat(new URL(scriptTag.getAttribute("src")).getQuery(), containsString("auth="));
-    verifyNoMoreInteractions(mockSauceREST);
   }
 
   @Test
@@ -109,7 +115,7 @@ public class SauceOnDemandBuildActionTest {
             SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest"));
     bw.setEnableSauceConnect(false);
     freeStyleProject.getBuildWrappersList().add(bw);
-    Build build = freeStyleProject.scheduleBuild2(0).get();
+    FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
     SauceOnDemandBuildAction buildAction =
         new SauceOnDemandBuildAction(build, bw.getCredentialId());
     build.addAction(buildAction);
@@ -125,7 +131,8 @@ public class SauceOnDemandBuildActionTest {
         new TestSauceOnDemandBuildWrapper(
             SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest"));
     project.getBuildWrappersList().add(bw);
-    project.setScm(new SingleFileSCM("pom.xml", getClass().getResource("/pom.xml")));
+    project.setScm(
+        new SingleFileSCM("pom.xml", Objects.requireNonNull(getClass().getResource("/pom.xml"))));
     project.setGoals("clean");
     MavenModuleSetBuild build = project.scheduleBuild2(0).get(1, TimeUnit.MINUTES);
     SauceOnDemandBuildAction buildAction =
@@ -140,50 +147,31 @@ public class SauceOnDemandBuildActionTest {
 
   @Test
   public void testRetrieveJobIdsFromSauce() throws Exception {
-    final Build build = makeMavenBuild();
+    final FreeStyleBuild build = makeMavenBuild();
     final SauceCredentials credentials = makeSauceCredentials();
     final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
-    final int jobCount = 4;
-    final List<String> jobIds = makeJobIds(jobCount);
-    final String buildJobsResponse = makeJobsResponse(jobIds, "/build_jobs_v2.json");
-    final String jobsResponse = makeJobListResponse(jobIds, "/jobs_by_ids.json");
+    final List<String> jobIds = makeJobIds(4);
+    final JobsInBuild buildJobsList = makeJobsResponse(jobIds);
+    final List<Job> jobsResponseList = makeJobListResponse(jobIds);
+    final List<Build> builds = makeBuildsByNameResponse();
+    final BuildsEndpoint mockBuildsEndpoint = mock(BuildsEndpoint.class);
+    final JobsEndpoint mockJobsEndpoint = mock(JobsEndpoint.class);
 
-    ObjectMapper mapper = new ObjectMapper();
-    List<Job> buildJobsList =
-        mapper.readValue(
-            buildJobsResponse,
-            TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-    when(mockSauceREST
-            .getBuildsEndpoint()
-            .lookupJobsForBuild(any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
+    when(mockBuildsEndpoint.lookupJobsForBuild(
+            any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
         .thenReturn(buildJobsList);
 
-    try (InputStream resourceAsStream =
-        SauceOnDemandProjectActionTest.class.getResourceAsStream("/builds_by_name.json")) {
-      String buildsByName =
-          IOUtils.toString(Objects.requireNonNull(resourceAsStream), StandardCharsets.UTF_8);
+    when(mockBuildsEndpoint.lookupBuilds(any(JobSource.class), any(LookupBuildsParameters.class)))
+        .thenReturn(builds);
 
-      List<Job> jobsFromBuildsByName =
-          mapper.readValue(
-              buildsByName,
-              TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-      when(mockSauceREST
-              .getBuildsEndpoint()
-              .lookupJobsForBuild(
-                  any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
-          .thenReturn(jobsFromBuildsByName);
-    }
-
-    when(mockSauceREST
-            .getBuildsEndpoint()
-            .lookupJobsForBuild(any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
+    when(mockBuildsEndpoint.lookupJobsForBuild(
+            any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
         .thenReturn(buildJobsList);
 
-    List<Job> jobsResponseList =
-        mapper.readValue(
-            jobsResponse,
-            TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-    when(mockSauceREST.getJobsEndpoint().getJobDetails(anyList())).thenReturn(jobsResponseList);
+    when(mockJobsEndpoint.getJobDetails(anyList())).thenReturn(jobsResponseList);
+
+    when(mockSauceREST.getBuildsEndpoint()).thenReturn(mockBuildsEndpoint);
+    when(mockSauceREST.getJobsEndpoint()).thenReturn(mockJobsEndpoint);
 
     LinkedHashMap<String, JenkinsJobInformation> jobInformation =
         SauceOnDemandBuildAction.retrieveJobIdsFromSauce(mockSauceREST, build, credentials);
@@ -194,71 +182,51 @@ public class SauceOnDemandBuildActionTest {
 
   @Test
   public void testRetrieveJobIdsFromSauceSplitsCallsToResto() throws Exception {
-    final Build build = makeMavenBuild();
+    final FreeStyleBuild build = makeMavenBuild();
     final SauceCredentials credentials = makeSauceCredentials();
     final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
     final int jobCount = 30;
     final List<String> jobIds = makeJobIds(jobCount);
-    final String buildJobsResponse = makeJobsResponse(jobIds, "/build_jobs_v2.json");
-    final String jobsResponse1 = makeJobListResponse(jobIds.subList(0, 20), "/jobs_by_ids.json");
-    final String jobsResponse2 =
-        makeJobListResponse(jobIds.subList(20, jobIds.size()), "/jobs_by_ids.json");
+    final JobsInBuild buildJobsList = makeJobsResponse(jobIds);
+    final List<Job> jobsResponse1 = makeJobListResponse(jobIds.subList(0, 20));
+    final List<Job> jobsResponse2 = makeJobListResponse(jobIds.subList(20, jobIds.size()));
+    final List<Build> buildList = makeBuildsByNameResponse();
+    final BuildsEndpoint mockBuildsEndpoint = mock(BuildsEndpoint.class);
+    final JobsEndpoint mockJobsEndpoint = mock(JobsEndpoint.class);
 
-    ObjectMapper mapper = new ObjectMapper();
-    try (InputStream resourceAsStream =
-        SauceOnDemandProjectActionTest.class.getResourceAsStream("/builds_by_name.json")) {
-      String buildsByName =
-          IOUtils.toString(Objects.requireNonNull(resourceAsStream), StandardCharsets.UTF_8);
+    when(mockBuildsEndpoint.lookupBuilds(any(JobSource.class), any(LookupBuildsParameters.class)))
+        .thenReturn(buildList);
 
-      List<Job> jobsFromBuildsByName =
-          mapper.readValue(
-              buildsByName,
-              TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-      when(mockSauceREST
-              .getBuildsEndpoint()
-              .lookupJobsForBuild(
-                  any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
-          .thenReturn(jobsFromBuildsByName);
-    }
-
-    List<Job> buildJobsList =
-        mapper.readValue(
-            buildJobsResponse,
-            TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-    when(mockSauceREST
-            .getBuildsEndpoint()
-            .lookupJobsForBuild(any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
+    when(mockBuildsEndpoint.lookupJobsForBuild(
+            any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
         .thenReturn(buildJobsList);
 
-    List<Job> jobsResponseList1 =
-        mapper.readValue(
-            jobsResponse1,
-            TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-    List<Job> jobsResponseList2 =
-        mapper.readValue(
-            jobsResponse2,
-            TypeFactory.defaultInstance().constructCollectionType(List.class, Job.class));
-    when(mockSauceREST.getJobsEndpoint().getJobDetails(anyList()))
-        .thenReturn(jobsResponseList1)
-        .thenReturn(jobsResponseList2);
+    when(mockJobsEndpoint.getJobDetails(anyList()))
+        .thenReturn(jobsResponse1)
+        .thenReturn(jobsResponse2);
+
+    when(mockSauceREST.getBuildsEndpoint()).thenReturn(mockBuildsEndpoint);
+    when(mockSauceREST.getJobsEndpoint()).thenReturn(mockJobsEndpoint);
 
     LinkedHashMap<String, JenkinsJobInformation> jobInformation =
         SauceOnDemandBuildAction.retrieveJobIdsFromSauce(mockSauceREST, build, credentials);
 
-    Set<String> jobIdsSet = new HashSet<String>(jobIds);
+    Set<String> jobIdsSet = new HashSet<>(jobIds);
     assertEquals(jobInformation.keySet(), jobIdsSet);
   }
 
   @Test
   public void testRetrieveJobIdsFromSauceIfBuildIsNotFound() throws Exception {
-    final Build build = makeMavenBuild();
+    final FreeStyleBuild build = makeMavenBuild();
     final SauceCredentials credentials = makeSauceCredentials();
     final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
+    final BuildsEndpoint mockBuildsEndpoint = mock(BuildsEndpoint.class);
 
-    when(mockSauceREST
-            .getBuildsEndpoint()
-            .lookupJobsForBuild(any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
-        .thenReturn(Collections.emptyList());
+    when(mockBuildsEndpoint.lookupJobsForBuild(
+            any(JobSource.class), anyString(), any(LookupJobsParameters.class)))
+        .thenReturn(new JobsInBuild());
+
+    when(mockSauceREST.getBuildsEndpoint()).thenReturn(mockBuildsEndpoint);
 
     LinkedHashMap<String, JenkinsJobInformation> jobInformation =
         SauceOnDemandBuildAction.retrieveJobIdsFromSauce(mockSauceREST, build, credentials);
@@ -266,9 +234,9 @@ public class SauceOnDemandBuildActionTest {
     assertEquals(jobInformation.keySet().size(), 0);
   }
 
-  private List<String> makeJobIds(int count) {
-    List<String> jobIds = new ArrayList<String>();
-    for (int i = 0; i < count; i++) jobIds.add(String.format("%032x", i + 1));
+  private List<String> makeJobIds(int jobCount) {
+    List<String> jobIds = new ArrayList<>();
+    for (int i = 0; i < jobCount; i++) jobIds.add(String.format("%032x", i + 1));
     return jobIds;
   }
 
@@ -277,7 +245,7 @@ public class SauceOnDemandBuildActionTest {
         CredentialsScope.GLOBAL, "credentials-id", "fakeuser", "fake-access-key", "localhost", "");
   }
 
-  private Build makeMavenBuild() throws Exception {
+  private FreeStyleBuild makeMavenBuild() throws Exception {
     FreeStyleProject freeStyleProject = jenkins.createFreeStyleProject();
     TestSauceOnDemandBuildWrapper bw =
         new TestSauceOnDemandBuildWrapper(
@@ -287,35 +255,89 @@ public class SauceOnDemandBuildActionTest {
     return freeStyleProject.scheduleBuild2(0).get();
   }
 
-  private String makeJobsResponse(List<String> ids, String fileName) throws Exception {
-    String buildJobsV2Response =
-        IOUtils.toString(
-            SauceOnDemandProjectActionTest.class.getResourceAsStream(fileName), "UTF-8");
-    JSONObject jsonResponse = new JSONObject(buildJobsV2Response);
-    JSONArray jobs = jsonResponse.getJSONArray("jobs");
-    JSONObject job = jobs.getJSONObject(0);
-    while (jobs.length() > 0) jobs.remove(0);
-    for (String jobId : ids) {
-      JSONObject cloned = new JSONObject(job.toMap());
-      cloned.put("id", jobId);
-      jobs.put(cloned);
+  private List<Job> makeBuildJobsResponse() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Job> jobJsonAdapter = moshi.adapter(Job.class);
+    List<Job> jobsResponse = new ArrayList<>();
+    try (InputStream resourceAsStream =
+        SauceOnDemandProjectActionTest.class.getResourceAsStream("/build_jobs.json")) {
+      assertNotNull(resourceAsStream);
+      String buildJobsV2Response = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+      JSONObject jsonResponse = new JSONObject(buildJobsV2Response);
+      JSONArray jobs = jsonResponse.getJSONArray("jobs");
+      for (int i = 0; i < jobs.length(); i++) {
+        JSONObject job = jobs.getJSONObject(i);
+        jobsResponse.add(jobJsonAdapter.fromJson(job.toString()));
+      }
+      return jobsResponse;
     }
-    return jsonResponse.toString();
   }
 
-  private String makeJobListResponse(List<String> ids, String fileName) throws Exception {
-    String buildJobsV2Response =
-        IOUtils.toString(
-            SauceOnDemandProjectActionTest.class.getResourceAsStream(fileName), "UTF-8");
-    JSONArray jobs = new JSONArray(buildJobsV2Response);
-    JSONObject job = jobs.getJSONObject(0);
-    while (jobs.length() > 0) jobs.remove(0);
-    for (String jobId : ids) {
-      JSONObject cloned = new JSONObject(job.toMap());
-      cloned.put("id", jobId);
-      jobs.put(cloned);
+  private List<Build> makeBuildsByNameResponse() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Build> buildJsonAdapter = moshi.adapter(Build.class);
+    try (InputStream resourceAsStream =
+        SauceOnDemandProjectActionTest.class.getResourceAsStream("/builds_by_name.json")) {
+      String buildsByName =
+          IOUtils.toString(Objects.requireNonNull(resourceAsStream), StandardCharsets.UTF_8);
+      JSONObject jsonResponse = new JSONObject(buildsByName);
+      JSONArray builds = jsonResponse.getJSONArray("builds");
+      List<Build> buildList = new ArrayList<>();
+      for (int i = 0; i < builds.length(); i++) {
+        JSONObject build = builds.getJSONObject(i);
+        buildList.add(buildJsonAdapter.fromJson(build.toString()));
+      }
+      return buildList;
     }
-    return jobs.toString();
+  }
+
+  private JobsInBuild makeJobsResponse(List<String> ids) throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<JobsInBuild> jobsInBuildJsonAdapter = moshi.adapter(JobsInBuild.class);
+    try (InputStream resourceAsStream =
+        SauceOnDemandProjectActionTest.class.getResourceAsStream("/build_jobs_v2.json")) {
+      assertNotNull(resourceAsStream);
+      String buildJobsV2Response = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+      JSONObject jsonResponse = new JSONObject(buildJobsV2Response);
+      JobsInBuild jobsInBuild = jobsInBuildJsonAdapter.fromJson(jsonResponse.toString());
+      assertNotNull(jobsInBuild);
+      assertNotNull(jobsInBuild.jobs);
+      JobInBuild jobInBuild = jobsInBuild.jobs.get(0);
+      List<JobInBuild> jobs = new ArrayList<>();
+      for (String jobId : ids) {
+        JobInBuild clone =
+            new JobInBuild(
+                jobInBuild.creationTime,
+                jobInBuild.deletionTime,
+                jobId,
+                jobInBuild.modificationTime,
+                jobInBuild.state);
+        jobs.add(clone);
+      }
+      jobsInBuild.jobs = jobs;
+      return jobsInBuild;
+    }
+  }
+
+  private List<Job> makeJobListResponse(List<String> ids) throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Job> jobJsonAdapter = moshi.adapter(Job.class);
+    try (InputStream resourceAsStream =
+        SauceOnDemandProjectActionTest.class.getResourceAsStream("/jobs_by_ids.json")) {
+      assertNotNull(resourceAsStream);
+      String buildJobsV2Response = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+      JSONArray jobs = new JSONArray(buildJobsV2Response);
+      JSONObject job = jobs.getJSONObject(0);
+      jobs.clear();
+      List<Job> jobList = new ArrayList<>();
+      for (String jobId : ids) {
+        JSONObject cloned = new JSONObject(job.toMap());
+        cloned.put("id", jobId);
+        jobs.put(cloned);
+        jobList.add(jobJsonAdapter.fromJson(cloned.toString()));
+      }
+      return jobList;
+    }
   }
 
   private DomElement getEmbedTag(DomNodeList<DomElement> scripts) {
