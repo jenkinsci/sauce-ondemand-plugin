@@ -5,7 +5,11 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.JobSource;
 import com.saucelabs.saucerest.api.BuildsEndpoint;
 import com.saucelabs.saucerest.api.JobsEndpoint;
-import com.saucelabs.saucerest.model.builds.*;
+import com.saucelabs.saucerest.model.builds.Build;
+import com.saucelabs.saucerest.model.builds.JobInBuild;
+import com.saucelabs.saucerest.model.builds.JobsInBuild;
+import com.saucelabs.saucerest.model.builds.LookupBuildsParameters;
+import com.saucelabs.saucerest.model.builds.LookupJobsParameters;
 import hudson.Util;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModuleSetBuild;
@@ -238,20 +242,19 @@ public class SauceOnDemandBuildAction extends AbstractAction
   protected static List<String> getJobIdsForBuild(JenkinsSauceREST sauceREST, String buildId) {
     List<String> jobIds = new ArrayList<String>();
 
-    LookupJobsParameters parameters = new LookupJobsParameters.Builder().build();
+    LookupJobsParameters params = new LookupJobsParameters.Builder().build();
 
     BuildsEndpoint buildsEndpoint = sauceREST.getBuildsEndpoint();
     try {
-      List<com.saucelabs.saucerest.model.jobs.Job> jobs =
-          buildsEndpoint.lookupJobsForBuild(JobSource.VDC, buildId, parameters);
+      JobsInBuild jobsInBuild = buildsEndpoint.lookupJobsForBuild(JobSource.VDC, buildId, params);
 
-      if (jobs == null || jobs.size() == 0) {
+      if (jobsInBuild == null || jobsInBuild.jobs.isEmpty()) {
         logger.log(Level.WARNING, "Build without jobs id=`" + buildId + "`");
         return jobIds;
       }
 
-      for (com.saucelabs.saucerest.model.jobs.Job job : jobs) {
-        jobIds.add(job.id);
+      for (JobInBuild jobInBuild : jobsInBuild.jobs) {
+        jobIds.add(jobInBuild.id);
       }
     } catch (IOException e) {
       logger.log(Level.WARNING, "Failed to retrieve jobs for build " + buildId);
@@ -441,7 +444,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
   }
 
   public SauceTestResultsById getById(String id) {
-    return new SauceTestResultsById(id, getCredentials());
+    return new SauceTestResultsById(id, getCredentials(), getSauceREST());
   }
 
   /**
