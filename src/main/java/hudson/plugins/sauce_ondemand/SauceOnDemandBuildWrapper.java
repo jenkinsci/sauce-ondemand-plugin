@@ -696,12 +696,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
           }
         }
 
-        SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
-        if (buildAction == null) {
-          buildAction =
-              new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
-          build.addAction(buildAction);
-        }
+        SauceOnDemandBuildAction buildAction = getSauceBuildAction(build);
 
         if (forceCleanup) {
           listener
@@ -1063,6 +1058,16 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       }
     }
     return false;
+  }
+
+  public SauceOnDemandBuildAction getSauceBuildAction(AbstractBuild build) {
+    SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
+    if (buildAction == null) {
+      buildAction =
+          new SauceOnDemandBuildAction(build, SauceOnDemandBuildWrapper.this.credentialId);
+      build.addAction(buildAction);
+    }
+    return buildAction;
   }
 
   public static class GetAvailablePort extends MasterToSlaveCallable<Integer, RuntimeException> {
