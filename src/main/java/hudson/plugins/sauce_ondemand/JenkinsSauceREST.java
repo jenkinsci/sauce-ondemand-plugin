@@ -25,7 +25,7 @@ import okhttp3.Route;
  */
 public class JenkinsSauceREST extends SauceREST {
 
-  protected static String userAgent =
+  protected static final String userAgent =
       "Jenkins/" + Jenkins.VERSION + " " + "JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion();
   private String server = getSauceRestUrlFromEnv();
 
