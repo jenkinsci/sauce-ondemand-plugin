@@ -5,10 +5,9 @@
 # Since Jenkins is inside a network that has no access to the outside world, we would need to
 # configure a reverse proxy to access Jenkins from the outside world. To avoid that, we are using
 # a Firefox container that is in both networks (intnet and extnet), and from there load Jenkins.
-# This way, we can access Jenkins
-# by using noVNC and going into the Firefox container.
+# This way, we can access Jenkins # by using noVNC and going into the Firefox container.
 # Go to http://localhost:7900/?autoconnect=1&resize=scale in a browser to access the Firefox
-# container, right-click on the desktop
+# container.
 # How to run this? -> docker-compose -f docker-compose-test.yml up --build
 version: "3"
 services:
