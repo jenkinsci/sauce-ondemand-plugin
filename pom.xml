@@ -121,11 +121,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.mixpanel</groupId>
-      <artifactId>mixpanel-java</artifactId>
-      <version>1.5.0</version>
-    </dependency>
-    <dependency>
       <groupId>com.saucelabs</groupId>
       <artifactId>ci-sauce</artifactId>
       <version>${ci-sauce.version}</version>

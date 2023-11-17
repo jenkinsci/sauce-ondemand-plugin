@@ -25,9 +25,6 @@ package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.mixpanel.mixpanelapi.ClientDelivery;
-import com.mixpanel.mixpanelapi.MessageBuilder;
-import com.mixpanel.mixpanelapi.MixpanelAPI;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
@@ -74,7 +71,6 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -460,40 +456,13 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
     listener.getLogger().println("Finished pre-build for Sauce Labs plugin");
 
-    if (!isDisableUsageStats()) {
-      try {
-        logger.fine("Reporting usage stats");
-
-        // send usage stats so we know what features our customers actually use
-        try {
-          MessageBuilder messageBuilder = new MessageBuilder("5d9a83c5f58311b7b88622d0da5e7e9d");
-          String distinctId = username;
-          JSONObject props = new JSONObject();
-          props.put("plugin", "jenkins");
-          props.put("enableSauceConnect", enableSauceConnect);
-          props.put("verboseLogging", verboseLogging);
-          props.put("useGeneratedTunnelIdentifier", useGeneratedTunnelIdentifier);
-          props.put("launchSauceConnectOnSlave", launchSauceConnectOnSlave);
-          props.put("webDriverBrowsers", webDriverBrowsers);
-          props.put("appiumBrowsers", appiumBrowsers);
-          props.put("useLatestVersion", useLatestVersion);
-          props.put("useLatestSauceConnect", useLatestSauceConnect);
-          props.put("forceCleanup", forceCleanup);
-          props.put("restEndpoint", restEndpoint);
-          props.put("username", username);
-          JSONObject sentEvent = messageBuilder.event(distinctId, "Jenkins settings", props);
-          ClientDelivery delivery = new ClientDelivery();
-          delivery.addMessage(sentEvent);
-          MixpanelAPI mixpanel = new MixpanelAPI();
-          mixpanel.deliver(delivery);
-        } catch (JSONException e) {
-          listener.getLogger().println(e);
-        }
-      } catch (Exception e) {
-        logger.finest("Error reporting in: " + e.getMessage());
-        // This is purely for informational purposes, so if it fails, just keep going
-      }
-    }
+    /*
+       Analytics data collection can be placed here. To disable collection, the following
+       can be used:
+       if (isDisableUsageStats()) {
+         return true;
+       }
+    */
 
     return new Environment() {
 
