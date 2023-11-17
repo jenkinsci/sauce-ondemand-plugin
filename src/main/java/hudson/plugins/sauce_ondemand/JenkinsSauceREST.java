@@ -51,11 +51,16 @@ public class JenkinsSauceREST extends SauceREST {
     }
     Proxy proxy = null;
     Authenticator auth = Authenticator.NONE;
-    ProxyConfiguration pc = Jenkins.get().proxy;
-    if (pc != null) {
-      proxy = pc.createProxy(Objects.requireNonNull(buildURL(server, "")).getHost());
+    ProxyConfiguration pc = Jenkins.get().getProxy();
 
-      if (pc.getUserName() != null && pc.getSecretPassword() != null) {
+    if (pc != null) {
+      String host = Objects.requireNonNull(buildURL(server)).getHost();
+      proxy = pc.createProxy(host);
+
+      if (pc.getUserName() != null
+          && !pc.getUserName().isEmpty()
+          && pc.getSecretPassword() != null
+          && !pc.getSecretPassword().getPlainText().isEmpty()) {
         auth = new ProxyAuthenticator(pc.getUserName(), pc.getSecretPassword().getPlainText());
       }
     }
@@ -64,9 +69,9 @@ public class JenkinsSauceREST extends SauceREST {
     return HttpClientConfig.defaultConfig().proxy(proxy).authenticator(auth).interceptor(ua);
   }
 
-  protected static URL buildURL(String server, String endpoint) {
+  protected static URL buildURL(String server) {
     try {
-      return new URL(new URL(server), "/rest/v1/" + endpoint);
+      return new URL(new URL(server), "/rest/v1/");
     } catch (MalformedURLException e) {
       return null;
     }
