@@ -1,0 +1,53 @@
+# This docker compose file has 3 services: Jenkins, Forwarder (a proxy), and a browser (Firefox)
+# Jenkins is built from a Dockerfile (Jenkins.Dockerfile) that is in the same directory as this file
+# Jenkins is inside a network that has no access to the outside world (intnet), therefore it needs
+# to use the forwarder (proxy) container to access the outside world.
+# Since Jenkins is inside a network that has no access to the outside world, we would need to
+# configure a reverse proxy to access Jenkins from the outside world. To avoid that, we are using
+# a Firefox container that is in both networks (intnet and extnet), and from there load Jenkins.
+# This way, we can access Jenkins
+# by using noVNC and going into the Firefox container.
+# Go to http://localhost:7900/?autoconnect=1&resize=scale in a browser to access the Firefox
+# container, right-click on the desktop
+# How to run this? -> docker-compose -f docker-compose-test.yml up --build
+version: "3"
+services:
+  jenkins:
+    image: jenkins_sauce
+    build:
+      context: .
+      dockerfile: Jenkins.Dockerfile
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      intnet: { }
+  forwarder:
+    image: saucelabs/forwarder
+    ports:
+      - "3128:3128"
+    environment:
+      - FORWARDER_LOG_LEVEL=debug
+    networks:
+      intnet: { }
+      extnet: { }
+  browser:
+    image: seleniarm/standalone-firefox:latest
+    ports:
+      - "7900:7900"
+    shm_size: 2g
+    environment:
+      - SE_VNC_NO_PASSWORD=1
+    volumes:
+      - ./sauce-ondemand.hpi:/home/seluser/sauce-ondemand.hpi
+    networks:
+      intnet: { }
+      extnet: { }
+networks:
+  intnet:
+    internal: true
+  extnet: { }
+volumes:
+  jenkins_home:
+
