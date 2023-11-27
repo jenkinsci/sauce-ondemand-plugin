@@ -28,7 +28,6 @@ import hudson.model.AbstractBuild;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestObject;
 import hudson.tasks.junit.TestResultAction.Data;
-
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;

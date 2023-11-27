@@ -23,11 +23,7 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import hudson.model.AbstractBuild;
-import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
-import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;

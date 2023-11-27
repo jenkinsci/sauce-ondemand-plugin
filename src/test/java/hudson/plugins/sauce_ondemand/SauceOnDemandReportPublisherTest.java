@@ -1,15 +1,12 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.JobInformation;
-import junit.framework.Assert;
-import org.junit.Test;
-
-import java.util.LinkedList;
-import java.util.List;
-
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.util.LinkedList;
+import java.util.List;
+import org.junit.Test;
 
 public class SauceOnDemandReportPublisherTest {
 

@@ -3,14 +3,13 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import hudson.Extension;
 import hudson.matrix.AxisDescriptor;
-import org.json.JSONException;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Multi-configuration project axis for Appium browsers.

@@ -15,8 +15,10 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnamePortRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
-import com.saucelabs.saucerest.SauceShareableLink;
 import com.saucelabs.saucerest.DataCenter;
+import com.saucelabs.saucerest.SauceShareableLink;
+import com.saucelabs.saucerest.api.AccountsEndpoint;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
@@ -32,20 +34,17 @@ import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 public class SauceCredentials extends BaseStandardCredentials implements StandardUsernamePasswordCredentials {
     /**
@@ -67,11 +66,11 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
     @DataBoundConstructor
     public SauceCredentials(@CheckForNull CredentialsScope scope, @CheckForNull String id,
-                            @NonNull String username, @NonNull String apiKey, @NonNull String restEndpoint, @CheckForNull String description) {
-        super(scope, id, description);
-        this.apiKey = Secret.fromString(apiKey);
-        this.username = username;
-        this.restEndpoint = restEndpoint;
+            @NonNull String username, @NonNull String apiKey, @NonNull String restEndpoint, @CheckForNull String description) {
+            super(scope, id, description);
+            this.apiKey = Secret.fromString(apiKey);
+            this.username = username;
+            this.restEndpoint = restEndpoint;
     }
 
     public ShortLivedConfig getShortLivedConfig() {
@@ -106,9 +105,9 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             try {
                 Date d = new Date();
                 Date expires = new Date(
-                    System.currentTimeMillis() +
+                        System.currentTimeMillis() +
                         (long) this.getShortLivedConfig().getTime() * 1000 /* to millis */ * 60 /* to minutes */
-                );
+                        );
 
                 String token = JWT.create()
                     .withIssuer("Jenkins/" + Jenkins.VERSION + " JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion())
@@ -173,7 +172,8 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public JenkinsSauceREST getSauceREST() {
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText(), getRestEndpointName());
+        DataCenter dc = DataCenter.fromString(getRestEndpointName());
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText(), dc);
         return sauceREST;
     }
 
@@ -191,9 +191,16 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
                 dataCenter = "US_WEST";
             }
 
-            JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dataCenter);
+            DataCenter dc = DataCenter.fromString(dataCenter);
+
+            JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dc);
+            AccountsEndpoint users = rest.getAccountsEndpoint();
             // If unauthorized getUser returns an empty string.
-            if (rest.getUser().equals("")) {
+            try {
+                if (users.getUser("me").username.equals("")) {
+                    return FormValidation.error("Bad username or Access key");
+                }
+            } catch (IOException|com.saucelabs.saucerest.SauceException.NotAuthorized e) {
                 return FormValidation.error("Bad username or Access key");
             }
             return FormValidation.ok();
@@ -296,11 +303,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
      *
      */
     public String getHMAC(String jobId) {
-        try {
-            return SauceShareableLink.getJobAuthDigest(username, getPassword().getPlainText(), jobId);
-        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
-            return "";
-        }
+        return SauceShareableLink.getJobAuthDigest(username, getPassword().getPlainText(), jobId);
     }
 
     public static final class ShortLivedConfig extends AbstractDescribableImpl<ShortLivedConfig> implements Serializable {

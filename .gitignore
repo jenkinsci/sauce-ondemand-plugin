@@ -3,6 +3,7 @@ work
 sauce-ondemand*.iml
 sauce-ondemand*.ipr
 sauce-ondemand*.iws
+src/test/sauce-ondemand*.hpi
 
 httpclient.log.zip
 
