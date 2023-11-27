@@ -59,22 +59,22 @@ _Java_ and _Maven_
 
 - Ensure Java 8 or 11 is available.
 
-  ```console	
-  $ java -version	
-  ```	
-  - Use the alternate Java 11.	
+  ```console
+  $ java -version
+  ```
+  - Use the alternate Java 11.
 
-  ```console	
-  $ export JAVA_HOME=`/usr/libexec/java_home -v 11`	
-  $ echo $JAVA_HOME	
+  ```console
+  $ export JAVA_HOME=`/usr/libexec/java_home -v 11`
+  $ echo $JAVA_HOME
   /Library/Java/JavaVirtualMachines/temurin-11.jdk/Contents/Home
-  ```	
+  ```
 
 - Ensure Maven > 3.6.0 is installed and included in the PATH environment variable.
 
   ```console
-  $ mvn --version	
-  ```	
+  $ mvn --version
+  ```
 
 ### Check out code
 
@@ -98,15 +98,15 @@ $ mvn test
 
 To spin up a Jenkins server with your plugin and test manually:
 
-```console	
-$ mvn hpi:run	
+```console
+$ mvn hpi:run
 ```
 
 and wait for:
 
-```text	
-...	
-INFO: Jenkins is fully up and running	
+```text
+...
+INFO: Jenkins is fully up and running
 ```
 
 to appear.
