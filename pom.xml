@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>4.51</version>
-    <relativePath/>
+    <relativePath />
   </parent>
   <properties>
-    <revision>1.213</revision>
+    <revision>1.214</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -64,13 +62,10 @@
             <configuration>
               <target>
                 <filterset id="filters">
-                  <filter token="VERSION" value="${project.version}"/>
+                  <filter token="VERSION" value="${project.version}" />
                 </filterset>
-                <copy preservelastmodified="true"
-                      file="./src/main/resources/hudson/plugins/sauce_ondemand/BuildUtils.template"
-                      tofile="./src/main/java/hudson/plugins/sauce_ondemand/BuildUtils.java"
-                      overwrite="true">
-                  <filterset refid="filters"/>
+                <copy preservelastmodified="true" file="./src/main/resources/hudson/plugins/sauce_ondemand/BuildUtils.template" tofile="./src/main/java/hudson/plugins/sauce_ondemand/BuildUtils.java" overwrite="true">
+                  <filterset refid="filters" />
                 </copy>
               </target>
             </configuration>
