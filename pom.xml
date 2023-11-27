@@ -211,7 +211,7 @@
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>maven-plugin</artifactId>
-      <version>3.8</version>
+      <version>3.23</version>
       <exclusions>
         <!-- Avoid requireUpperBoundDeps conflict -->
         <exclusion>
