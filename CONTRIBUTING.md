@@ -40,30 +40,30 @@ It is always best to discuss your plans beforehand, to ensure that your contribu
 - Project maintainers might comment on your work as you progress.
 - When you are done, remove the `work in progress` label and assign one of the maintainers to review.
 
-## Run Locally	
+## Run Locally
 
 ### Prerequisites
 
 _Java_ and _Maven_
 
-- Ensure Java 8 or 11 is available.	
-
-  ```console	
-  $ java -version	
-  ```	
-  - Use the alternate Java 8.	
-
-  ```console	
-  $ export JAVA_HOME=`/usr/libexec/java_home -v 1.8`	
-  $ echo $JAVA_HOME	
-  /Library/Java/JavaVirtualMachines/jdk1.8.0_252.jdk/Contents/Home
-  ```	
-
-- Ensure Maven > 3.6.0 is installed and included in the PATH environment variable.	
+- Ensure Java 8 or 11 is available.
 
   ```console
-  $ mvn --version	
-  ```	
+  $ java -version
+  ```
+  - Use the alternate Java 8.
+
+  ```console
+  $ export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+  $ echo $JAVA_HOME
+  /Library/Java/JavaVirtualMachines/jdk1.8.0_252.jdk/Contents/Home
+  ```
+
+- Ensure Maven > 3.6.0 is installed and included in the PATH environment variable.
+
+  ```console
+  $ mvn --version
+  ```
 
 ### Check out code
 
@@ -73,11 +73,11 @@ To get the code base, have [git](https://git-scm.com/downloads) installed and ru
 $ git clone git@github.com:saucelabs/jenkins-sauce-ondemand-plugin.git
 ```
 
-### IDE configuration	
+### IDE configuration
 
 See [IDE configuration](https://jenkins.io/doc/developer/development-environment/ide-configuration/).
 
-### CLI	
+### CLI
 
 To run tests:
 
@@ -87,14 +87,14 @@ $ mvn test
 
 To spin up a Jenkins server with your plugin and test manually:
 
-```console	
-$ mvn hpi:run	
-```	
+```console
+$ mvn hpi:run
+```
 and wait for:
-```text	
-...	
-INFO: Jenkins is fully up and running	
-```	
+```text
+...
+INFO: Jenkins is fully up and running
+```
 to appear.
 
 - Open <http://localhost:8080/jenkins/> to test the plugin locally.
