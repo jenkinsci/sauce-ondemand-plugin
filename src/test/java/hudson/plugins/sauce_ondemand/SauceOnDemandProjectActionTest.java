@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.gargoylesoftware.htmlunit.Page;
 import com.saucelabs.saucerest.JobSource;
 import com.saucelabs.saucerest.api.BuildsEndpoint;
 import com.saucelabs.saucerest.model.builds.LookupBuildsParameters;
@@ -15,6 +14,7 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import org.htmlunit.Page;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -77,7 +77,7 @@ public class SauceOnDemandProjectActionTest {
     jenkins.assertGoodStatus(generateSupportZip);
   }
 
-  @Test(expected = com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException.class)
+  @Test(expected = org.htmlunit.FailingHttpStatusCodeException.class)
   public void testDoGenerateSupportZip_NoBuildLog() throws Exception {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     sauceBuildWrapper.setEnableSauceConnect(false);

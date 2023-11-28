@@ -12,9 +12,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.DomNodeList;
+import org.htmlunit.html.HtmlPage;
 import com.saucelabs.saucerest.JobSource;
 import com.saucelabs.saucerest.api.BuildsEndpoint;
 import com.saucelabs.saucerest.api.JobsEndpoint;
