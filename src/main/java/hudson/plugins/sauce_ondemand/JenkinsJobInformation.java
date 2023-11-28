@@ -1,14 +1,13 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.JobInformation;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.net.URISyntaxException;
+import java.time.Duration;
+import java.util.Objects;
 import org.apache.http.client.utils.URIBuilder;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import java.net.URISyntaxException;
-import java.util.Objects;
-import java.time.Duration;
 
 @ExportedBean
 public class JenkinsJobInformation extends JobInformation {

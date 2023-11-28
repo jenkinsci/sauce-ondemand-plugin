@@ -1,21 +1,20 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.maven.MavenBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Run;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Contains helper methods.

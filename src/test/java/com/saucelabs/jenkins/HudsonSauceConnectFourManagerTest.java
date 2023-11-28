@@ -1,10 +1,9 @@
 package com.saucelabs.jenkins;
 
-import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class HudsonSauceConnectFourManagerTest {
 

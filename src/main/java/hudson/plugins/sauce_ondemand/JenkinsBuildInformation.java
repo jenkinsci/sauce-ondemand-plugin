@@ -1,14 +1,13 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.BuildInformation;
+import com.saucelabs.saucerest.model.builds.Build;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-
-import java.text.SimpleDateFormat;
-import java.text.DecimalFormat;
-import java.time.Duration;
 
 @ExportedBean
 public class JenkinsBuildInformation extends BuildInformation {
@@ -17,6 +16,10 @@ public class JenkinsBuildInformation extends BuildInformation {
 
     public JenkinsBuildInformation(String buildId) {
         super(buildId);
+    }
+
+    public JenkinsBuildInformation(Build build) {
+        super(build);
     }
 
     @Override

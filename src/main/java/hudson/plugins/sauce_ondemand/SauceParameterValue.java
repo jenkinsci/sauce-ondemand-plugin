@@ -2,6 +2,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.saucerest.DataCenter;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.ParameterValue;
@@ -16,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class SauceParameterValue extends ParameterValue {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
 
     private final String selectedBrowsersString;
 

@@ -2,20 +2,19 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.saucerest.DataCenter;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import org.json.JSONException;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sf.json.JSONObject;
+import org.json.JSONException;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Allows users to select Sauce browsers as parameters for a Jenkins build.
@@ -28,7 +27,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, "US_WEST"));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
 
     @DataBoundConstructor
     public SauceParameterDefinition() {
