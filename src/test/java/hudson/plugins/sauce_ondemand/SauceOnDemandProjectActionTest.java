@@ -77,7 +77,7 @@ public class SauceOnDemandProjectActionTest {
     jenkins.assertGoodStatus(generateSupportZip);
   }
 
-  @Test(expected = com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException.class)
+  @Test(expected = org.htmlunit.FailingHttpStatusCodeException.class)
   public void testDoGenerateSupportZip_NoBuildLog() throws Exception {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     sauceBuildWrapper.setEnableSauceConnect(false);
