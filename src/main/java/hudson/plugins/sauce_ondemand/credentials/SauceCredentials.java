@@ -21,6 +21,7 @@ import com.saucelabs.saucerest.api.AccountsEndpoint;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ProxyConfiguration;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
@@ -171,9 +172,9 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
         return getCredentialsById(build.getProject(), credentialId);
     }
 
-    public JenkinsSauceREST getSauceREST() {
+    public JenkinsSauceREST getSauceREST(ProxyConfiguration proxy) {
         DataCenter dc = DataCenter.fromString(getRestEndpointName());
-        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText(), dc);
+        JenkinsSauceREST sauceREST = new JenkinsSauceREST(getUsername(), getPassword().getPlainText(), dc, proxy);
         return sauceREST;
     }
 
@@ -193,7 +194,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
             DataCenter dc = DataCenter.fromString(dataCenter);
 
-            JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dc);
+            JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dc, Jenkins.get().getProxy());
             AccountsEndpoint users = rest.getAccountsEndpoint();
             // If unauthorized getUser returns an empty string.
             try {

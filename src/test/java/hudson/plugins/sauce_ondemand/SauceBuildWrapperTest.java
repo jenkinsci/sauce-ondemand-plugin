@@ -81,7 +81,7 @@ public class SauceBuildWrapperTest {
     this.credentialsId =
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-    JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", DataCenter.US_WEST);
+    JenkinsSauceREST sauceRest = new JenkinsSauceREST("username", "access key", DataCenter.US_WEST, null);
     PluginImpl plugin = PluginImpl.get();
     assertNotNull(plugin);
     // Reset connection string every run

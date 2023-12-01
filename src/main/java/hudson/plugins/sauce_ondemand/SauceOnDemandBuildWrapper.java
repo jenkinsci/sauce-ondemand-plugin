@@ -37,6 +37,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.ProxyConfiguration;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -428,7 +429,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 credentials.getApiKey().getPlainText(),
                 dc,
                 maxRetries,
-                retryWaitTime);
+                retryWaitTime,
+                Jenkins.get().getProxy()
+            );
 
         if (launchSauceConnectOnSlave) {
           listener
@@ -684,7 +687,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
               SauceCredentials.getSauceCredentials(
                   build, SauceOnDemandBuildWrapper.this); // get credentials
           JenkinsSauceREST sauceREST =
-              credentials.getSauceREST(); // use credentials to get sauceRest
+              credentials.getSauceREST(Jenkins.get().getProxy()); // use credentials to get sauceRest
           SauceConnectEndpoint ep = sauceREST.getSauceConnectEndpoint();
 
           if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()) {
@@ -1103,7 +1106,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private final String username;
     private final String key;
     private final DataCenter dataCenter;
-    private final BuildListener listener;
+      private final ProxyConfiguration proxy;
+      private final BuildListener listener;
     private final boolean verboseLogging;
     private final String sauceConnectPath;
     private int maxRetries;
@@ -1123,7 +1127,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         String apiKey,
         DataCenter dataCenter,
         String maxRetries,
-        String retryWaitTime) {
+        String retryWaitTime,
+        ProxyConfiguration proxy) {
       this.options = resolvedOptions;
       this.workingDirectory = workingDirectory;
       this.useLatestSauceConnect = useLatestSauceConnect;
@@ -1131,7 +1136,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       this.username = username;
       this.key = apiKey;
       this.dataCenter = dataCenter;
-      this.port = sauceOnDemandBuildWrapper.getPort(env);
+        this.proxy = proxy;
+        this.port = sauceOnDemandBuildWrapper.getPort(env);
       this.verboseLogging = sauceOnDemandBuildWrapper.isVerboseLogging();
       this.sauceConnectPath = sauceOnDemandBuildWrapper.getSauceConnectPath();
       this.sauceConnectJar = sauceConnectJar;
@@ -1171,7 +1177,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
           ((HudsonSauceConnectFourManager) sauceTunnelManager)
               .setUseLatestSauceConnect(useLatestSauceConnect);
         }
-        sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key, dataCenter));
+        sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key, dataCenter, proxy));
         if (StringUtils.isBlank(username)) {
           listener.getLogger().println("Username not set, not starting Sauce Connect");
         } else if (StringUtils.isBlank(key)) {

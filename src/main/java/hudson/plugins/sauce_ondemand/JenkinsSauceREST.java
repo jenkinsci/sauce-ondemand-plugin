@@ -29,8 +29,8 @@ public class JenkinsSauceREST extends SauceREST {
       "Jenkins/" + Jenkins.VERSION + " " + "JenkinsSauceOnDemand/" + BuildUtils.getCurrentVersion();
   private String server = getSauceRestUrlFromEnv();
 
-  public JenkinsSauceREST(String username, String accessKey, DataCenter dataCenter) {
-    super(username, accessKey, dataCenter, getJenkinsPluginHttpConfig(dataCenter));
+  public JenkinsSauceREST(String username, String accessKey, DataCenter dataCenter, ProxyConfiguration proxy) {
+    super(username, accessKey, dataCenter, getJenkinsPluginHttpConfig(dataCenter, proxy));
     if (server == null) {
       server = dataCenter.server();
     }
@@ -44,24 +44,23 @@ public class JenkinsSauceREST extends SauceREST {
     return srUrl;
   }
 
-  private static HttpClientConfig getJenkinsPluginHttpConfig(DataCenter dataCenter) {
+  private static HttpClientConfig getJenkinsPluginHttpConfig(DataCenter dataCenter, ProxyConfiguration proxyConfig) {
     String server = getSauceRestUrlFromEnv();
     if (server == null) {
       server = dataCenter.server();
     }
     Proxy proxy = null;
     Authenticator auth = Authenticator.NONE;
-    ProxyConfiguration pc = Jenkins.get().getProxy();
 
-    if (pc != null) {
+    if (proxyConfig != null) {
       String host = Objects.requireNonNull(buildURL(server)).getHost();
-      proxy = pc.createProxy(host);
+      proxy = proxyConfig.createProxy(host);
 
-      if (pc.getUserName() != null
-          && !pc.getUserName().isEmpty()
-          && pc.getSecretPassword() != null
-          && !pc.getSecretPassword().getPlainText().isEmpty()) {
-        auth = new ProxyAuthenticator(pc.getUserName(), pc.getSecretPassword().getPlainText());
+      if (proxyConfig.getUserName() != null
+          && !proxyConfig.getUserName().isEmpty()
+          && proxyConfig.getSecretPassword() != null
+          && !proxyConfig.getSecretPassword().getPlainText().isEmpty()) {
+        auth = new ProxyAuthenticator(proxyConfig.getUserName(), proxyConfig.getSecretPassword().getPlainText());
       }
     }
     UserAgentInterceptor ua = new UserAgentInterceptor(userAgent);
