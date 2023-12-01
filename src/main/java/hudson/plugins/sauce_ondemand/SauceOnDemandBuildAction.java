@@ -34,6 +34,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.servlet.ServletException;
+
+import jenkins.model.Jenkins;
 import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.Timer;
@@ -440,7 +442,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
 
     DataCenter dc = DataCenter.fromString(dataCenter);
 
-    return new JenkinsSauceREST(username, accessKey, dc);
+    return new JenkinsSauceREST(username, accessKey, dc, Jenkins.get().getProxy());
   }
 
   public SauceTestResultsById getById(String id) {

@@ -17,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class SauceParameterValue extends ParameterValue {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST, null));
 
     private final String selectedBrowsersString;
 

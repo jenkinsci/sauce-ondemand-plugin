@@ -7,6 +7,8 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import org.json.JSONException;
 
 /** */
@@ -40,7 +42,10 @@ public class SauceTestResultsById {
         new JenkinsSauceREST(
             credentials.getUsername(),
             credentials.getPassword().getPlainText(),
-            DataCenter.fromString(credentials.getRestEndpointName())));
+            DataCenter.fromString(credentials.getRestEndpointName()),
+            Jenkins.get().getProxy()
+        )
+    );
   }
 
   public String getId() {

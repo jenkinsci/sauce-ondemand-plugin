@@ -7,7 +7,7 @@ import java.net.URL;
 public class MockSauceREST extends JenkinsSauceREST {
 
   public MockSauceREST() {
-    super("fake", "", DataCenter.US_WEST);
+    super("fake", "", DataCenter.US_WEST, null);
   }
 
   public String retrieveResults(URL restEndpoint) {

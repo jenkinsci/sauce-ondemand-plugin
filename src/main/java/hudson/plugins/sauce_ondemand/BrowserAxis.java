@@ -30,6 +30,8 @@ import hudson.matrix.Axis;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
+import jenkins.model.Jenkins;
+
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +44,7 @@ import java.util.Map;
 public abstract class BrowserAxis extends Axis {
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
+    protected static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST, Jenkins.get().getProxy()));
     private transient MatrixProject project;
 
     public BrowserAxis(List<String> values) {

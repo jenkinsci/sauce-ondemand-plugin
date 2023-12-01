@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -27,7 +29,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
     private static final Logger logger = Logger.getLogger(SauceParameterDefinition.class.getName());
 
     /** Handles the retrieval of browsers from Sauce Labs. */
-    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
+    private static final BrowserFactory BROWSER_FACTORY = BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST, Jenkins.get().getProxy()));
 
     @DataBoundConstructor
     public SauceParameterDefinition() {

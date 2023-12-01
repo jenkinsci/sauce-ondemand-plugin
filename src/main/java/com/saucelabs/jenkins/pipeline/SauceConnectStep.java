@@ -8,6 +8,7 @@ import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ProxyConfiguration;
 import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Item;
@@ -21,11 +22,14 @@ import hudson.plugins.sauce_ondemand.SauceEnvironmentUtil;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.BodyExecution;
@@ -66,7 +70,8 @@ public class SauceConnectStep extends Step {
             useGeneratedTunnelIdentifier,
             verboseLogging,
             sauceConnectPath,
-            useLatestSauceConnect
+            useLatestSauceConnect,
+            Jenkins.get().getProxy()
         );
     }
 
@@ -154,8 +159,9 @@ public class SauceConnectStep extends Step {
         private final Boolean verboseLogging;
         private final String sauceConnectPath;
         private final Boolean useLatestSauceConnect;
+        private final ProxyConfiguration proxy;
 
-        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath, Boolean useLatestSauceConnect) {
+        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath, Boolean useLatestSauceConnect, ProxyConfiguration proxy) {
             this.sauceCredentials = sauceCredentials;
             this.port = port;
             this.options = options;
@@ -163,12 +169,13 @@ public class SauceConnectStep extends Step {
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
             this.useLatestSauceConnect = useLatestSauceConnect;
+            this.proxy = proxy;
         }
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
             SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
-            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.setUseLatestSauceConnect(useLatestSauceConnect);
             sauceTunnelManager.openConnection(
                 sauceCredentials.getUsername(),
@@ -190,17 +197,19 @@ public class SauceConnectStep extends Step {
         private final SauceCredentials sauceCredentials;
         private final String options;
         private final TaskListener listener;
+        private final ProxyConfiguration proxy;
 
-        SauceStopConnectHandler(SauceCredentials sauceCredentials, String options, TaskListener listener) {
+        SauceStopConnectHandler(SauceCredentials sauceCredentials, String options, TaskListener listener, ProxyConfiguration proxy) {
             this.sauceCredentials = sauceCredentials;
             this.options = options;
             this.listener = listener;
+            this.proxy = proxy;
         }
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
             SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
-            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST());
+            sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.closeTunnelsForPlan(
                 sauceCredentials.getUsername(),
                 options,
@@ -219,6 +228,7 @@ public class SauceConnectStep extends Step {
         private final boolean useLatestSauceConnect;
 
         private static final long serialVersionUID = 1L;
+        private final ProxyConfiguration proxy;
 
         private BodyExecution body;
 
@@ -229,7 +239,8 @@ public class SauceConnectStep extends Step {
             boolean useGeneratedTunnelIdentifier,
             boolean verboseLogging,
             String sauceConnectPath,
-            boolean useLatestSauceConnect
+            boolean useLatestSauceConnect,
+            ProxyConfiguration proxy
         ) {
             super(context);
             this.globalOptions = globalOptions;
@@ -238,6 +249,7 @@ public class SauceConnectStep extends Step {
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
             this.useLatestSauceConnect = useLatestSauceConnect;
+            this.proxy = proxy;
         }
 
         @Override
@@ -290,13 +302,14 @@ public class SauceConnectStep extends Step {
                 listener,
                 verboseLogging,
                 sauceConnectPath,
-                useLatestSauceConnect
+                useLatestSauceConnect,
+                proxy
             );
             computer.getChannel().call(handler);
 
             body = getContext().newBodyInvoker()
                 .withContext(EnvironmentExpander.merge(getContext().get(EnvironmentExpander.class), new ExpanderImpl(overrides)))
-                .withCallback(new Callback(sauceCredentials, options))
+                .withCallback(new Callback(sauceCredentials, options, proxy))
                 .withDisplayName("Sauce Connect")
                 .start();
 
@@ -320,10 +333,13 @@ public class SauceConnectStep extends Step {
             private final String options;
             private final SauceCredentials sauceCredentials;
 
+            private final ProxyConfiguration proxy;
 
-            Callback(SauceCredentials sauceCredentials, String options) {
+
+            Callback(SauceCredentials sauceCredentials, String options, ProxyConfiguration proxy) {
                 this.sauceCredentials = sauceCredentials;
                 this.options = options;
+                this.proxy = proxy;
             }
 
             @Override protected void finished(StepContext context) throws Exception {
@@ -333,7 +349,8 @@ public class SauceConnectStep extends Step {
                 SauceStopConnectHandler stopConnectHandler = new SauceStopConnectHandler(
                     sauceCredentials,
                     options,
-                    listener
+                    listener,
+                    proxy
                 );
                 computer.getChannel().call(stopConnectHandler);
             }

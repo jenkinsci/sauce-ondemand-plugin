@@ -58,6 +58,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import jenkins.model.Jenkins;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -399,7 +401,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
   }
 
   protected JenkinsSauceREST getSauceREST(Run build) {
-    return SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials().getSauceREST();
+    return SauceOnDemandBuildAction.getSauceBuildAction(build).getCredentials().getSauceREST(Jenkins.get().getProxy());
   }
 
   /**

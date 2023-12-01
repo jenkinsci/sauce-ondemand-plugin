@@ -54,7 +54,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
   /** Handles the retrieval of browsers from Sauce Labs. */
   static final BrowserFactory BROWSER_FACTORY =
-      BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST));
+      BrowserFactory.getInstance(new JenkinsSauceREST(null, null, DataCenter.US_WEST, null));
   private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
   /** Username to access Sauce OnDemand. */
   @Deprecated private transient String username;
