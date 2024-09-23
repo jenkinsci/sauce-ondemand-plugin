@@ -13,8 +13,8 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
     <jenkins.version>2.375.4</jenkins.version>
-    <ci-sauce.version>1.179</ci-sauce.version>
-    <saucerest.version>2.4.0</saucerest.version>
+    <ci-sauce.version>2.0</ci-sauce.version>
+    <saucerest.version>2.5.3</saucerest.version>
   </properties>
 
 
