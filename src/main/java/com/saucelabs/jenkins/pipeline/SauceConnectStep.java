@@ -4,7 +4,7 @@ import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepEx
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -174,7 +174,7 @@ public class SauceConnectStep extends Step {
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
-            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
+            SauceConnectManager sauceTunnelManager = getSauceTunnelManager();
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.setUseLatestSauceConnect(useLatestSauceConnect);
             sauceTunnelManager.openConnection(
@@ -208,7 +208,7 @@ public class SauceConnectStep extends Step {
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
-            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
+            SauceConnectManager sauceTunnelManager = getSauceTunnelManager();
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.closeTunnelsForPlan(
                 sauceCredentials.getUsername(),
@@ -324,8 +324,8 @@ public class SauceConnectStep extends Step {
 
         }
 
-        public static SauceConnectFourManager getSauceTunnelManager() {
-            return HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+        public static SauceConnectManager getSauceTunnelManager() {
+            return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
         }
 
         private static final class Callback extends BodyExecutionCallback.TailCall {

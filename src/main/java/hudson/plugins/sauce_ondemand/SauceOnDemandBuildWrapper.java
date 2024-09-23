@@ -27,7 +27,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
-import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
+import com.saucelabs.jenkins.HudsonSauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
@@ -340,7 +340,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
    * @throws ComponentLookupException see plexus
    */
   public static AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
-    return HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+    return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
   }
 
   @Override
@@ -1170,11 +1170,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       try {
         listener.getLogger().println("Launching Sauce Connect on " + getCurrentHostName());
         sauceTunnelManager = getSauceTunnelManager();
-        if (sauceTunnelManager instanceof HudsonSauceConnectFourManager
+        if (sauceTunnelManager instanceof HudsonSauceConnectManager
             && workingDirectory != null) {
-          ((HudsonSauceConnectFourManager) sauceTunnelManager)
+          ((HudsonSauceConnectManager) sauceTunnelManager)
               .setWorkingDirectory(workingDirectory);
-          ((HudsonSauceConnectFourManager) sauceTunnelManager)
+          ((HudsonSauceConnectManager) sauceTunnelManager)
               .setUseLatestSauceConnect(useLatestSauceConnect);
         }
         sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key, dataCenter, proxy));
@@ -1305,7 +1305,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @return Sauce Connect version
      */
     public String getSauceConnectVersion() {
-      return HudsonSauceConnectFourManager.CURRENT_SC_VERSION;
+      return HudsonSauceConnectManager.CURRENT_SC_VERSION;
     }
 
     /**
