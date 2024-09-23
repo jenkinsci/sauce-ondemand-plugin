@@ -103,7 +103,7 @@
       <dependency>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-stdlib-jdk8</artifactId>
-        <version>1.9.21</version>
+        <version>1.9.25</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -288,6 +288,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness-tools</artifactId>
       <version>2.2</version>
@@ -297,6 +303,12 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.moshi</groupId>
+      <artifactId>moshi</artifactId>
+      <version>1.15.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
