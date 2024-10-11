@@ -20,11 +20,11 @@ public class ExtractSauceConnectTest {
     @Test
     public void linux() throws Exception {
         File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
-        manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.LINUX);
+        manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.LINUX_AMD64);
     }
 
     @Test
     public void windows() throws Exception {
-        manager.extractZipFile(new File(System.getProperty("java.io.tmpdir")), SauceConnectManager.OperatingSystem.WINDOWS);
+        manager.extractZipFile(new File(System.getProperty("java.io.tmpdir")), SauceConnectManager.OperatingSystem.WINDOWS_AMD64);
     }
 }
