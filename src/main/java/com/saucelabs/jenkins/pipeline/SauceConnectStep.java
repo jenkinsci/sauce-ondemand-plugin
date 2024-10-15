@@ -107,11 +107,6 @@ public class SauceConnectStep extends Step {
         return useLatestSauceConnect;
     }
 
-    @DataBoundSetter
-    public void setUseLatestSauceConnect(Boolean useLatestSauceConnect) {
-        this.useLatestSauceConnect = useLatestSauceConnect;
-    }
-
     public Boolean getVerboseLogging() {
         return verboseLogging;
     }

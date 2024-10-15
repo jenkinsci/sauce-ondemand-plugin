@@ -933,10 +933,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     return useLatestSauceConnect;
   }
 
-  public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
-    this.useLatestSauceConnect = useLatestSauceConnect;
-  }
-
   public boolean isUseGeneratedTunnelIdentifier() {
     return useGeneratedTunnelIdentifier;
   }
