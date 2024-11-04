@@ -170,7 +170,7 @@ public class SauceBuildWrapperTest {
               String sauceConnectPath) {
             assertEquals(
                 "Variable not resolved",
-                "-i 1 -x https://saucelabs.com/rest/v1",
+                "-i 1 --region us-west",
                 options); // null reverts to default US_WEST
             return null;
           }
@@ -202,7 +202,7 @@ public class SauceBuildWrapperTest {
             assertEquals(
                 "Variables are resolved correctly",
                 options,
-                "-i 1 -x https://saucelabs.com/rest/v1"); // null reverts to default US
+                "-i 1 --region us-west"); // null reverts to default US
             return null;
           }
         };
