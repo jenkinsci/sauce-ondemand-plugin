@@ -159,7 +159,7 @@ public class SauceStepTest {
     WorkflowRun run = p.scheduleBuild2(0).get();
     r.assertBuildStatus(Result.FAILURE, run);
     r.assertLogContains(
-        "Perhaps you forgot to surround the code with a step that provides this, such as: sauce",
+        "Perhaps you forgot to surround the sauceconnect step with a step that provides this, such as: sauce",
         run);
   }
 }

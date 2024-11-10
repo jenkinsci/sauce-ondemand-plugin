@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.81</version>
+    <version>4.88</version>
     <relativePath />
   </parent>
   <properties>
@@ -12,7 +12,8 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
-    <jenkins.version>2.375.4</jenkins.version>
+    <jenkins.baseline>2.452</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.4</jenkins.version>
     <ci-sauce.version>2.0</ci-sauce.version>
     <saucerest.version>2.5.3</saucerest.version>
   </properties>
@@ -89,8 +90,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.375.x</artifactId>
-        <version>2198.v39c76fc308ca</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>3654.v237e4a_f2d8da_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -142,10 +143,15 @@
           <groupId>javax.inject</groupId>
           <artifactId>javax.inject</artifactId>
         </exclusion>
-        <!-- Provided by core -->
+        <!-- Provided by api-plugin -->
         <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
+        </exclusion>
+        <!-- Provided by api-plugin -->
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
         </exclusion>
         <!-- conflicts with maven-plugin -->
         <exclusion>
@@ -177,6 +183,11 @@
         <exclusion>
           <groupId>commons-io</groupId>
           <artifactId>commons-io</artifactId>
+        </exclusion>
+        <!-- Provided by API plugin -->
+        <exclusion>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -242,6 +253,18 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>jackson2-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-compress-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>gson-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
