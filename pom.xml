@@ -8,7 +8,7 @@
     <relativePath />
   </parent>
   <properties>
-    <revision>1.215</revision>
+    <revision>1.216</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -20,7 +20,7 @@
 
 
   <artifactId>sauce-ondemand</artifactId>
-  <version>1.215</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Sauce OnDemand plugin</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -29,7 +29,7 @@
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
-    <tag>sauce-ondemand-1.215</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <organization>
