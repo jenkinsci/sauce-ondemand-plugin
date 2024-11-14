@@ -4,7 +4,7 @@ import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepEx
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -107,6 +107,11 @@ public class SauceConnectStep extends Step {
         return useLatestSauceConnect;
     }
 
+    @DataBoundSetter
+    public void setUseLatestSauceConnect(Boolean useLatestSauceConnect) {
+        this.useLatestSauceConnect = useLatestSauceConnect;
+    }
+
     public Boolean getVerboseLogging() {
         return verboseLogging;
     }
@@ -169,7 +174,7 @@ public class SauceConnectStep extends Step {
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
-            SauceConnectManager sauceTunnelManager = getSauceTunnelManager();
+            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.setUseLatestSauceConnect(useLatestSauceConnect);
             sauceTunnelManager.openConnection(
@@ -203,7 +208,7 @@ public class SauceConnectStep extends Step {
 
         @Override
         public Void call() throws AbstractSauceTunnelManager.SauceConnectException {
-            SauceConnectManager sauceTunnelManager = getSauceTunnelManager();
+            SauceConnectFourManager sauceTunnelManager = getSauceTunnelManager();
             sauceTunnelManager.setSauceRest(sauceCredentials.getSauceREST(proxy));
             sauceTunnelManager.closeTunnelsForPlan(
                 sauceCredentials.getUsername(),
@@ -319,8 +324,8 @@ public class SauceConnectStep extends Step {
 
         }
 
-        public static SauceConnectManager getSauceTunnelManager() {
-            return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
+        public static SauceConnectFourManager getSauceTunnelManager() {
+            return HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
         }
 
         private static final class Callback extends BodyExecutionCallback.TailCall {

@@ -27,7 +27,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
-import com.saucelabs.jenkins.HudsonSauceConnectManager;
+import com.saucelabs.jenkins.HudsonSauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
@@ -191,14 +191,6 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
   /** Indicates whether Sauce Connect should be started as part of the build. */
   private boolean enableSauceConnect;
 
-  private static Map<String, String> endpointToRegion = Map.of(
-          "https://saucelabs.com/", "us-west",
-          "https://eu-central-1.saucelabs.com/", "eu-central",
-          "https://us-east-4.saucelabs.com/", "us-east",
-          // Deprecated endpoint but it hasn't been removed from Sauce Credentials yet
-          "https://us-east-1.saucelabs.com/", "us-east"
-  );
-
   /** Host location of the selenium server. */
   private String seleniumHost;
 
@@ -348,7 +340,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
    * @throws ComponentLookupException see plexus
    */
   public static AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
-    return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
+    return HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
   }
 
   @Override
@@ -400,7 +392,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       }
 
       build.getBuildVariables().put(SAUCE_REST_ENDPOINT, restEndpoint);
-      resolvedOptions = resolvedOptions + " --region " + this.endpointToRegion.get(restEndpoint);
+      resolvedOptions = resolvedOptions + " -x " + restEndpoint + "rest/v1";
 
       try {
         if (condition != null) {
@@ -933,6 +925,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     return useLatestSauceConnect;
   }
 
+  public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
+    this.useLatestSauceConnect = useLatestSauceConnect;
+  }
+
   public boolean isUseGeneratedTunnelIdentifier() {
     return useGeneratedTunnelIdentifier;
   }
@@ -1174,11 +1170,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       try {
         listener.getLogger().println("Launching Sauce Connect on " + getCurrentHostName());
         sauceTunnelManager = getSauceTunnelManager();
-        if (sauceTunnelManager instanceof HudsonSauceConnectManager
+        if (sauceTunnelManager instanceof HudsonSauceConnectFourManager
             && workingDirectory != null) {
-          ((HudsonSauceConnectManager) sauceTunnelManager)
+          ((HudsonSauceConnectFourManager) sauceTunnelManager)
               .setWorkingDirectory(workingDirectory);
-          ((HudsonSauceConnectManager) sauceTunnelManager)
+          ((HudsonSauceConnectFourManager) sauceTunnelManager)
               .setUseLatestSauceConnect(useLatestSauceConnect);
         }
         sauceTunnelManager.setSauceRest(new JenkinsSauceREST(username, key, dataCenter, proxy));
@@ -1309,7 +1305,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      * @return Sauce Connect version
      */
     public String getSauceConnectVersion() {
-      return HudsonSauceConnectManager.CURRENT_SC_VERSION;
+      return HudsonSauceConnectFourManager.CURRENT_SC_VERSION;
     }
 
     /**

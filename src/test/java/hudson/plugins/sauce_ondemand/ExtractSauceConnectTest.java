@@ -1,6 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,7 +10,7 @@ import org.junit.Test;
  */
 public class ExtractSauceConnectTest {
 
-    private SauceConnectManager manager = new SauceConnectManager();
+    private SauceConnectFourManager manager = new SauceConnectFourManager();
 
     @Before
     public void setUp() throws Exception {
@@ -20,11 +20,11 @@ public class ExtractSauceConnectTest {
     @Test
     public void linux() throws Exception {
         File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
-        manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.LINUX_AMD64);
+        manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
     }
 
     @Test
     public void windows() throws Exception {
-        manager.extractZipFile(new File(System.getProperty("java.io.tmpdir")), SauceConnectManager.OperatingSystem.WINDOWS_AMD64);
+        manager.extractZipFile(new File(System.getProperty("java.io.tmpdir")), SauceConnectFourManager.OperatingSystem.WINDOWS);
     }
 }

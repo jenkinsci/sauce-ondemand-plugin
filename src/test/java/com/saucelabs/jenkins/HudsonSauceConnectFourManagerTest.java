@@ -5,13 +5,13 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-public class HudsonSauceConnectManagerTest {
+public class HudsonSauceConnectFourManagerTest {
 
-    private HudsonSauceConnectManager manager;
+    private HudsonSauceConnectFourManager manager;
 
     @Before
     public void setUp() throws Exception {
-        this.manager = new HudsonSauceConnectManager();
+        this.manager = new HudsonSauceConnectFourManager();
     }
 
     @Test

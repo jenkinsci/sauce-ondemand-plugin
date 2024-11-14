@@ -1,12 +1,12 @@
 package com.saucelabs.jenkins;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import org.apache.commons.lang.StringUtils;
 
 /**
  * @author Ross Rowe
  */
-public class HudsonSauceConnectManager extends SauceConnectManager {
+public class HudsonSauceConnectFourManager extends SauceConnectFourManager {
 
     private String workingDirectory;
 

@@ -1,6 +1,6 @@
 package com.saucelabs.jenkins;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,7 +13,7 @@ public class HudsonSauceManagerFactory {
 
     private Lock accessLock = new ReentrantLock();
 
-    private SauceConnectManager sauceConnectManager;
+    private SauceConnectFourManager sauceConnectFourManager;
 
     public static HudsonSauceManagerFactory getInstance() {
         return INSTANCE;
@@ -22,14 +22,14 @@ public class HudsonSauceManagerFactory {
     private HudsonSauceManagerFactory() {
     }
 
-    public SauceConnectManager createSauceConnectManager() {
+    public SauceConnectFourManager createSauceConnectFourManager() {
         accessLock.lock();
         try {
-            if (sauceConnectManager == null)
+            if (sauceConnectFourManager == null)
             {
-                sauceConnectManager = new HudsonSauceConnectManager();
+                sauceConnectFourManager = new HudsonSauceConnectFourManager();
             }
-            return sauceConnectManager;
+            return sauceConnectFourManager;
         } finally {
             accessLock.unlock();
         }
