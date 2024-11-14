@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.DataCenter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -113,8 +113,8 @@ public class ParameterizedSauceBuildWrapperTest {
     String credentialsId =
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-    SauceConnectManager sauceConnectManager =
-        new SauceConnectManager() {
+    SauceConnectFourManager sauceConnectFourManager =
+        new SauceConnectFourManager() {
           @Override
           public Process openConnection(
               String username,
@@ -130,7 +130,7 @@ public class ParameterizedSauceBuildWrapperTest {
           }
         };
 
-    storeDummyManager(sauceConnectManager);
+    storeDummyManager(sauceConnectFourManager);
 
     JSONObject pluginConfig = new JSONObject();
     pluginConfig.put("username", "fakeuser");
@@ -159,11 +159,11 @@ public class ParameterizedSauceBuildWrapperTest {
     storeDummyManager(null);
   }
 
-  private void storeDummyManager(SauceConnectManager sauceConnectManager) throws Exception {
+  private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
     HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
-    Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectManager");
+    Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
     field.setAccessible(true);
-    field.set(factory, sauceConnectManager);
+    field.set(factory, sauceConnectFourManager);
   }
 
   /**
@@ -177,8 +177,8 @@ public class ParameterizedSauceBuildWrapperTest {
 
     final JSONObject holder = new JSONObject();
 
-    SauceConnectManager sauceConnectManager =
-        new SauceConnectManager() {
+    SauceConnectFourManager sauceConnectFourManager =
+        new SauceConnectFourManager() {
           @Override
           public Process openConnection(
               String username,
@@ -195,7 +195,7 @@ public class ParameterizedSauceBuildWrapperTest {
           }
         };
 
-    storeDummyManager(sauceConnectManager);
+    storeDummyManager(sauceConnectFourManager);
     SauceBuilder sauceBuilder =
         new SauceBuilder() {
           @Override

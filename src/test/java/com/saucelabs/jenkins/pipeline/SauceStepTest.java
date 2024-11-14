@@ -4,7 +4,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import com.saucelabs.saucerest.DataCenter;
 
@@ -35,11 +35,11 @@ public class SauceStepTest {
     }
   }
 
-  private void storeDummyManager(SauceConnectManager sauceConnectManager) throws Exception {
+  private void storeDummyManager(SauceConnectFourManager sauceConnectFourManager) throws Exception {
     HudsonSauceManagerFactory factory = HudsonSauceManagerFactory.getInstance();
-    Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectManager");
+    Field field = HudsonSauceManagerFactory.class.getDeclaredField("sauceConnectFourManager");
     field.setAccessible(true);
-    field.set(factory, sauceConnectManager);
+    field.set(factory, sauceConnectFourManager);
   }
 
   @Test
@@ -96,13 +96,13 @@ public class SauceStepTest {
     String credentialsId =
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
-    SauceConnectManager sauceConnectManager = Mockito.mock(SauceConnectManager.class);
+    SauceConnectFourManager sauceConnectFourManager = Mockito.mock(SauceConnectFourManager.class);
 
-    storeDummyManager(sauceConnectManager);
+    storeDummyManager(sauceConnectFourManager);
 
     // stubbing appears before the actual execution
     Mockito.when(
-            sauceConnectManager.openConnection(
+            sauceConnectFourManager.openConnection(
                 Mockito.anyString(),
                 Mockito.anyString(),
                 Mockito.any(DataCenter.class),
@@ -131,7 +131,7 @@ public class SauceStepTest {
     r.assertLogContains("USERNAME=fakeuser", run);
     r.assertLogContains("ACCESS_KEY=fakekey", run);
 
-    Mockito.verify(sauceConnectManager)
+    Mockito.verify(sauceConnectFourManager)
         .openConnection(
             Mockito.eq("fakeuser"),
             Mockito.eq("fakekey"),
