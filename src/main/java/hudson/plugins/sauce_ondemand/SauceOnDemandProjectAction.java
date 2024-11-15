@@ -1,6 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
 import hudson.FilePath;
 import hudson.matrix.MatrixBuild;
@@ -190,7 +190,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         Permission p = Project.CONFIGURE;
         ac.checkPermission(p);
 
-        SauceConnectFourManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+        SauceConnectManager manager = HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
         SauceOnDemandBuildWrapper sauceBuildWrapper = getBuildWrapper();
         Run<?, ?> build = job.getLastBuild();
 
@@ -231,7 +231,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
     }
 
     public static class BuildSupportZipUtils {
-        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectFourManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException, InterruptedException {
+        public static void buildSauceConnectLog(ZipOutputStream zipOutputStream, SauceConnectManager manager, AbstractBuild build, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException, InterruptedException {
             if (sauceBuildWrapper.isEnableSauceConnect()) {
                 File sauceConnectLogFile = manager.getSauceConnectLogFile(sauceBuildWrapper.getOptions());
                 if (sauceBuildWrapper.isLaunchSauceConnectOnSlave()) {
