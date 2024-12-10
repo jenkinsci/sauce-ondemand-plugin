@@ -102,9 +102,6 @@
         </f:section>
     </f:block>
 
-    <script LANGUAGE="JavaScript">
-        new Chosen($("webDriverBrowsers"));
-        new Chosen($("appiumBrowsers"));
-    </script>
+    <st:adjunct includes="hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper.sauce-chosen-init"/>
 
 </j:jelly>
