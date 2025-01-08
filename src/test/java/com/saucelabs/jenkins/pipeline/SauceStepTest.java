@@ -111,7 +111,8 @@ public class SauceStepTest {
                 Mockito.anyString(),
                 Mockito.any(PrintStream.class),
                 Mockito.eq(true),
-                Mockito.anyString()))
+                Mockito.anyString(),
+                Mockito.eq(true)))
         .thenReturn(null);
     PluginImpl.get().setSauceConnectOptions("-i gavin -vv");
 
@@ -135,14 +136,15 @@ public class SauceStepTest {
         .openConnection(
             Mockito.eq("fakeuser"),
             Mockito.eq("fakekey"),
-            Mockito.eq("US_WEST"),
+            Mockito.any(DataCenter.class),
             Mockito.anyInt(),
             isNull(),
             Mockito.matches(
-                "-i gavin -vv -i tunnel-name --tunnel-name [a-zA-Z0-9_-]+ -x https://saucelabs.com/rest/v1"),
+                "-i gavin -vv -i tunnel-name --tunnel-name [a-zA-Z0-9_-]+ --region us-west"),
             Mockito.any(PrintStream.class),
             Mockito.eq(true),
-            isNull());
+            isNull(),
+            Mockito.eq(true));
   }
 
   @Test

@@ -4,7 +4,10 @@
     <f:entry field="verboseLogging">
         <f:checkbox title="${%Enable Verbose Logging}"/>
     </f:entry>
-    <f:entry field="options" title="${%Sauce Connect Options}">
+    <f:entry field="optionsSC5" title="${%Sauce Connect v5 Options}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="options" title="${%Legacy Sauce Connect v4 Options}">
         <f:textbox/>
     </f:entry>
     <f:entry field="useGeneratedTunnelIdentifier">

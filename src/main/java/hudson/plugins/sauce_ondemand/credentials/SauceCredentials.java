@@ -156,6 +156,21 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     @NonNull
+    public String getRegion() {
+        if (this.restEndpoint == null) {
+            return "us-west";
+        }
+
+        switch (this.restEndpoint) {
+            case "https://eu-central-1.saucelabs.com/":
+                return "eu-central";
+            default:
+            case "https://saucelabs.com/":
+                return "us-west";
+        }
+    }
+
+    @NonNull
     public String getUsername() { return this.username; }
 
     @Override

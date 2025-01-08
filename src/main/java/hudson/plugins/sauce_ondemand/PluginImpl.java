@@ -69,7 +69,9 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
   private String sauceConnectDirectory;
 
-  private String sauceConnectOptions;
+  private String sauceConnectOptions; // SC4 Legacy CLI Options
+
+  private String sauceConnectCLIOptions; // SC5 options
 
   private String sauceConnectMaxRetries;
 
@@ -150,6 +152,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
       throws IOException, ServletException, Descriptor.FormException {
     sauceConnectDirectory = formData.getString("sauceConnectDirectory");
     sauceConnectOptions = formData.getString("sauceConnectOptions");
+    sauceConnectCLIOptions = formData.getString("sauceConnectCLIOptions");
     environmentVariablePrefix = formData.getString("environmentVariablePrefix");
     setDisableUsageStats(formData.getBoolean("disableUsageStats"));
     sauceConnectMaxRetries = formData.getString("sauceConnectMaxRetries");
@@ -218,6 +221,14 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
   public void setSauceConnectOptions(String sauceConnectOptions) {
     this.sauceConnectOptions = sauceConnectOptions;
+  }
+
+  public String getSauceConnectCLIOptions() {
+    return sauceConnectCLIOptions;
+  }
+
+  public void setSauceConnectCLIOptions(String sauceConnectCLIOptions) {
+    this.sauceConnectCLIOptions = sauceConnectCLIOptions;
   }
 
   public void setDisableUsageStats(boolean disableUsageStats) {

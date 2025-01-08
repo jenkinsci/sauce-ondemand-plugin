@@ -125,7 +125,8 @@ public class ParameterizedSauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             return null;
           }
         };
@@ -138,6 +139,7 @@ public class ParameterizedSauceBuildWrapperTest {
     pluginConfig.put("reuseSauceAuth", true);
     pluginConfig.put("sauceConnectDirectory", "");
     pluginConfig.put("sauceConnectOptions", "");
+    pluginConfig.put("sauceConnectCLIOptions", "");
     pluginConfig.put("disableStatusColumn", false);
     pluginConfig.put("environmentVariablePrefix", "");
     pluginConfig.put("disableUsageStats", true);
@@ -189,7 +191,8 @@ public class ParameterizedSauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             holder.element("scProvidedPort", port);
             return null;
           }
