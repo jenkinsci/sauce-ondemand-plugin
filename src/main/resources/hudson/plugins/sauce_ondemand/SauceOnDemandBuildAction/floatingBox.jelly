@@ -46,7 +46,7 @@
                                 <font color="${job.getStatusColor()}">${job.getStatus()}</font>
                                 <j:if test="${job.hasFailureMessage()}">
                                     <div class="divider"/>
-                                    <button onclick="dropdown(this)" class="dropdown-button">Info</button>
+                                    <button class="dropdown-button">Info</button>
                                     <div class="dropdown-content">
                                         ${job.getFailureMessage()}
                                     </div>

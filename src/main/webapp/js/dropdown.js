@@ -1,5 +1,5 @@
-function dropdown(target) {
-    target.parentNode.getElementsByClassName("dropdown-content")[0].classList.toggle("show");
+function dropdown(event) {
+    event.target.parentNode.getElementsByClassName("dropdown-content")[0].classList.toggle("show");
 }
 
 // close the dropdown if the user clicks outside the button or dropdown content
@@ -15,3 +15,9 @@ window.onclick = function(event) {
     }
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".dropdown-button").forEach((button) => {
+    button.addEventListener("click", dropdown);
+  });
+});
