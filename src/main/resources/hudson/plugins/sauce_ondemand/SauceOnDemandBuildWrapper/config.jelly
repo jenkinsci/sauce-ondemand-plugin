@@ -88,8 +88,8 @@
                 </f:entry>
 
                 <hr/>
+
                 <div id="validationMessage" style="color: red;"></div>
-                <div id="deprecationMessage" style="color: orange;"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -147,6 +147,8 @@
                  field="cliOptions">
                     <f:textbox/>
                 </f:entry>
+
+                <div id="deprecationMessage" style="color: orange;"></div>
 
                 <f:entry title="${%Sauce Connect Legacy v4 Options}"
                  field="options">

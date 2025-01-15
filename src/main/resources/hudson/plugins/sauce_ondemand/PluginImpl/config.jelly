@@ -13,9 +13,10 @@
             <f:entry title="${%Override Sauce Connect Path}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>
             </f:entry>
+
             <hr/>
+
             <div id="validationMessage" style="color: red;"></div>
-            <div id="deprecationMessage" style="color: orange;"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -71,6 +72,8 @@
             <f:entry title="${%Sauce Connect v5 Options}" field="sauceConnectCLIOptions">
                 <f:textbox id="sauceConnectCLIOptionsBox"/>
             </f:entry>
+
+            <div id="deprecationMessage" style="color: orange;"></div>
 
             <f:entry title="${%Sauce Connect Legacy v4 Options}" field="sauceConnectOptions">
                 <f:textbox id="sauceConnectOptionsBox"/>
