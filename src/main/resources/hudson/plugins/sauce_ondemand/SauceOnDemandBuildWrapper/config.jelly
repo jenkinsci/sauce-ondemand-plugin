@@ -110,7 +110,7 @@
                 // Validation logic: Fail if both fields are set
                 if (optionsValue &amp;&amp; cliOptionsValue) {
                     isValid = false;
-                    message = '"Sauce Connect Legacy v4 Options" and "Sauce Connect v5 Options" cannot both be set. Please use SC5 style CLI flags only.';
+                    message = '"Sauce Connect Legacy v4 Options" and "Sauce Connect v5 Options" cannot both be set. Please use "Sauce Connect v5 Options" only.';
                 }
 
                 // Update UI
@@ -129,7 +129,7 @@
 
                 if (optionsValue) {
                     isDeprecated = true;
-                    deprecationText = "Legacy SC4 CLI commands are deprecated. Please update to SC5 style CLI flags."
+                    deprecationText = '"Sauce Connect Legacy v4 Options" is deprecated. Please use "Sauce Connect v5 Options".'
                 }
                 deprecationMessage.textContent = deprecationText;
             }
