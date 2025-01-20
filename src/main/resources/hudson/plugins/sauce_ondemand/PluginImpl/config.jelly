@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
@@ -12,9 +13,74 @@
             <f:entry title="${%Override Sauce Connect Path}" field="sauceConnectDirectory">
                 <f:textbox id="directoryBox"/>
             </f:entry>
-            <f:entry title="${%Sauce Connect Options}" field="sauceConnectOptions">
+
+            <hr/>
+
+            <div id="validationMessage" style="color: red;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const options = document.querySelector('input[name="_.sauceConnectOptions"]');
+            const sauceConnectCLIOptions = document.querySelector('input[name="_.sauceConnectCLIOptions"]');
+            const validationMessage = document.getElementById('validationMessage');
+            const deprecationMessage = document.getElementById('deprecationMessage');
+            const saveButton = document.querySelector('.jenkins-button[name="Submit"]');
+            const applyButton = document.querySelector('.jenkins-button[name="Apply"]');
+
+            // Validation function
+            function validateFields() {
+                const optionsValue = options.value.trim();
+                const sauceConnectCLIOptionsValue = sauceConnectCLIOptions.value.trim();
+                let isValid = true;
+                let message = '';
+
+                // Validation logic: Fail if both fields are set
+                if (optionsValue &amp;&amp; sauceConnectCLIOptionsValue) {
+                    isValid = false;
+                    message = '"Sauce Connect Legacy v4 Options" and "Sauce Connect v5 Options" cannot both be set. Please use "Sauce Connect v5 Options" only.';
+                }
+
+                // Update UI
+                validationMessage.textContent = message;
+                if (isValid) {
+                    saveButton.removeAttribute('disabled');
+                    applyButton.removeAttribute('disabled');
+                } else {
+                    saveButton.setAttribute('disabled', 'disabled');
+                    applyButton.setAttribute('disabled', 'disabled');
+                }
+
+                // Add a warning for SC4 upgrades
+                let isDeprecated = false;
+                let deprecationText = '';
+
+                if (optionsValue) {
+                    isDeprecated = true;
+                    deprecationText = '"Sauce Connect Legacy v4 Options" is deprecated. Please use "Sauce Connect v5 Options".'
+                }
+                deprecationMessage.textContent = deprecationText;
+            }
+
+            // Attach event listeners
+            options.addEventListener('input', validateFields);
+            sauceConnectCLIOptions.addEventListener('input', validateFields);
+
+            // Initial validation
+            validateFields();
+        });
+    </script>
+            <f:entry title="${%Sauce Connect v5 Options}" field="sauceConnectCLIOptions">
+                <f:textbox id="sauceConnectCLIOptionsBox"/>
+            </f:entry>
+
+            <div id="deprecationMessage" style="color: orange;"></div>
+
+            <f:entry title="${%Sauce Connect Legacy v4 Options}" field="sauceConnectOptions">
                 <f:textbox id="sauceConnectOptionsBox"/>
             </f:entry>
+
+            <hr/>
+
             <f:entry title="${%Sauce Connect Max Retries}" field="sauceConnectMaxRetries">
                 <f:textbox id="sauceConnectMaxRetriesBox"/>
             </f:entry>

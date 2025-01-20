@@ -86,6 +86,7 @@ public class SauceBuildWrapperTest {
     assertNotNull(plugin);
     // Reset connection string every run
     plugin.setSauceConnectOptions("");
+    plugin.setSauceConnectCLIOptions("");
     plugin.setDisableUsageStats(true);
 
     JobsEndpoint mockJobsEndpoint = mock(JobsEndpoint.class);
@@ -128,7 +129,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             return null;
           }
         };
@@ -167,7 +169,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             assertEquals(
                 "Variable not resolved",
                 "-i 1 --region us-west",
@@ -177,7 +180,7 @@ public class SauceBuildWrapperTest {
         };
     storeDummyManager(sauceConnectManager);
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
-    sauceBuildWrapper.setOptions("-i ${BUILD_NUMBER}");
+    sauceBuildWrapper.setCliOptions("-i ${BUILD_NUMBER}");
 
     FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "resolveVariables");
     jenkinsRule.assertBuildStatusSuccess(build);
@@ -198,7 +201,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             assertEquals(
                 "Variables are resolved correctly",
                 options,
@@ -210,8 +214,8 @@ public class SauceBuildWrapperTest {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     PluginImpl plugin = PluginImpl.get();
     assertNotNull(plugin);
-    plugin.setSauceConnectOptions("-i ${BUILD_NUMBER}");
-    sauceBuildWrapper.setOptions("");
+    plugin.setSauceConnectCLIOptions("-i ${BUILD_NUMBER}");
+    sauceBuildWrapper.setCliOptions("");
 
     FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "commonOptions");
     jenkinsRule.assertBuildStatusSuccess(build);
@@ -232,7 +236,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             // Match that it starts with tunnel-name, because timestamp
             assertThat(
                 "Variables are resolved correctly",
@@ -246,8 +251,8 @@ public class SauceBuildWrapperTest {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     PluginImpl plugin = PluginImpl.get();
     assertNotNull(plugin);
-    plugin.setSauceConnectOptions("--global");
-    sauceBuildWrapper.setOptions("--build -i 1");
+    plugin.setSauceConnectCLIOptions("--global");
+    sauceBuildWrapper.setCliOptions("--build -i 1");
     sauceBuildWrapper.setUseGeneratedTunnelIdentifier(true);
 
     FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, null, "resolvedOptionsOrder");
@@ -269,7 +274,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath)
+              String sauceConnectPath,
+              boolean legacyCLI)
               throws SauceConnectException {
             throw new SauceConnectDidNotStartException("Sauce Connect failed to start");
           }
@@ -320,7 +326,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             holder.element("scProvidedPort", port);
             return null;
           }
@@ -379,7 +386,8 @@ public class SauceBuildWrapperTest {
               String options,
               PrintStream printStream,
               Boolean verboseLogging,
-              String sauceConnectPath) {
+              String sauceConnectPath,
+              boolean legacyCLI) {
             holder.element("scProvidedPort", Integer.toString(port, 10));
             return null;
           }

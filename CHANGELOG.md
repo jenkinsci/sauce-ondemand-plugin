@@ -1,3 +1,22 @@
+# Jenkins 2.0 - 2025-01-15
+
+This is a new major version of the Sauce Ondemand Plugin to support Sauce
+Connect 5.
+
+There is a new option field added to the 'Freestyle' projects called "Sauce
+Connect v5 Options", and a new argument to 'Pipeline' projects is added called
+`optionsSC5`. This is meant to be used for all new versions, and the previous
+field has been renamed "Sauce Connect v4 Legacy Options".
+
+If you have anything in the legacy options, it will run the Sauce Connect
+client in `sc legacy` mode, and it will continue to work as before. **Note:**
+This legacy field/argument will be removed in a future release, so please
+convert your command line options to the new options format. See the [SC 5 Migration](https://docs.saucelabs.com/secure-connections/sauce-connect-5/migrating/#cli-changes-in-sauce-connect-5)
+docs for more details.
+
+If the legacy options are empty, the SC client will be started in `sc run`
+mode, any no additional changes are needed.
+
 # Jenkins 1.206 - 2022-11-07
 
 * Bump saucerest from 1.1.8 to 1.1.9

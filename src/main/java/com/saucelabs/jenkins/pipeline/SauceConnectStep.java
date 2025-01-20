@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
+import com.saucelabs.saucerest.DataCenter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ProxyConfiguration;
@@ -48,18 +49,20 @@ public class SauceConnectStep extends Step {
     private Boolean useLatestSauceConnect = false;
     private Boolean useGeneratedTunnelIdentifier = false;
     private String options;
+    private String optionsSC5;
     private String sauceConnectPath;
 
     @DataBoundConstructor
     public SauceConnectStep() {
     }
 
-    public SauceConnectStep(String options, Boolean verboseLogging, Boolean useLatestSauceConnect, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
+    public SauceConnectStep(String options, String optionsSC5, Boolean verboseLogging, Boolean useLatestSauceConnect, Boolean useGeneratedTunnelIdentifier, String sauceConnectPath) {
         this.verboseLogging = verboseLogging;
         this.useLatestSauceConnect = useLatestSauceConnect;
         this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
         this.sauceConnectPath = Util.fixEmptyAndTrim(sauceConnectPath);
         this.options = StringUtils.trimToEmpty(options);
+        this.optionsSC5 = StringUtils.trimToEmpty(optionsSC5);
     }
 
     @Override
@@ -67,6 +70,7 @@ public class SauceConnectStep extends Step {
         return new SauceConnectStepExecution(context,
             PluginImpl.get().getSauceConnectOptions(),
             options,
+            optionsSC5,
             useGeneratedTunnelIdentifier,
             verboseLogging,
             sauceConnectPath,
@@ -82,7 +86,16 @@ public class SauceConnectStep extends Step {
 
     @DataBoundSetter
     public void setOptions(String options) {
-        this.options = options;
+        this.options = options.strip();
+    }
+
+    public String getOptionsSC5() {
+        return optionsSC5;
+    }
+
+    @DataBoundSetter
+    public void setOptionsSC5(String optionsSC5) {
+        this.optionsSC5 = optionsSC5.strip();
     }
 
     public String getSauceConnectPath() {
@@ -154,16 +167,18 @@ public class SauceConnectStep extends Step {
         private final Boolean verboseLogging;
         private final String sauceConnectPath;
         private final Boolean useLatestSauceConnect;
+        private final Boolean legacyCLI;
         private final ProxyConfiguration proxy;
 
-        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath, Boolean useLatestSauceConnect, ProxyConfiguration proxy) {
+        SauceStartConnectHandler(SauceCredentials sauceCredentials, int port, String options, TaskListener listener, Boolean verboseLogging, String sauceConnectPath, Boolean useLatestSauceConnect, Boolean legacyCLI, ProxyConfiguration proxy) {
             this.sauceCredentials = sauceCredentials;
             this.port = port;
-            this.options = options;
+            this.options = options.strip();
             this.listener = listener;
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
             this.useLatestSauceConnect = useLatestSauceConnect;
+            this.legacyCLI = legacyCLI;
             this.proxy = proxy;
         }
 
@@ -175,13 +190,14 @@ public class SauceConnectStep extends Step {
             sauceTunnelManager.openConnection(
                 sauceCredentials.getUsername(),
                 sauceCredentials.getApiKey().getPlainText(),
-                sauceCredentials.getRestEndpointName(),
+                DataCenter.fromString(sauceCredentials.getRestEndpointName()),
                 port,
                 null, /*sauceConnectJar,*/
                 options,
                 listener.getLogger(),
                 verboseLogging,
-                sauceConnectPath
+                sauceConnectPath,
+                legacyCLI
             );
             return null;
         }
@@ -217,6 +233,7 @@ public class SauceConnectStep extends Step {
     public static class SauceConnectStepExecution extends StepExecution {
         private final String globalOptions;
         private final String options;
+        private final String optionsSC5;
         private final boolean useGeneratedTunnelIdentifier;
         private final boolean verboseLogging;
         private final String sauceConnectPath;
@@ -231,6 +248,7 @@ public class SauceConnectStep extends Step {
             @NonNull StepContext context,
             String globalOptions,
             String options,
+            String optionsSC5,
             boolean useGeneratedTunnelIdentifier,
             boolean verboseLogging,
             String sauceConnectPath,
@@ -240,6 +258,7 @@ public class SauceConnectStep extends Step {
             super(context);
             this.globalOptions = globalOptions;
             this.options = options;
+            this.optionsSC5 = optionsSC5;
             this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
             this.verboseLogging = verboseLogging;
             this.sauceConnectPath = sauceConnectPath;
@@ -249,6 +268,14 @@ public class SauceConnectStep extends Step {
 
         @Override
         public boolean start() throws Exception {
+            boolean legacyCLI = false;
+            if (options != null && optionsSC5 != null && !options.isEmpty() && !optionsSC5.isEmpty()) {
+                throw new Exception("Legacy and SC5 CLI options cannot both be specified");
+            }
+
+            if (options != null && !options.isEmpty()) {
+                legacyCLI = true;
+            }
 
             Run<?, ?> run = getContext().get(Run.class);
             Job<?,?> job = run.getParent();
@@ -266,10 +293,14 @@ public class SauceConnectStep extends Step {
 
             ArrayList<String> optionsArray = new ArrayList<String>();
             optionsArray.add(globalOptions);
-            optionsArray.add(options);
+            if (legacyCLI) {
+                optionsArray.add(options);
+            } else {
+                optionsArray.add(optionsSC5);
+            }
             optionsArray.removeAll(Collections.singleton("")); // remove the empty strings
 
-            String options = StringUtils.join(optionsArray, " ");
+            String combinedOptions = StringUtils.join(optionsArray, " ");
 
             HashMap<String,String> overrides = new HashMap<String,String>();
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_PORT, String.valueOf(port));
@@ -278,14 +309,12 @@ public class SauceConnectStep extends Step {
             if (useGeneratedTunnelIdentifier) {
                 final String tunnelName = SauceEnvironmentUtil.generateTunnelName(job.getName(), run.number);
                 overrides.put(SauceOnDemandBuildWrapper.TUNNEL_NAME, tunnelName);
-                options = options + " --tunnel-name " + tunnelName;
+                combinedOptions = combinedOptions + " --tunnel-name " + tunnelName;
             }
 
             SauceCredentials sauceCredentials = getContext().get(SauceCredentials.class);
-            final String restEndpoint = sauceCredentials.getRestEndpoint();
-
-            overrides.put(SauceOnDemandBuildWrapper.SAUCE_REST_ENDPOINT, restEndpoint);
-            options = options + " -x " + restEndpoint + "rest/v1";
+            final String region = sauceCredentials.getRegion();
+            combinedOptions = combinedOptions + " --region " + region;
 
             TaskListener listener = getContext().get(TaskListener.class);
             listener.getLogger().println("Starting sauce connect");
@@ -293,11 +322,12 @@ public class SauceConnectStep extends Step {
             SauceStartConnectHandler handler = new SauceStartConnectHandler(
                 sauceCredentials,
                 port,
-                options,
+                combinedOptions,
                 listener,
                 verboseLogging,
                 sauceConnectPath,
                 useLatestSauceConnect,
+                legacyCLI,
                 proxy
             );
             computer.getChannel().call(handler);
