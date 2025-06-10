@@ -1,7 +1,5 @@
 package com.saucelabs.jenkins.pipeline;
 
-import static com.saucelabs.jenkins.pipeline.SauceConnectStep.SauceConnectStepExecution.getSauceTunnelManager;
-
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
@@ -63,6 +61,10 @@ public class SauceConnectStep extends Step {
         this.sauceConnectPath = Util.fixEmptyAndTrim(sauceConnectPath);
         this.options = StringUtils.trimToEmpty(options);
         this.optionsSC5 = StringUtils.trimToEmpty(optionsSC5);
+    }
+
+    public static SauceConnectManager getSauceTunnelManager() {
+        return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
     }
 
     @Override
@@ -334,7 +336,7 @@ public class SauceConnectStep extends Step {
 
             body = getContext().newBodyInvoker()
                 .withContext(EnvironmentExpander.merge(getContext().get(EnvironmentExpander.class), new ExpanderImpl(overrides)))
-                .withCallback(new Callback(sauceCredentials, options, proxy))
+                .withCallback(new Callback(sauceCredentials, combinedOptions, proxy))
                 .withDisplayName("Sauce Connect")
                 .start();
 
@@ -347,10 +349,6 @@ public class SauceConnectStep extends Step {
                 body.cancel(cause);
             }
 
-        }
-
-        public static SauceConnectManager getSauceTunnelManager() {
-            return HudsonSauceManagerFactory.getInstance().createSauceConnectManager();
         }
 
         private static final class Callback extends BodyExecutionCallback.TailCall {
