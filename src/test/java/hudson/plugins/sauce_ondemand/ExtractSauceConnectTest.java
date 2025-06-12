@@ -1,31 +1,32 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
-import java.io.File;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
 import org.slf4j.helpers.NOPLogger;
+
+import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Ross Rowe
  */
-public class ExtractSauceConnectTest {
+class ExtractSauceConnectTest {
 
-    private SauceConnectManager manager = new SauceConnectManager();
-
-    @Before
-    public void setUp() throws Exception {
-
-    }
+    private final SauceConnectManager manager = new SauceConnectManager();
 
     @Test
-    public void linux() throws Exception {
+    void linux() throws Exception {
         File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
-        manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.LINUX_AMD64, NOPLogger.NOP_LOGGER);
+        File file = manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.LINUX_AMD64, NOPLogger.NOP_LOGGER);
+        assertTrue(FileUtils.deleteQuietly(file));
     }
 
     @Test
-    public void windows() throws Exception {
-        manager.extractZipFile(new File(System.getProperty("java.io.tmpdir")), SauceConnectManager.OperatingSystem.WINDOWS_AMD64, NOPLogger.NOP_LOGGER);
+    void windows() throws Exception {
+        File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
+        File file = manager.extractZipFile(workingDirectory, SauceConnectManager.OperatingSystem.WINDOWS_AMD64, NOPLogger.NOP_LOGGER);
+        assertTrue(FileUtils.deleteQuietly(file));
     }
 }
