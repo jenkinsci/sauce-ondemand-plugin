@@ -1,6 +1,8 @@
 package hudson.plugins.sauce_ondemand;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,8 +45,8 @@ public class TestIDDetails {
 
         TestIDDetails that = (TestIDDetails) o;
 
-        if (jobId != null ? !jobId.equals(that.jobId) : that.jobId != null) return false;
-        return jobName != null ? jobName.equals(that.jobName) : that.jobName == null;
+        if (!Objects.equals(jobId, that.jobId)) return false;
+        return Objects.equals(jobName, that.jobName);
 
     }
 

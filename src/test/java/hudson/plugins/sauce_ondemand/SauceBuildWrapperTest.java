@@ -205,8 +205,8 @@ public class SauceBuildWrapperTest {
               boolean legacyCLI) {
             assertEquals(
                 "Variables are resolved correctly",
-                options,
-                "-i 1 --region us-west"); // null reverts to default US
+                "-i 1 --region us-west",
+                options); // null reverts to default US
             return null;
           }
         };
@@ -357,7 +357,7 @@ public class SauceBuildWrapperTest {
         "Port provided to SC is the same as generated",
         holder.getInt("scProvidedPort"),
         holder.getInt("port"));
-    assertEquals("Successful Build", build.getResult(), Result.SUCCESS);
+    assertEquals("Successful Build", Result.SUCCESS, build.getResult());
   }
 
   /**

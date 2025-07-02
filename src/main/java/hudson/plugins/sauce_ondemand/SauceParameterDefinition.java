@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.saucerest.DataCenter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -67,6 +68,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
          *
          * @return label to be displayed within the list of parameter options
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Sauce Labs Browsers";

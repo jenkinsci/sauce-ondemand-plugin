@@ -315,7 +315,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
   /** Dummy builder which is run by the unit tests. */
   @SuppressFBWarnings({"SE_BAD_FIELD_INNER_CLASS", "SE_NO_SERIALVERSIONID"})
-  private class SauceBuilder extends TestBuilder implements Serializable {
+  private static class SauceBuilder extends TestBuilder implements Serializable {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)

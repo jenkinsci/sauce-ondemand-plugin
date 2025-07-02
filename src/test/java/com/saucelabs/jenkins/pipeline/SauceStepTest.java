@@ -153,10 +153,11 @@ public class SauceStepTest {
         r.jenkins.createProject(WorkflowJob.class, "SauceStepTest-sauceConnectWithoutSauceTest");
     p.setDefinition(
         new CpsFlowDefinition(
-            "node { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true) { \n"
-                + "echo 'USERNAME=' + env.SAUCE_USERNAME\n"
-                + "echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY\n"
-                + "}}",
+            """
+                node { sauceconnect(useGeneratedTunnelIdentifier: true, verboseLogging: true) {\s
+                echo 'USERNAME=' + env.SAUCE_USERNAME
+                echo 'ACCESS_KEY=' + env.SAUCE_ACCESS_KEY
+                }}""",
             true));
     WorkflowRun run = p.scheduleBuild2(0).get();
     r.assertBuildStatus(Result.FAILURE, run);

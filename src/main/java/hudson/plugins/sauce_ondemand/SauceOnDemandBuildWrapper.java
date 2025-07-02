@@ -32,6 +32,7 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
 import com.saucelabs.saucerest.model.sauceconnect.TunnelInformation;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -53,6 +54,7 @@ import hudson.util.ListBoxModel;
 import hudson.util.VariableResolver;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -166,6 +168,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
   /** Environment variable key which specifies whether Chrome should be used for Android devices. */
   private static final String SAUCE_USE_CHROME = "SAUCE_USE_CHROME";
 
+  @Serial
   private static final long serialVersionUID = 1L;
   private boolean useGeneratedTunnelIdentifier;
 
@@ -432,15 +435,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       EnvVars env;
       try {
         env = build.getEnvironment(listener);
-      } catch (IOException e) {
-        listener.getLogger().println("Error getting environment variables");
-        throw e;
-      } catch (InterruptedException e) {
+      } catch (IOException | InterruptedException e) {
         listener.getLogger().println("Error getting environment variables");
         throw e;
       }
 
-      if (canRun) {
+        if (canRun) {
         DataCenter dc = DataCenter.fromString(credentials.getRestEndpointName());
         sauceConnectStarter =
             new SauceConnectHandler(
@@ -743,7 +743,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
         // if usage stats is allowed we will fill in the custom data field in the jobs with Jenkins
         // build info for analytics
-        Map<String, String> customData = new HashMap<String, String>();
+        Map<String, String> customData = new HashMap<>();
         if (!isDisableUsageStats()) {
           listener
               .getLogger()
@@ -813,7 +813,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       throws IOException, InterruptedException {
     PluginImpl p = PluginImpl.get();
 
-    ArrayList<String> resolvedOptions = new ArrayList<String>();
+    ArrayList<String> resolvedOptions = new ArrayList<>();
     resolvedOptions.add(
         getResolvedOptions(build, listener, p != null ? p.getSauceConnectOptions() : null));
     resolvedOptions.add(getResolvedOptions(build, listener, options));
@@ -837,7 +837,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       throws IOException, InterruptedException {
     PluginImpl p = PluginImpl.get();
 
-    ArrayList<String> resolvedOptions = new ArrayList<String>();
+    ArrayList<String> resolvedOptions = new ArrayList<>();
     resolvedOptions.add(
         getResolvedOptions(build, listener, p != null ? p.getSauceConnectCLIOptions() : null));
     resolvedOptions.add(getResolvedOptions(build, listener, cliOptions));
@@ -862,7 +862,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
       return "";
     }
     VariableResolver.ByMap<String> variableResolver =
-        new VariableResolver.ByMap<String>(build.getEnvironment(listener));
+        new VariableResolver.ByMap<>(build.getEnvironment(listener));
     return Util.replaceMacro(options, variableResolver);
   }
 
@@ -894,12 +894,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             } else {
               return new GetAvailablePort().call();
             }
-          } catch (IOException e) {
-            e.printStackTrace();
-          } catch (InterruptedException e) {
+          } catch (IOException | InterruptedException e) {
             e.printStackTrace();
           }
-          return 0;
+            return 0;
         }
         return 4445;
       } else {
@@ -1063,9 +1061,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                   this.credentials.getRestEndpoint(),
                   project == null ? "Unknown" : project.getDisplayName());
           return true;
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (IOException e) {
+        } catch (InterruptedException | IOException e) {
           e.printStackTrace();
         }
       }
@@ -1078,9 +1074,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 PluginImpl.get().getRestEndpoint(), // maybe use default US instead
                 "Global");
         return true;
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
+      } catch (InterruptedException | IOException e) {
         e.printStackTrace();
       }
     }
@@ -1098,6 +1092,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
   }
 
   public static class GetAvailablePort extends MasterToSlaveCallable<Integer, RuntimeException> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public Integer call() {
@@ -1270,10 +1265,9 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
             } else {
               listener
                   .getLogger()
-                  .println(
-                      String.format(
-                          "Error launching Sauce Connect, trying %s time(s) more.",
-                          (maxRetries - retryCount)));
+                  .printf(
+                      "Error launching Sauce Connect, trying %s time(s) more.%n",
+                      (maxRetries - retryCount));
             }
             try {
               Thread.sleep((long) 1000 * retryWaitTime);
@@ -1305,6 +1299,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     /**
      * @return text to be displayed within Jenkins job configuration
      */
+    @NonNull
     @Override
     public String getDisplayName() {
       return "Sauce Labs Support";
@@ -1343,14 +1338,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
      */
     public Map<String, List<Browser>> getWebDriverMap() {
       try {
-        Map<String, List<Browser>> map = new HashMap<String, List<Browser>>();
+        Map<String, List<Browser>> map = new HashMap<>();
         for (Browser browser : PluginImpl.BROWSER_FACTORY.getWebDriverBrowsers()) {
-          List<Browser> browsers = map.get(browser.getOs());
-          if (browsers == null) {
-            browsers = new ArrayList<Browser>();
-            map.put(browser.getOs(), browsers);
-          }
-          browsers.add(browser);
+            List<Browser> browsers = map.computeIfAbsent(browser.getOs(), k -> new ArrayList<>());
+            browsers.add(browser);
         }
         return map;
       } catch (IOException e) {
@@ -1386,7 +1377,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
   @Extension
   public static final class ItemListenerImpl extends ItemListener {
     public void onLoaded() {
-      Jenkins instance = Jenkins.getInstance();
+      Jenkins instance = Jenkins.getInstanceOrNull();
       if (instance == null) {
         return;
       }

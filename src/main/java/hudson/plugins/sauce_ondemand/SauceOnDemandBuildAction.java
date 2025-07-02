@@ -20,6 +20,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +84,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
   public static final Pattern SESSION_ID_PATTERN =
       Pattern.compile("SauceOnDemandSessionID=([0-9a-fA-F]+)(?:.job-name=(.*))?");
 
+  @Serial
   private static final long serialVersionUID = 1L;
 
   /** Logger instance. */
@@ -129,7 +131,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
     int maxRetries = 1;
     String jsonResponse = "";
 
-    while (retries < maxRetries && "".equals(jsonResponse)) {
+    while (retries < maxRetries && jsonResponse.isEmpty()) {
       try {
         JenkinsBuildInformation buildInformation =
             retrieveBuildInformationFromSauce(sauceREST, buildNumber);
@@ -242,7 +244,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
   }
 
   protected static List<String> getJobIdsForBuild(JenkinsSauceREST sauceREST, String buildId) {
-    List<String> jobIds = new ArrayList<String>();
+    List<String> jobIds = new ArrayList<>();
 
     LookupJobsParameters params = new LookupJobsParameters.Builder().build();
 
@@ -269,7 +271,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
   protected static Map<String, JenkinsJobInformation> getJobsInformation(
       JenkinsSauceREST sauceREST, SauceCredentials credentials, Iterable<String> jobIds)
       throws JSONException, IOException {
-    Map<String, JenkinsJobInformation> jobs = new HashMap<String, JenkinsJobInformation>();
+    Map<String, JenkinsJobInformation> jobs = new HashMap<>();
     JobsEndpoint jobsEndpoint = sauceREST.getJobsEndpoint();
 
     List<List<String>> slicedIds = SauceOnDemandBuildAction.slice(jobIds, 20);
@@ -289,11 +291,11 @@ public class SauceOnDemandBuildAction extends AbstractAction
   }
 
   protected static List<List<String>> slice(Iterable<String> strings, int sliceSize) {
-    List<List<String>> sliced = new ArrayList<List<String>>();
+    List<List<String>> sliced = new ArrayList<>();
     List<String> current = null;
     for (String s : strings) {
       if (current == null || current.size() >= sliceSize) {
-        current = new ArrayList<String>();
+        current = new ArrayList<>();
         sliced.add(current);
       }
       current.add(s);
@@ -350,7 +352,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
   public List<JenkinsJobInformation> getJobs(boolean updateJobs) {
     if (updateJobs || jobInformation == null) {
       try {
-        jobInformation = new ArrayList<JenkinsJobInformation>();
+        jobInformation = new ArrayList<>();
         jobInformation.addAll(
             retrieveJobIdsFromSauce(getSauceREST(), build, getCredentials()).values());
       } catch (JSONException | IOException e) {
@@ -409,7 +411,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
 
   public Map<String, String> getAnalytics() {
     logger.fine("Getting Sauce analytics");
-    HashMap<String, String> analytics = new HashMap<String, String>();
+    HashMap<String, String> analytics = new HashMap<>();
 
     JenkinsBuildInformation buildInformation = getSauceBuild(true);
     List<JenkinsJobInformation> allJobs = getJobs();
@@ -468,11 +470,11 @@ public class SauceOnDemandBuildAction extends AbstractAction
     this.jobInformation = jobs;
   }
 
+  @Serial
   protected Object readResolve() {
     if (credentialsId == null) {
-      if (build.getParent() instanceof BuildableItemWithBuildWrappers) {
-        BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) build.getParent();
-        SauceOnDemandBuildWrapper bw =
+      if (build.getParent() instanceof BuildableItemWithBuildWrappers p) {
+          SauceOnDemandBuildWrapper bw =
             p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
         this.credentialsId = bw.getCredentialId();
       }

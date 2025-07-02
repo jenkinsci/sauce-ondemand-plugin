@@ -3,11 +3,13 @@ package com.saucelabs.jenkins.pipeline;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import java.io.IOException;
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
 
 final class ExpanderImpl extends EnvironmentExpander {
+    @Serial
     private static final long serialVersionUID = 1;
     private final Map<String, String> overrides;
 

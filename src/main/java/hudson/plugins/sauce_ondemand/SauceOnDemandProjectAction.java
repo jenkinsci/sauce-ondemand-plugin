@@ -18,6 +18,7 @@ import hudson.security.Permission;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
@@ -117,9 +118,8 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         Run<?,?> build = job.getLastBuild();
 
         if (build != null) {
-            if (build instanceof MatrixBuild) {
-                List<SauceOnDemandBuildAction> buildActions = new ArrayList<SauceOnDemandBuildAction>();
-                MatrixBuild matrixBuild = (MatrixBuild) build;
+            if (build instanceof MatrixBuild matrixBuild) {
+                List<SauceOnDemandBuildAction> buildActions = new ArrayList<>();
                 for (MatrixRun matrixRun : matrixBuild.getRuns()) {
                     SauceOnDemandBuildAction buildAction = matrixRun.getAction(SauceOnDemandBuildAction.class);
                     if (buildAction != null) {
@@ -130,7 +130,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
             } else {
                 SauceOnDemandBuildAction buildAction = build.getAction(SauceOnDemandBuildAction.class);
                 if (buildAction == null) {
-                    logger.fine("No Sauce Build Action found for " + build.toString() + " adding a new one");
+                    logger.fine("No Sauce Build Action found for " + build + " adding a new one");
                     return Collections.emptyList();
                 }
                 return Collections.singletonList(buildAction);
@@ -150,7 +150,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         logger.fine("Getting Sauce jobs");
         List<SauceOnDemandBuildAction> sauceOnDemandBuildAction = getSauceBuildActions();
         if (sauceOnDemandBuildAction != null) {
-            List<JenkinsJobInformation> allJobs = new ArrayList<JenkinsJobInformation>();
+            List<JenkinsJobInformation> allJobs = new ArrayList<>();
             for (SauceOnDemandBuildAction action : sauceOnDemandBuildAction) {
                 allJobs.addAll(action.getJobs(true));
             }
@@ -205,7 +205,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         zipOutputStream.setLevel(ZipOutputStream.STORED);
 
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_kk-mm");
-        BuildSupportZipUtils.addFileToZipStream(zipOutputStream, "".getBytes("UTF-8"), "generated_" + df.format(Calendar.getInstance().getTime()));
+        BuildSupportZipUtils.addFileToZipStream(zipOutputStream, "".getBytes(StandardCharsets.UTF_8), "generated_" + df.format(Calendar.getInstance().getTime()));
         BuildSupportZipUtils.addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(build.getLogFile()), "build.log");
         /* This doesn't make a huge amount of sense for pipeline builds
          * Really need to re-think whats useful here
@@ -240,7 +240,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
                     VirtualChannel channel = builtOn.getChannel();
                     if (channel == null ) { return; }
                     FilePath fp = new FilePath(channel, sauceConnectLogFile.getPath());
-                    addFileToZipStream(zipOutputStream, fp.readToString().getBytes("UTF-8"), "sc.log");
+                    addFileToZipStream(zipOutputStream, fp.readToString().getBytes(StandardCharsets.UTF_8), "sc.log");
                 } else if (sauceConnectLogFile != null) {
                     addFileToZipStream(zipOutputStream, FileUtils.readFileToByteArray(sauceConnectLogFile), "sc.log");
                 }
@@ -249,30 +249,30 @@ public class SauceOnDemandProjectAction extends AbstractAction {
 
         public static void buildGlobalConfigTxt(ZipOutputStream zipOutputStream) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
             StringBuilder pluginImplSB = new StringBuilder();
-            Iterator bpluginImplIterator = BeanUtils.describe(PluginImpl.get()).entrySet().iterator();
-            while (bpluginImplIterator.hasNext())
-            {
-                Map.Entry entry = (Map.Entry) bpluginImplIterator.next();
-                if (entry.getKey().equals("class") || entry.getKey().equals("descriptor")) { continue; }
-                pluginImplSB.append(entry.getKey() + "=" + entry.getValue() + "\r\n");
+            for (Map.Entry<String, String> stringStringEntry : BeanUtils.describe(PluginImpl.get()).entrySet()) {
+                Map.Entry entry = stringStringEntry;
+                if (entry.getKey().equals("class") || entry.getKey().equals("descriptor")) {
+                    continue;
+                }
+                pluginImplSB.append(entry.getKey()).append("=").append(entry.getValue()).append("\r\n");
             }
-            pluginImplSB.append("version=" + PluginImpl.get().getWrapper().getVersion() + "\r\n");
-            pluginImplSB.append("jenkinsVersion=" + Jenkins.VERSION + "\r\n");
+            pluginImplSB.append("version=").append(PluginImpl.get().getWrapper().getVersion()).append("\r\n");
+            pluginImplSB.append("jenkinsVersion=").append(Jenkins.VERSION).append("\r\n");
 
 
-            addFileToZipStream(zipOutputStream, pluginImplSB.toString().getBytes("UTF-8"), "global_sauce_config.txt");
+            addFileToZipStream(zipOutputStream, pluginImplSB.toString().getBytes(StandardCharsets.UTF_8), "global_sauce_config.txt");
         }
 
         public static void buildWrapperConfigTxt(ZipOutputStream zipOutputStream, SauceOnDemandBuildWrapper sauceBuildWrapper) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
             StringBuilder buildWrapperSB = new StringBuilder();
-            Iterator buildWrapperIterator = BeanUtils.describe(sauceBuildWrapper).entrySet().iterator();
-            while (buildWrapperIterator.hasNext())
-            {
-                Map.Entry entry = (Map.Entry) buildWrapperIterator.next();
-                if (entry.getKey().equals("class") || entry.getKey().equals("descriptor")) { continue; }
-                buildWrapperSB.append(entry.getKey() + "=" + entry.getValue() + "\r\n");
+            for (Map.Entry<String, String> stringStringEntry : BeanUtils.describe(sauceBuildWrapper).entrySet()) {
+                Map.Entry entry = stringStringEntry;
+                if (entry.getKey().equals("class") || entry.getKey().equals("descriptor")) {
+                    continue;
+                }
+                buildWrapperSB.append(entry.getKey()).append("=").append(entry.getValue()).append("\r\n");
             }
-            addFileToZipStream(zipOutputStream, buildWrapperSB.toString().getBytes("UTF-8"), "build_wrapper_config.txt");
+            addFileToZipStream(zipOutputStream, buildWrapperSB.toString().getBytes(StandardCharsets.UTF_8), "build_wrapper_config.txt");
         }
 
         private static void addFileToZipStream(ZipOutputStream zipOutputStream, byte[] bytes, String filename) throws IOException {

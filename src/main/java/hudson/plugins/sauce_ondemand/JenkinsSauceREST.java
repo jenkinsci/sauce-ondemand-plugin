@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.HttpClientConfig;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -88,11 +89,10 @@ public class JenkinsSauceREST extends SauceREST {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof JenkinsSauceREST)) {
+    if (!(obj instanceof JenkinsSauceREST sauceobj)) {
       return super.equals(obj);
     }
-    JenkinsSauceREST sauceobj = (JenkinsSauceREST) obj;
-    return Objects.equals(sauceobj.username, this.username)
+      return Objects.equals(sauceobj.username, this.username)
         && Objects.equals(sauceobj.accessKey, this.accessKey)
         && Objects.equals(sauceobj.server, this.server);
   }
@@ -128,8 +128,9 @@ class UserAgentInterceptor implements Interceptor {
     this.userAgent = userAgent;
   }
 
+  @NonNull
   @Override
-  public Response intercept(Chain chain) throws IOException {
+  public Response intercept(@NonNull Chain chain) throws IOException {
     Request originalRequest = chain.request();
     Request requestWithUserAgent =
         originalRequest.newBuilder().header("User-Agent", userAgent).build();
