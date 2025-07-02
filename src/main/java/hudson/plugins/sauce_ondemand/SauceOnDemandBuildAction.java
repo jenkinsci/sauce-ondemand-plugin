@@ -33,7 +33,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import jenkins.model.Jenkins;
 import jenkins.model.RunAction2;
@@ -41,8 +41,8 @@ import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.Timer;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -455,7 +455,7 @@ public class SauceOnDemandBuildAction extends AbstractAction
    * @throws IOException Unable to load index.jelly template
    */
   @SuppressWarnings("unused") // used by stapler
-  public void doJobReport(StaplerRequest req, StaplerResponse rsp) throws IOException {
+  public void doJobReport(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
     SauceTestResultsById byId = getById(req.getParameter("jobId"));
     try {
       req.getView(byId, "index.jelly").forward(req, rsp);

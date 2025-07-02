@@ -40,6 +40,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+import org.kohsuke.stapler.StaplerRequest2;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 @RunWith(Parameterized.class)
@@ -153,7 +154,7 @@ public class ParameterizedSauceBuildWrapperTest {
     assertNotNull(plugin);
     Plugin p2 = plugin.getPlugin();
     assertNotNull(p2);
-    p2.configure(null, pluginConfig);
+    p2.configure((StaplerRequest2) null, pluginConfig);
   }
 
   @After

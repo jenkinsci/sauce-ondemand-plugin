@@ -22,14 +22,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * Backing logic for the Sauce UI component displayed on the Jenkins project page.
@@ -185,7 +185,7 @@ public class SauceOnDemandProjectAction extends AbstractAction {
         return sauceBuildAction.getCredentials();
     }
 
-    public void doGenerateSupportZip(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
+    public void doGenerateSupportZip(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
         AccessControlled ac = job;
         Permission p = Project.CONFIGURE;
         ac.checkPermission(p);
