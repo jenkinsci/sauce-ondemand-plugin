@@ -48,7 +48,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -96,7 +95,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
    */
   public static LinkedList<TestIDDetails> processSessionIds(
       Boolean isStdout, String... logStrings) {
-    LinkedList<TestIDDetails> onDemandTests = new LinkedList<TestIDDetails>();
+    LinkedList<TestIDDetails> onDemandTests = new LinkedList<>();
 
     for (String logString : logStrings) {
       if (logString == null) continue;
@@ -225,29 +224,19 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
       logger.severe(e.getMessage());
     }
 
-    LinkedList<TestIDDetails> testIds = new LinkedList<TestIDDetails>();
+    LinkedList<TestIDDetails> testIds = new LinkedList<>();
 
-    BufferedReader in = null;
-    try {
-      in = new BufferedReader(new InputStreamReader(build.getLogInputStream()));
-      String line;
-      logger.log(Level.FINE, "Parsing Sauce Session ids in stdout");
+      try (BufferedReader in = new BufferedReader(new InputStreamReader(build.getLogInputStream()))) {
+          String line;
+          logger.log(Level.FINE, "Parsing Sauce Session ids in stdout");
 
-      while ((line = in.readLine()) != null) {
-        testIds.addAll(processSessionIds(true, line));
+          while ((line = in.readLine()) != null) {
+              testIds.addAll(processSessionIds(true, line));
+          }
+      } catch (IOException e) {
+          logger.finer("Exception while adding testIds ");
+          logger.severe(e.getMessage());
       }
-    } catch (IOException e) {
-      logger.finer("Exception while adding testIds ");
-      logger.severe(e.getMessage());
-    } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    }
 
     // try the stdout for the tests, but if build was aborted testResult will be null
     if (testResult != null) {
@@ -304,7 +293,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
         Boolean buildResult = hasTestPassed(testResult, jobInformation);
         if (buildResult != null) {
           // set the status to passed if the test was successful
-          jobInformation.setStatus(buildResult.booleanValue() ? "Passed" : "Failed");
+          jobInformation.setStatus(buildResult ? "Passed" : "Failed");
           updates.put("passed", buildResult);
           builder.setPassed(buildResult);
         }
@@ -330,17 +319,15 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
       if (!isDisableUsageStats()
           && testResult != null
           && "Failed".equals(jobInformation.getStatus())) {
-        Map<String, String> customData = new HashMap<String, String>();
+        Map<String, String> customData = new HashMap<>();
 
         // preserve any existing custom data
         try {
           Job job = jobs.getJobDetails(details.getJobId());
-          if (job.customData.size() > 0) {
-            Iterator<String> customDataKeys = job.customData.keySet().iterator();
-            while (customDataKeys.hasNext()) {
-              String customDataKey = customDataKeys.next();
-              customData.put(customDataKey, job.customData.get(customDataKey));
-            }
+          if (!job.customData.isEmpty()) {
+              for (String customDataKey : job.customData.keySet()) {
+                  customData.put(customDataKey, job.customData.get(customDataKey));
+              }
           }
         } catch (IOException e) {
           logger.warning("Unable to get job details for " + details.getJobId());
@@ -489,6 +476,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
     /**
      * @return the label to be displayed within the Jenkins job configuration.
      */
+    @NonNull
     @Override
     public String getDisplayName() {
       return "Embed Sauce Labs reports";

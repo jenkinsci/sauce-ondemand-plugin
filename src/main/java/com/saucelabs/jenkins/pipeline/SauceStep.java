@@ -14,6 +14,8 @@ import hudson.plugins.sauce_ondemand.SauceOnDemandBuildAction;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
+
+import java.io.Serial;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
@@ -47,6 +49,7 @@ public class SauceStep extends Step {
     }
 
     public static class Execution extends StepExecution {
+        @Serial
         private static final long serialVersionUID = 1;
 
         private final String credentialsId;
@@ -73,7 +76,7 @@ public class SauceStep extends Step {
             CredentialsProvider.track(run, credentials);
 
 
-            HashMap<String,String> overrides = new HashMap<String,String>();
+            HashMap<String,String> overrides = new HashMap<>();
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_USERNAME, credentials.getUsername());
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_ACCESS_KEY, credentials.getPassword().getPlainText());
             overrides.put(SauceOnDemandBuildWrapper.SAUCE_REST_ENDPOINT, credentials.getRestEndpoint());
@@ -112,7 +115,9 @@ public class SauceStep extends Step {
             return Collections.singleton(Run.class);
         }
 
-        @Override public String getDisplayName() {
+        @NonNull
+        @Override
+        public String getDisplayName() {
             return "Sauce";
         }
 
@@ -126,7 +131,7 @@ public class SauceStep extends Step {
 
         @Override
         public Set<Class<?>> getProvidedContext() {
-            return Collections.<Class<?>>singleton(SauceCredentials.class);
+            return Collections.singleton(SauceCredentials.class);
         }
 
         @SuppressWarnings("unused")

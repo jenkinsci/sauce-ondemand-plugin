@@ -1,6 +1,6 @@
 package hudson.plugins.sauce_ondemand;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -14,7 +14,7 @@ public class SauceOnDemandReportPublisherTest {
     public void testProcessSessionIds_none() throws Exception {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
 
-        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, new String[]{});
+        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null);
         assertTrue(details.isEmpty());
     }
 
@@ -23,9 +23,7 @@ public class SauceOnDemandReportPublisherTest {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         List<JenkinsJobInformation> jobs;
 
-        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, new String[]{
-            "SauceOnDemandSessionID=abc123 job-name=gavin"
-        });
+        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, "SauceOnDemandSessionID=abc123 job-name=gavin");
         assertFalse(details.isEmpty());
         assertEquals(1, details.size());
         assertEquals("abc123", details.get(0).getJobId());
@@ -36,9 +34,7 @@ public class SauceOnDemandReportPublisherTest {
         SauceOnDemandBuildAction sauceOnDemandBuildAction;
         List<JenkinsJobInformation> jobs;
 
-        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, new String[]{
-            "SauceOnDemandSessionID=abc123 job-name=gavin\n[firefox 32 OS X 10.10 #1-5] SauceOnDemandSessionID=941b498c5ad544dba92fe73fabfa9eb6 job-name=Insert Job Name Here"
-        });
+        LinkedList<TestIDDetails> details = SauceOnDemandReportPublisher.processSessionIds(null, "SauceOnDemandSessionID=abc123 job-name=gavin\n[firefox 32 OS X 10.10 #1-5] SauceOnDemandSessionID=941b498c5ad544dba92fe73fabfa9eb6 job-name=Insert Job Name Here");
         assertFalse(details.isEmpty());
         assertEquals(2, details.size());
         assertEquals("abc123", details.get(0).getJobId());

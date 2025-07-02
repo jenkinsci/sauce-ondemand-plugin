@@ -5,9 +5,9 @@ import hudson.model.Action;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import java.io.IOException;
 import java.util.List;
-import javax.servlet.ServletException;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import jakarta.servlet.ServletException;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * @author Ross Rowe
@@ -45,7 +45,7 @@ public abstract class AbstractAction implements Action {
      * @param rsp Standard Response Object
      * @throws IOException Unable to load index.jelly template
      */
-    public void doJobReport(StaplerRequest req, StaplerResponse rsp)
+    public void doJobReport(StaplerRequest2 req, StaplerResponse2 rsp)
         throws IOException {
 
         SauceTestResultsById byId = new SauceTestResultsById(

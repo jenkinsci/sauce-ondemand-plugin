@@ -72,7 +72,7 @@ public class JenkinsBuildInformation extends BuildInformation {
         long minutes = duration.toMinutes() % 60;
         long seconds = duration.getSeconds() % 60;
 
-        StringBuffer prettyDuration = new StringBuffer();
+        StringBuilder prettyDuration = new StringBuilder();
         if (hours>0) {
             prettyDuration.append(hours).append("hr ");
         }

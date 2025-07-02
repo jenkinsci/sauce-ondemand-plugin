@@ -3,6 +3,7 @@ package hudson.plugins.sauce_ondemand;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.saucerest.DataCenter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -16,7 +17,7 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Allows users to select Sauce browsers as parameters for a Jenkins build.
@@ -38,14 +39,14 @@ public class SauceParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest request, JSONObject jo) {
+    public ParameterValue createValue(StaplerRequest2 request, JSONObject jo) {
 
         String selectedBrowsers = jo.getJSONArray("webDriverBrowsers").toString();
         return new SauceParameterValue(getName(), selectedBrowsers);
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest request) {
+    public ParameterValue createValue(StaplerRequest2 request) {
         throw new RuntimeException("Not supported");
     }
 
@@ -67,6 +68,7 @@ public class SauceParameterDefinition extends ParameterDefinition {
          *
          * @return label to be displayed within the list of parameter options
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Sauce Labs Browsers";

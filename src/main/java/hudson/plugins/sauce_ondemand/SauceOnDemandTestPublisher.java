@@ -36,9 +36,8 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildStep {
   private DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers =
       new DescribableList<>(Saveable.NOOP);
-  ;
 
-  @DataBoundConstructor
+    @DataBoundConstructor
   public SauceOnDemandTestPublisher() {
     super();
   }
@@ -144,7 +143,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
       throws IOException, InterruptedException {
     TestResultAction report = build.getAction(TestResultAction.class);
     if (report != null) {
-      List<TestResultAction.Data> data = new ArrayList<TestResultAction.Data>();
+      List<TestResultAction.Data> data = new ArrayList<>();
       if (testDataPublishers != null) {
         for (TestDataPublisher tdp : testDataPublishers) {
           TestResultAction.Data d = tdp.getTestData(build, launcher, listener, report.getResult());
@@ -187,7 +186,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
 
   public List<TestDataPublisher> getTestDataPublishers() {
     return testDataPublishers == null
-        ? Collections.<TestDataPublisher>emptyList()
+        ? Collections.emptyList()
         : testDataPublishers;
   }
 
@@ -203,7 +202,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
   @DataBoundSetter
   public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
     this.testDataPublishers =
-        new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        new DescribableList<>(Saveable.NOOP);
     this.testDataPublishers.addAll(testDataPublishers);
   }
 
@@ -211,6 +210,7 @@ public class SauceOnDemandTestPublisher extends Recorder implements SimpleBuildS
   @Symbol("saucePublisher")
   public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+    @NonNull
     @Override
     public String getDisplayName() {
       return "Run Sauce Labs Test Publisher";

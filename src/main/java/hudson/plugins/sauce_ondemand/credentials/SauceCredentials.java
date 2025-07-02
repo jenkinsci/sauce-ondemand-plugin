@@ -86,14 +86,13 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     public static SauceCredentials getCredentials(AbstractProject project) {
         if (project == null) { return null; }
 
-        if (!(project instanceof BuildableItemWithBuildWrappers)) {
+        if (!(project instanceof BuildableItemWithBuildWrappers p)) {
             return getCredentials((AbstractProject) project.getParent());
         }
-        BuildableItemWithBuildWrappers p = (BuildableItemWithBuildWrappers) project;
         SauceOnDemandBuildWrapper bw = p.getBuildWrappersList().get(SauceOnDemandBuildWrapper.class);
         if (bw == null) { return null; }
         String credentialsId = bw.getCredentialId();
-        return getCredentialsById((Item) p, credentialsId);
+        return getCredentialsById(p, credentialsId);
     }
 
     public static SauceCredentials getCredentials(AbstractBuild build) {
@@ -144,15 +143,11 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             return "US_WEST";
         }
 
-        switch (this.restEndpoint) {
-            case "https://eu-central-1.saucelabs.com/":
-                return "EU_CENTRAL";
-            case "https://us-east-1.saucelabs.com/":
-                return "US_EAST";
-            default:
-            case "https://saucelabs.com/":
-                return "US_WEST";
-        }
+        return switch (this.restEndpoint) {
+            case "https://eu-central-1.saucelabs.com/" -> "EU_CENTRAL";
+            case "https://us-east-1.saucelabs.com/" -> "US_EAST";
+            default -> "US_WEST";
+        };
     }
 
     @NonNull
@@ -161,13 +156,10 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             return "us-west";
         }
 
-        switch (this.restEndpoint) {
-            case "https://eu-central-1.saucelabs.com/":
-                return "eu-central";
-            default:
-            case "https://saucelabs.com/":
-                return "us-west";
-        }
+        return switch (this.restEndpoint) {
+            case "https://eu-central-1.saucelabs.com/" -> "eu-central";
+            default -> "us-west";
+        };
     }
 
     @NonNull
@@ -196,6 +188,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     @Extension
     public static class DescriptorImpl extends CredentialsDescriptor
     {
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Sauce Labs";
@@ -213,7 +206,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             AccountsEndpoint users = rest.getAccountsEndpoint();
             // If unauthorized getUser returns an empty string.
             try {
-                if (users.getUser("me").username.equals("")) {
+                if (users.getUser("me").username.isEmpty()) {
                     return FormValidation.error("Bad username or Access key");
                 }
             } catch (IOException|com.saucelabs.saucerest.SauceException.NotAuthorized e) {
@@ -259,9 +252,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             final Map<Domain, List<Credentials>> credentialsMap = credentialsProvider.getDomainCredentialsMap();
 
             final Domain domain = Domain.global();
-            if (credentialsMap.get(domain) == null) {
-                credentialsMap.put(domain, Collections.EMPTY_LIST);
-            }
+            credentialsMap.putIfAbsent(domain, Collections.EMPTY_LIST);
             credentialsMap.get(domain).add(credentialsToCreate);
 
             credentialsProvider.setDomainCredentialsMap(credentialsMap);
@@ -276,26 +267,26 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public static List<SauceCredentials> all(ItemGroup context) {
-        return CredentialsProvider.lookupCredentials(
+        return CredentialsProvider.lookupCredentialsInItemGroup(
             SauceCredentials.class,
             context,
-            ACL.SYSTEM,
-            SauceCredentials.DOMAIN_REQUIREMENT
+            ACL.SYSTEM2,
+            List.of(SauceCredentials.DOMAIN_REQUIREMENT)
         );
     }
 
     public static List<SauceCredentials> all(Item context) {
-        return CredentialsProvider.lookupCredentials(
+        return CredentialsProvider.lookupCredentialsInItem(
             SauceCredentials.class,
             context,
-            ACL.SYSTEM,
-            SauceCredentials.DOMAIN_REQUIREMENT
+            ACL.SYSTEM2,
+            List.of(SauceCredentials.DOMAIN_REQUIREMENT)
         );
     }
 
     public static SauceCredentials getCredentialsById(Item context, String id) {
         return CredentialsMatchers.firstOrNull(
-            SauceCredentials.all((Item) context),
+            SauceCredentials.all(context),
             CredentialsMatchers.withId(id)
         );
     }
@@ -336,6 +327,7 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
 
         @Extension
         public static class DescriptorImpl extends Descriptor<ShortLivedConfig> {
+            @NonNull
             @Override
             public String getDisplayName() { return ""; }
         }

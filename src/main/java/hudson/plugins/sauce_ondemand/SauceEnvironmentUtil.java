@@ -82,7 +82,7 @@ public final class SauceEnvironmentUtil {
         JSONObject config = new JSONObject();
         try {
             config.put("os", browserInstance.getOs());
-            config.put("platform", browserInstance.getPlatform().toString());
+            config.put("platform", browserInstance.getPlatform());
             config.put("browser", browserInstance.getBrowserName());
             config.put("browser-version", browserInstance.getVersion());
             config.put("long-name", browserInstance.getLongName());
@@ -202,7 +202,7 @@ public final class SauceEnvironmentUtil {
             logger.fine("Project is not a BuildableItemWithBuildWrappers instance " + project.toString());
         }
         if (buildWrapper == null) {
-            logger.fine("Could not find SauceOnDemandBuildWrapper on project " + project.toString());
+            logger.fine("Could not find SauceOnDemandBuildWrapper on project " + project);
         }
         return buildWrapper;
     }
@@ -214,7 +214,7 @@ public final class SauceEnvironmentUtil {
      */
     @NonNull
     public static String getBuildName(Run<?, ?> build) {
-        while (build != null && build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
+        while (build instanceof MavenBuild && ((MavenBuild) build).getParentBuild() != null) {
             build = ((MavenBuild) build).getParentBuild();
         }
         if (build == null) { return ""; }
