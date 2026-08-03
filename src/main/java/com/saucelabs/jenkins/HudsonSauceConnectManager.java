@@ -1,7 +1,7 @@
 package com.saucelabs.jenkins;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Ross Rowe
