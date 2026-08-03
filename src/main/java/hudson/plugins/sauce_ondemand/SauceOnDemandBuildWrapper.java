@@ -68,7 +68,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.json.JSONException;
