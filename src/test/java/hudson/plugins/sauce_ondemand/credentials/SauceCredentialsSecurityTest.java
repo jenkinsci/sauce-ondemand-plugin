@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.sun.net.httpserver.HttpServer;
@@ -17,6 +18,7 @@ import hudson.plugins.sauce_ondemand.PluginImpl;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -36,6 +38,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.MockFolder;
 
 /**
  * Regression tests for SECURITY-3770 / CVE-2026-70445.
@@ -64,6 +67,18 @@ public class SauceCredentialsSecurityTest {
     private HttpServer fakeSauce;
     private final AtomicInteger outboundRequests = new AtomicInteger();
 
+    /** What the stand-in Sauce Labs accounts API answers. 401 is what an invalid key looks like. */
+    private volatile int sauceStatus = 401;
+    private volatile String sauceBody = "{\"message\":\"Unauthorized\"}";
+
+    private SauceCredentials.DescriptorImpl descriptor() {
+        return j.jenkins.getDescriptorByType(SauceCredentials.DescriptorImpl.class);
+    }
+
+    private static ACLContext as(String user) {
+        return ACL.as2(User.getById(user, true).impersonate2());
+    }
+
     @Before
     public void setUp() throws Exception {
         freestyle = j.createFreeStyleProject("freestyle");
@@ -74,7 +89,9 @@ public class SauceCredentialsSecurityTest {
             .grant(Jenkins.ADMINISTER).everywhere().to("admin")
             .grant(Jenkins.READ, Item.READ).everywhere().to("reader")
             .grant(Jenkins.READ).everywhere().to("configurer")
-            .grant(Item.READ, Item.CONFIGURE).onItems(freestyle, pipeline).to("configurer"));
+            .grant(Item.READ, Item.CONFIGURE).onItems(freestyle, pipeline).to("configurer")
+            .grant(Jenkins.READ).everywhere().to("user-of-credentials")
+            .grant(Item.READ, CredentialsProvider.USE_ITEM).onItems(freestyle).to("user-of-credentials"));
 
         globalId = SauceCredentials.migrateToCredentials(GLOBAL_USER, "fakekey", null, "SauceCredentialsSecurityTest");
         SystemCredentialsProvider.getInstance().getCredentials().add(new SauceCredentials(
@@ -85,9 +102,19 @@ public class SauceCredentialsSecurityTest {
         // maps to SauceException.NotAuthorized (other status codes are retried or turned into RuntimeExceptions).
         fakeSauce = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         fakeSauce.createContext("/", exchange -> {
+            // The plugin asks for supported browsers from a static initialiser while it loads. That call
+            // must succeed or the whole plugin fails to load, so it is answered separately and not counted.
+            if (exchange.getRequestURI().getPath().contains("/info/platforms")) {
+                byte[] platforms = "[]".getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(200, platforms.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(platforms);
+                }
+                return;
+            }
             outboundRequests.incrementAndGet();
-            byte[] body = "{}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(401, body.length);
+            byte[] body = sauceBody.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(sauceStatus, body.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(body);
             }
@@ -243,5 +270,102 @@ public class SauceCredentialsSecurityTest {
         String body = postCheckApiKey("admin");
         assertThat(body, containsString("Bad username or Access key"));
         assertEquals(1, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeyOnAnItemRequiresConfigurePermission() throws Exception {
+        SauceCredentials.DescriptorImpl d = descriptor();
+
+        try (ACLContext ignored = as("reader")) {
+            assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(freestyle, "a-key", "a-user", null).kind);
+        }
+        assertEquals("a user who cannot configure the job gets no verdict and no outbound call",
+                0, outboundRequests.get());
+
+        try (ACLContext ignored = as("configurer")) {
+            FormValidation v = d.doCheckApiKey(freestyle, "a-key", "a-user", null);
+            assertEquals(FormValidation.Kind.ERROR, v.kind);
+        }
+        assertEquals("a user who can configure the job does get a verdict", 1, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeySkipsBlankInput() throws Exception {
+        SauceCredentials.DescriptorImpl d = descriptor();
+        try (ACLContext ignored = as("admin")) {
+            assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(null, "a-key", "   ", null).kind);
+            assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(null, "", "a-user", null).kind);
+            assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(null, null, null, null).kind);
+        }
+        assertEquals("blank input must not reach Sauce Labs", 0, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeyRejectsAnUnknownDataCenter() throws Exception {
+        try (ACLContext ignored = as("admin")) {
+            FormValidation v = descriptor().doCheckApiKey(null, "a-key", "a-user", "NO_SUCH_DATA_CENTER");
+            assertEquals(FormValidation.Kind.ERROR, v.kind);
+            assertThat(v.getMessage(), containsString("Unknown data center"));
+        }
+        assertEquals("an unknown data center must not reach Sauce Labs", 0, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeyAcceptsAnExplicitDataCenter() throws Exception {
+        try (ACLContext ignored = as("admin")) {
+            // exercises the non-null side of the data centre default
+            assertEquals(FormValidation.Kind.ERROR,
+                    descriptor().doCheckApiKey(null, "a-key", "a-user", "US_WEST").kind);
+        }
+        assertEquals(1, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeyReportsBadCredentialsWhenSauceReturnsAnEmptyUsername() throws Exception {
+        sauceStatus = 200;
+        sauceBody = "{\"username\":\"\"}";
+        try (ACLContext ignored = as("admin")) {
+            FormValidation v = descriptor().doCheckApiKey(null, "a-key", "a-user", null);
+            assertEquals(FormValidation.Kind.ERROR, v.kind);
+            assertThat(v.getMessage(), containsString("Bad username or Access key"));
+        }
+        assertEquals(1, outboundRequests.get());
+    }
+
+    @Test
+    public void checkApiKeyAcceptsCredentialsSauceRecognises() throws Exception {
+        sauceStatus = 200;
+        sauceBody = "{\"username\":\"a-user\"}";
+        try (ACLContext ignored = as("admin")) {
+            assertEquals(FormValidation.Kind.OK, descriptor().doCheckApiKey(null, "a-key", "a-user", null).kind);
+        }
+        assertEquals(1, outboundRequests.get());
+    }
+
+    @Test
+    public void credentialsUseItemPermissionAloneIsEnoughToPickACredential() throws Exception {
+        // Item/ExtendedRead is not the only way in: Credentials/UseItem also qualifies, and that user
+        // deliberately has no Item/Configure, which would have implied ExtendedRead.
+        try (ACLContext ignored = as("user-of-credentials")) {
+            assertFalse(freestyle.hasPermission(Item.EXTENDED_READ));
+            assertTrue(freestyle.hasPermission(CredentialsProvider.USE_ITEM));
+
+            ListBoxModel model = SauceCredentials.fillCredentialsIdItems(freestyle, null);
+            assertTrue(contains(model, globalId));
+            assertFalse("System-scoped credentials still never reach a job", contains(model, SYSTEM_ID));
+        }
+    }
+
+    @Test
+    public void credentialsCanBeListedForAnItemThatIsNotABuildableTask() throws Exception {
+        // A folder is an Item but not a Queue.Task, so there is no build authentication to borrow and the
+        // lookup falls back to SYSTEM in the folder's own context.
+        MockFolder folder = j.createFolder("a-folder");
+        try (ACLContext ignored = as("admin")) {
+            ListBoxModel model = SauceCredentials.fillCredentialsIdItems(folder, null);
+            assertTrue(contains(model, globalId));
+            assertFalse("System-scoped credentials must not reach a folder either",
+                    contains(model, SYSTEM_ID));
+        }
     }
 }
