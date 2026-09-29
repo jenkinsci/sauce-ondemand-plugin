@@ -1,6 +1,5 @@
 package com.saucelabs.jenkins.pipeline;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
@@ -41,6 +40,8 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 public class SauceConnectStep extends Step {
     private Boolean verboseLogging = false;
@@ -154,9 +155,14 @@ public class SauceConnectStep extends Step {
             return true;
         }
 
-        public ListBoxModel doFillCredentialsIdItems(final @AncestorInPath Item project) {
-            return new StandardUsernameListBoxModel()
-                .withAll(SauceCredentials.all(project));
+        /**
+         * Fills the credentials dropdown of the step. Only users allowed to see credentials in the job's
+         * context get the list; everybody else only gets the current value (SECURITY-3770).
+         */
+        @SuppressWarnings("unused") // used by stapler
+        @POST
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String credentialsId) {
+            return SauceCredentials.fillCredentialsIdItems(item, credentialsId);
         }
 
     }

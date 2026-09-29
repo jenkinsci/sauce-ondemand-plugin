@@ -24,7 +24,6 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager;
 import com.saucelabs.jenkins.HudsonSauceConnectManager;
@@ -46,7 +45,7 @@ import hudson.model.BuildListener;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
-import hudson.model.ItemGroup;
+import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.tasks.BuildWrapper;
@@ -74,6 +73,8 @@ import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.json.JSONException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * {@link BuildWrapper} that sets up the Sauce OnDemand SSH tunnel and populates environment
@@ -1368,11 +1369,17 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     /**
-     * @param context Project/parent
-     * @return the list of supported credentials
+     * Fills the credentials dropdown of the job configuration. Only users allowed to see credentials in
+     * the job's context get the list; everybody else only gets the current value (SECURITY-3770).
+     *
+     * @param item the job being configured
+     * @param credentialId the currently selected credentials id
+     * @return the list of Sauce credentials the caller may choose from
      */
-    public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
-      return new StandardUsernameListBoxModel().withAll(SauceCredentials.all(context));
+    @POST
+    public ListBoxModel doFillCredentialIdItems(
+        @AncestorInPath Item item, @QueryParameter String credentialId) {
+      return SauceCredentials.fillCredentialsIdItems(item, credentialId);
     }
   }
 

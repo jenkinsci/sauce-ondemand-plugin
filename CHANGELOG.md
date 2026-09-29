@@ -1,3 +1,18 @@
+# Jenkins 2.2.1 - unreleased
+
+Security release for [SECURITY-3770 / CVE-2026-70445](https://www.jenkins.io/security/advisory/2026-08-05/#SECURITY-3770)
+(missing permission checks allowed users with Overall/Read to enumerate Sauce credentials IDs).
+
+- The credentials dropdowns of the "Sauce Labs Support" build wrapper, of the `sauce` and `sauceconnect`
+  pipeline steps and of the global configuration now require Overall/Administer (global configuration) or
+  Item/Configure resp. Item/ExtendedRead (job configuration) to list Sauce credentials. Users without
+  these permissions only see the currently selected value.
+- Credentials for jobs are now looked up in the context of the job being configured, so System-scoped
+  credentials are no longer offered to jobs.
+- The access key validation of the "Sauce Labs" credentials type now requires POST and Overall/Administer
+  (Item/Configure for folder credentials stores). It no longer contacts Sauce Labs on behalf of unprivileged
+  users and reports an unknown data center instead of failing with an internal error.
+
 # Jenkins 2.0 - 2025-01-15
 
 This is a new major version of the Sauce Ondemand Plugin to support Sauce
