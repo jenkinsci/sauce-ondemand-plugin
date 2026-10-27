@@ -10,6 +10,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
@@ -22,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ProxyConfiguration;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
@@ -29,11 +31,14 @@ import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.plugins.sauce_ondemand.BuildUtils;
 import hudson.plugins.sauce_ondemand.JenkinsSauceREST;
 import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.io.IOException;
 import java.io.Serializable;
@@ -43,9 +48,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 public class SauceCredentials extends BaseStandardCredentials implements StandardUsernamePasswordCredentials {
     /**
@@ -201,13 +210,38 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             return "Sauce Labs";
         }
 
+        /**
+         * Validates a Sauce Labs username / access key pair against the Sauce Labs accounts API.
+         * <p>
+         * Only administrators (system credentials store) or users allowed to configure the ancestor item
+         * (folder store, or the inline "Add credentials" dialog of a job) may trigger the outbound request.
+         * Everybody else silently gets {@link FormValidation#ok()}, so the endpoint cannot be used as a
+         * credentials oracle. Restricted to POST so it cannot be triggered by following a link (SECURITY-3770).
+         *
+         * @param item the ancestor item, or {@code null} for the system / user credentials stores
+         * @param value the access key to validate
+         * @param username the Sauce Labs username
+         * @param dataCenter the Sauce Labs data center name, defaults to {@code US_WEST}
+         * @return the validation result
+         */
+        @POST
         @SuppressWarnings("unused") // used by stapler
-        public FormValidation doCheckApiKey(@QueryParameter String value, @QueryParameter String username, @QueryParameter String dataCenter) {
-            if (dataCenter == null) {
-                dataCenter = "US_WEST";
+        public FormValidation doCheckApiKey(@AncestorInPath Item item, @QueryParameter String value,
+                @QueryParameter String username, @QueryParameter String dataCenter) {
+            boolean allowed = item == null
+                    ? Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    : item.hasPermission(Item.CONFIGURE);
+            if (!allowed) {
+                return FormValidation.ok();
+            }
+            if (Util.fixEmptyAndTrim(username) == null || Util.fixEmptyAndTrim(value) == null) {
+                return FormValidation.ok();
             }
 
-            DataCenter dc = DataCenter.fromString(dataCenter);
+            DataCenter dc = DataCenter.fromString(dataCenter == null ? "US_WEST" : dataCenter);
+            if (dc == null) {
+                return FormValidation.error("Unknown data center");
+            }
 
             JenkinsSauceREST rest = new JenkinsSauceREST(username, value, dc, Jenkins.get().getProxy());
             AccountsEndpoint users = rest.getAccountsEndpoint();
@@ -229,6 +263,8 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
     }
 
     public final static DomainRequirement DOMAIN_REQUIREMENT = new HostnamePortRequirement("saucelabs.com", 80);
+
+    private static final List<DomainRequirement> DOMAIN_REQUIREMENTS = Collections.singletonList(DOMAIN_REQUIREMENT);
 
     public static String migrateToCredentials(String username, String accessKey, String restEndpoint, String migratedFrom) throws InterruptedException, IOException {
         final List<SauceCredentials> credentialsForDomain = SauceCredentials.all((Item) null);
@@ -275,6 +311,11 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
         return credentialId;
     }
 
+    /**
+     * @deprecated no longer used by the plugin; UI code must use {@link #fillCredentialsIdItems(Item, String)}
+     *             so that the caller's permissions are honoured.
+     */
+    @Deprecated
     public static List<SauceCredentials> all(ItemGroup context) {
         return CredentialsProvider.lookupCredentials(
             SauceCredentials.class,
@@ -291,6 +332,46 @@ public class SauceCredentials extends BaseStandardCredentials implements Standar
             ACL.SYSTEM,
             SauceCredentials.DOMAIN_REQUIREMENT
         );
+    }
+
+    /**
+     * Fills a credentials dropdown with the Sauce credentials the current user is allowed to see, following the
+     * credentials plugin consumer guide (SECURITY-3770):
+     * <ul>
+     * <li>outside of an item (global configuration) only administrators get the list, looked up against the
+     * Jenkins root;</li>
+     * <li>inside an item only users with {@code Item.EXTENDED_READ} (implied by {@code Item.CONFIGURE}) or
+     * {@code CredentialsProvider.USE_ITEM} get the list, looked up in the item's context with the
+     * authentication the item's builds run as, which excludes {@code SYSTEM}-scoped credentials;</li>
+     * <li>everybody else only gets the currently selected value, so the form still round-trips.</li>
+     * </ul>
+     * Build-time lookups must keep using {@link #getCredentialsById(Item, String)}.
+     *
+     * @param item the ancestor item, or {@code null} for the global configuration
+     * @param currentValue the currently selected credentials id, may be {@code null}
+     * @return the model for the dropdown
+     */
+    @Restricted(NoExternalUse.class)
+    public static ListBoxModel fillCredentialsIdItems(@CheckForNull Item item, @CheckForNull String currentValue) {
+        String current = Util.fixNull(currentValue);
+        StandardUsernameListBoxModel result = new StandardUsernameListBoxModel();
+        if (item == null) {
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                return result.includeCurrentValue(current);
+            }
+            return result
+                .includeMatchingAs(ACL.SYSTEM2, Jenkins.get(), SauceCredentials.class, DOMAIN_REQUIREMENTS,
+                    CredentialsMatchers.always())
+                .includeCurrentValue(current);
+        }
+        if (!item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+            return result.includeCurrentValue(current);
+        }
+        return result
+            .includeMatchingAs(
+                item instanceof Queue.Task ? Tasks.getAuthenticationOf2((Queue.Task) item) : ACL.SYSTEM2,
+                item, SauceCredentials.class, DOMAIN_REQUIREMENTS, CredentialsMatchers.always())
+            .includeCurrentValue(current);
     }
 
     public static SauceCredentials getCredentialsById(Item context, String id) {

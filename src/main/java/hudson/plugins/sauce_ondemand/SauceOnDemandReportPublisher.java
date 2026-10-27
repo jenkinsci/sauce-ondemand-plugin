@@ -63,6 +63,7 @@ import jenkins.model.Jenkins;
 import org.json.JSONException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Associates Sauce OnDemand session ID to unit tests.
@@ -494,6 +495,7 @@ public class SauceOnDemandReportPublisher extends TestDataPublisher {
       return "Embed Sauce Labs reports";
     }
 
+    @POST
     public ListBoxModel doFillJobVisibilityItems() {
       ListBoxModel items = new ListBoxModel();
       items.add("- default -", "");

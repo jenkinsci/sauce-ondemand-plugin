@@ -23,7 +23,6 @@
  */
 package hudson.plugins.sauce_ondemand;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.saucerest.DataCenter;
 import hudson.Extension;
@@ -41,7 +40,9 @@ import org.jenkins.ui.icon.Icon;
 import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconType;
 import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Persists the access credentials and common options for the Sauce plugin.
@@ -247,11 +248,17 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
     }
 
     /**
-     * @param context Ancestor/what project
-     * @return the list of supported credentials
+     * Fills the credentials dropdown. Only users allowed to see credentials in the given context get the
+     * list; everybody else only gets the current value (SECURITY-3770).
+     *
+     * @param item the ancestor item, or {@code null} on the global configuration page
+     * @param credentialId the currently selected credentials id
+     * @return the list of Sauce credentials the caller may choose from
      */
-    public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
-      return new StandardUsernameListBoxModel().withAll(SauceCredentials.all(context));
+    @POST
+    public ListBoxModel doFillCredentialIdItems(
+        @AncestorInPath Item item, @QueryParameter String credentialId) {
+      return SauceCredentials.fillCredentialsIdItems(item, credentialId);
     }
   }
 }
