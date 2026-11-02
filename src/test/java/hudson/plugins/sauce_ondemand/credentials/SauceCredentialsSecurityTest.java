@@ -3,9 +3,9 @@ package hudson.plugins.sauce_ondemand.credentials;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -32,13 +32,13 @@ import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.util.NameValuePair;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Regression tests for SECURITY-3770 / CVE-2026-70445.
@@ -47,6 +47,7 @@ import org.jvnet.hudson.test.MockFolder;
  * to users with only Overall/Read, System-scoped credentials must not be offered to jobs, and the access key
  * check must neither be reachable via GET nor usable as a credentials oracle by unprivileged users.
  */
+@WithJenkins
 public class SauceCredentialsSecurityTest {
 
     private static final String GLOBAL_USER = "fakeuser";
@@ -58,8 +59,7 @@ public class SauceCredentialsSecurityTest {
     private static final String CHECK_API_KEY_URL =
         "descriptorByName/hudson.plugins.sauce_ondemand.credentials.SauceCredentials/checkApiKey";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
     private String globalId;
     private FreeStyleProject freestyle;
@@ -79,8 +79,9 @@ public class SauceCredentialsSecurityTest {
         return ACL.as2(User.getById(user, true).impersonate2());
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
         freestyle = j.createFreeStyleProject("freestyle");
         pipeline = j.createProject(WorkflowJob.class, "pipeline");
 
@@ -124,7 +125,7 @@ public class SauceCredentialsSecurityTest {
             "http://127.0.0.1:" + fakeSauce.getAddress().getPort() + "/");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         System.clearProperty("saucerest-java.base_api_url");
         if (fakeSauce != null) {
@@ -279,14 +280,14 @@ public class SauceCredentialsSecurityTest {
         try (ACLContext ignored = as("reader")) {
             assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(freestyle, "a-key", "a-user", null).kind);
         }
-        assertEquals("a user who cannot configure the job gets no verdict and no outbound call",
-                0, outboundRequests.get());
+        assertEquals(0,
+                outboundRequests.get(), "a user who cannot configure the job gets no verdict and no outbound call");
 
         try (ACLContext ignored = as("configurer")) {
             FormValidation v = d.doCheckApiKey(freestyle, "a-key", "a-user", null);
             assertEquals(FormValidation.Kind.ERROR, v.kind);
         }
-        assertEquals("a user who can configure the job does get a verdict", 1, outboundRequests.get());
+        assertEquals(1, outboundRequests.get(), "a user who can configure the job does get a verdict");
     }
 
     @Test
@@ -297,7 +298,7 @@ public class SauceCredentialsSecurityTest {
             assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(null, "", "a-user", null).kind);
             assertEquals(FormValidation.Kind.OK, d.doCheckApiKey(null, null, null, null).kind);
         }
-        assertEquals("blank input must not reach Sauce Labs", 0, outboundRequests.get());
+        assertEquals(0, outboundRequests.get(), "blank input must not reach Sauce Labs");
     }
 
     @Test
@@ -307,7 +308,7 @@ public class SauceCredentialsSecurityTest {
             assertEquals(FormValidation.Kind.ERROR, v.kind);
             assertThat(v.getMessage(), containsString("Unknown data center"));
         }
-        assertEquals("an unknown data center must not reach Sauce Labs", 0, outboundRequests.get());
+        assertEquals(0, outboundRequests.get(), "an unknown data center must not reach Sauce Labs");
     }
 
     @Test
@@ -352,7 +353,7 @@ public class SauceCredentialsSecurityTest {
 
             ListBoxModel model = SauceCredentials.fillCredentialsIdItems(freestyle, null);
             assertTrue(contains(model, globalId));
-            assertFalse("System-scoped credentials still never reach a job", contains(model, SYSTEM_ID));
+            assertFalse(contains(model, SYSTEM_ID), "System-scoped credentials still never reach a job");
         }
     }
 
@@ -364,8 +365,8 @@ public class SauceCredentialsSecurityTest {
         try (ACLContext ignored = as("admin")) {
             ListBoxModel model = SauceCredentials.fillCredentialsIdItems(folder, null);
             assertTrue(contains(model, globalId));
-            assertFalse("System-scoped credentials must not reach a folder either",
-                    contains(model, SYSTEM_ID));
+            assertFalse(contains(model, SYSTEM_ID),
+                    "System-scoped credentials must not reach a folder either");
         }
     }
 }

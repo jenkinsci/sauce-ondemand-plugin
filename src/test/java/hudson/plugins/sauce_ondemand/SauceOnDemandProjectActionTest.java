@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,21 +15,28 @@ import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.plugins.sauce_ondemand.mocks.MockSauceREST;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.Page;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.PresetData;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+@WithJenkins
 public class SauceOnDemandProjectActionTest {
 
-  @ClassRule public static JenkinsRule jenkins = new JenkinsRule();
+  private static JenkinsRule jenkins;
+
+  @BeforeAll
+  static void setUpJenkins(JenkinsRule rule) {
+    jenkins = rule;
+  }
   final JenkinsSauceREST mockSauceREST = mock(MockSauceREST.class);
   final BuildsEndpoint mockBuildsEndpoint = mock(BuildsEndpoint.class);
   private String credentialsId;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     credentialsId = SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
     PluginImpl plugin = PluginImpl.get();
@@ -77,7 +85,7 @@ public class SauceOnDemandProjectActionTest {
     jenkins.assertGoodStatus(generateSupportZip);
   }
 
-  @Test(expected = org.htmlunit.FailingHttpStatusCodeException.class)
+  @Test
   public void testDoGenerateSupportZip_NoBuildLog() throws Exception {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);
     sauceBuildWrapper.setEnableSauceConnect(false);
@@ -86,9 +94,12 @@ public class SauceOnDemandProjectActionTest {
     SauceOnDemandProjectAction pa = new SauceOnDemandProjectAction(project);
     project.getBuildWrappersList().add(sauceBuildWrapper);
 
-    jenkins
-        .createWebClient()
-        .goTo(project.getUrl() + pa.getUrlName() + "/generateSupportZip", "application/zip");
+    assertThrows(
+        FailingHttpStatusCodeException.class,
+        () ->
+            jenkins
+                .createWebClient()
+                .goTo(project.getUrl() + pa.getUrlName() + "/generateSupportZip", "application/zip"));
   }
 
   @Test
@@ -113,7 +124,6 @@ public class SauceOnDemandProjectActionTest {
     jenkins.assertGoodStatus(generateSupportZip);
   }
 
-  @PresetData(PresetData.DataSet.ANONYMOUS_READONLY)
   @Test
   public void testDoGenerateSupportZip_authorized() throws Exception {
     SauceOnDemandBuildWrapper sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(credentialsId);

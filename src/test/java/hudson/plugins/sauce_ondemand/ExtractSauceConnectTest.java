@@ -2,8 +2,8 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import java.io.File;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.helpers.NOPLogger;
 
 /**
@@ -13,7 +13,7 @@ public class ExtractSauceConnectTest {
 
     private SauceConnectManager manager = new SauceConnectManager();
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
     }
