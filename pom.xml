@@ -12,7 +12,7 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.492</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <ci-sauce.version>2.8</ci-sauce.version>
     <saucerest.version>3.2.0</saucerest.version>
@@ -91,7 +91,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>5473.vb_9533d9e5d88</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
