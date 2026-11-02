@@ -2,8 +2,8 @@ package hudson.plugins.sauce_ondemand;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -51,29 +51,36 @@ import java.util.concurrent.TimeUnit;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
 import org.jvnet.hudson.test.ToolInstallations;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Ross Rowe
  */
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
+@WithJenkins
 public class SauceBuildWrapperTest {
 
   public static final String DEFAULT_TEST_XML = "/hudson/plugins/sauce_ondemand/test-result.xml";
 
   /** JUnit rule which instantiates a local Jenkins instance with our plugin installed. */
-  @ClassRule public static JenkinsRule jenkinsRule = new JenkinsRule();
+  private static JenkinsRule jenkinsRule;
+
+  @BeforeAll
+  static void setUpJenkins(JenkinsRule rule) {
+    jenkinsRule = rule;
+  }
 
   private String credentialsId;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     SystemCredentialsProvider.getInstance().save();
     ToolInstallations.configureDefaultMaven("apache-maven-3.0.1", Maven.MavenInstallation.MAVEN_30);
@@ -142,7 +149,7 @@ public class SauceBuildWrapperTest {
     jenkinsRule.getInstance().getGlobalNodeProperties().add(prop);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     storeDummyManager(null);
   }
@@ -172,9 +179,9 @@ public class SauceBuildWrapperTest {
               String sauceConnectPath,
               boolean legacyCLI) {
             assertEquals(
-                "Variable not resolved",
                 "-i 1 --region us-west",
-                options); // null reverts to default US_WEST
+                options,
+                "Variable not resolved"); // null reverts to default US_WEST
             return null;
           }
         };
@@ -204,9 +211,9 @@ public class SauceBuildWrapperTest {
               String sauceConnectPath,
               boolean legacyCLI) {
             assertEquals(
-                "Variables are resolved correctly",
                 "-i 1 --region us-west",
-                options); // null reverts to default US
+                options,
+                "Variables are resolved correctly"); // null reverts to default US
             return null;
           }
         };
@@ -354,10 +361,10 @@ public class SauceBuildWrapperTest {
 
     assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
     assertEquals(
-        "Port provided to SC is the same as generated",
         holder.getInt("scProvidedPort"),
-        holder.getInt("port"));
-    assertEquals("Successful Build", Result.SUCCESS, build.getResult());
+        holder.getInt("port"),
+        "Port provided to SC is the same as generated");
+    assertEquals(Result.SUCCESS, build.getResult(), "Successful Build");
   }
 
   /**
@@ -411,10 +418,10 @@ public class SauceBuildWrapperTest {
             sauceBuildWrapper, sauceBuilder, "providingPortWithEnvVariableStartsUpOnThatPort");
     jenkinsRule.assertBuildStatusSuccess(build);
     assertEquals(
-        "Port Provided as ENV equals port started up on", port, holder.getString("scProvidedPort"));
+        port, holder.getString("scProvidedPort"), "Port Provided as ENV equals port started up on");
     Map<String, String> envVars = (Map<String, String>) holder.get("env");
     assertNotNull(envVars);
-    assertEquals("Port Provided as ENV equals SELENIUM_PORT", port, envVars.get("SELENIUM_PORT"));
+    assertEquals(port, envVars.get("SELENIUM_PORT"), "Port Provided as ENV equals SELENIUM_PORT");
   }
 
   /**
@@ -474,13 +481,13 @@ public class SauceBuildWrapperTest {
       Map<String, String> envVars = build.getEnvironment(listener);
 
       assertEquals(
-          "Environment variable SAUCE_USER_NAME not found",
           credentials.getUsername(),
-          envVars.get("SAUCE_USER_NAME"));
+          envVars.get("SAUCE_USER_NAME"),
+          "Environment variable SAUCE_USER_NAME not found");
       assertEquals(
-          "Environment variable SAUCE_USER_NAME not found",
           credentials.getApiKey().getPlainText(),
-          envVars.get("SAUCE_API_KEY"));
+          envVars.get("SAUCE_API_KEY"),
+          "Environment variable SAUCE_USER_NAME not found");
 
       File destination = new File(build.getWorkspace().getRemote(), "test.xml");
       FileUtils.copyURLToFile(getClass().getResource(DEFAULT_TEST_XML), destination);
@@ -496,8 +503,8 @@ public class SauceBuildWrapperTest {
       Map<String, String> envVars = build.getEnvironment(listener);
       // TODO: this test will fail occasionally
       assertNotNull(
-          "Environment variable SAUCE_ONDEMAND_BROWSERS not found",
-          envVars.get("SAUCE_ONDEMAND_BROWSERS"));
+          envVars.get("SAUCE_ONDEMAND_BROWSERS"),
+          "Environment variable SAUCE_ONDEMAND_BROWSERS not found");
       return super.perform(build, launcher, listener);
     }
   }

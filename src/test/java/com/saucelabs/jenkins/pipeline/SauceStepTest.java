@@ -17,17 +17,24 @@ import java.lang.reflect.Field;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
+@WithJenkins
 public class SauceStepTest {
-  @ClassRule public static JenkinsRule r = new JenkinsRule();
+  private static JenkinsRule r;
 
-  @Before
+  @BeforeAll
+  static void setUpJenkins(JenkinsRule rule) {
+    r = rule;
+  }
+
+  @BeforeEach
   public void setUp() throws Exception {
     PluginImpl p = PluginImpl.get();
     if (p != null) {
@@ -87,7 +94,7 @@ public class SauceStepTest {
         accessKey = line.replaceFirst("ACCESS_KEY=", "");
       }
     }
-    Assert.assertNotNull(accessKey);
+    Assertions.assertNotNull(accessKey);
     JWT.require(Algorithm.HMAC256("fakeJWTkey")).build().verify(accessKey);
   }
 

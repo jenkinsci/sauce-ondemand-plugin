@@ -4,9 +4,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.jenkins.HudsonSauceManagerFactory;
@@ -32,26 +32,31 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.sf.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest2;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
-@RunWith(Parameterized.class)
+@WithJenkins
 public class ParameterizedSauceBuildWrapperTest {
   /** JUnit rule which instantiates a local Jenkins instance with our plugin installed. */
-  @ClassRule public static JenkinsRule jenkinsRule = new JenkinsRule();
+  private static JenkinsRule jenkinsRule;
+
+  @BeforeAll
+  static void setUpJenkins(JenkinsRule rule) {
+    jenkinsRule = rule;
+  }
 
   /** Build Wrapper with all the parameters set right */
-  private final SauceOnDemandBuildWrapper sauceBuildWrapper;
+  private SauceOnDemandBuildWrapper sauceBuildWrapper;
 
-  public ParameterizedSauceBuildWrapperTest(
+  public void initParameterizedSauceBuildWrapperTest(
       boolean enableSauceConnect,
       boolean launchSauceConnectOnSlave,
       boolean useGeneratedTunnelIdentifier,
@@ -60,7 +65,6 @@ public class ParameterizedSauceBuildWrapperTest {
       boolean forceCleanup,
       String seleniumPort,
       String seleniumHost) {
-    super();
     sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(null);
     sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
     sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
@@ -72,7 +76,6 @@ public class ParameterizedSauceBuildWrapperTest {
     sauceBuildWrapper.setSeleniumHost(seleniumHost);
   }
 
-  @Parameterized.Parameters
   public static Collection sauceOnDemandBuildWrapperValues() {
     ArrayList<Object[]> list = new ArrayList<>();
     for (boolean enableSauceConnect : new boolean[] {true, false}) {
@@ -109,7 +112,7 @@ public class ParameterizedSauceBuildWrapperTest {
     return list;
   }
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     String credentialsId =
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
@@ -157,7 +160,7 @@ public class ParameterizedSauceBuildWrapperTest {
     p2.configure((StaplerRequest2) null, pluginConfig);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     storeDummyManager(null);
   }
@@ -172,8 +175,27 @@ public class ParameterizedSauceBuildWrapperTest {
   /**
    * @throws Exception thrown if an unexpected error occurs
    */
-  @Test
-  public void portIsProperlyProvidedToSauceConnect() throws Exception {
+  @MethodSource("sauceOnDemandBuildWrapperValues")
+  @ParameterizedTest
+  public void portIsProperlyProvidedToSauceConnect(
+      boolean enableSauceConnect,
+      boolean launchSauceConnectOnSlave,
+      boolean useGeneratedTunnelIdentifier,
+      boolean verboseLogging,
+      boolean useLatestVersion,
+      boolean forceCleanup,
+      String seleniumPort,
+      String seleniumHost)
+      throws Exception {
+    initParameterizedSauceBuildWrapperTest(
+        enableSauceConnect,
+        launchSauceConnectOnSlave,
+        useGeneratedTunnelIdentifier,
+        verboseLogging,
+        useLatestVersion,
+        forceCleanup,
+        seleniumPort,
+        seleniumHost);
     if (!sauceBuildWrapper.isEnableSauceConnect()) {
       return;
     } /* Don't test sauce connect functionality if its not enabled */
@@ -216,14 +238,33 @@ public class ParameterizedSauceBuildWrapperTest {
     FreeStyleBuild build = runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
     assertThat("greater than 0", holder.getInt("port"), greaterThan(0));
     assertEquals(
-        "Port provided to SC is the same as generated",
         holder.getInt("scProvidedPort"),
-        holder.getInt("port"));
+        holder.getInt("port"),
+        "Port provided to SC is the same as generated");
     jenkinsRule.assertBuildStatusSuccess(build);
   }
 
-  @Test
-  public void confirmEnvVariablesAreAlwaysSet() throws Exception {
+  @MethodSource("sauceOnDemandBuildWrapperValues")
+  @ParameterizedTest
+  public void confirmEnvVariablesAreAlwaysSet(
+      boolean enableSauceConnect,
+      boolean launchSauceConnectOnSlave,
+      boolean useGeneratedTunnelIdentifier,
+      boolean verboseLogging,
+      boolean useLatestVersion,
+      boolean forceCleanup,
+      String seleniumPort,
+      String seleniumHost)
+      throws Exception {
+    initParameterizedSauceBuildWrapperTest(
+        enableSauceConnect,
+        launchSauceConnectOnSlave,
+        useGeneratedTunnelIdentifier,
+        verboseLogging,
+        useLatestVersion,
+        forceCleanup,
+        seleniumPort,
+        seleniumHost);
     final JSONObject holder = new JSONObject();
     SauceBuilder sauceBuilder =
         new SauceBuilder() {
@@ -243,17 +284,17 @@ public class ParameterizedSauceBuildWrapperTest {
     Map<String, String> envVars = (Map<String, String>) holder.get("env");
     assertNotNull(envVars);
     assertEquals(
-        "legacy SAUCE_USER_NAME is set to API username",
         "fakeuser",
-        envVars.get("SAUCE_USER_NAME"));
+        envVars.get("SAUCE_USER_NAME"),
+        "legacy SAUCE_USER_NAME is set to API username");
     assertEquals(
-        "proper SAUCE_USERNAME is set to API username", "fakeuser", envVars.get("SAUCE_USERNAME"));
+        "fakeuser", envVars.get("SAUCE_USERNAME"), "proper SAUCE_USERNAME is set to API username");
     assertEquals(
-        "legacy SAUCE_API_KEY is set to API username", "fakekey", envVars.get("SAUCE_API_KEY"));
+        "fakekey", envVars.get("SAUCE_API_KEY"), "legacy SAUCE_API_KEY is set to API username");
     assertEquals(
-        "proper SAUCE_ACCESS_KEY is set to API username",
         "fakekey",
-        envVars.get("SAUCE_ACCESS_KEY"));
+        envVars.get("SAUCE_ACCESS_KEY"),
+        "proper SAUCE_ACCESS_KEY is set to API username");
     assertThat(
         "SELENIUM_HOST equals something", envVars.get("SELENIUM_HOST"), not(emptyOrNullString()));
     assertThat(
@@ -265,8 +306,8 @@ public class ParameterizedSauceBuildWrapperTest {
 
     if (!"".equals(sauceBuildWrapper.getNativeAppPackage())) {
       assertNull(
-          "SAUCE_NATIVE_APP is not set when native package is not set",
-          envVars.get("SAUCE_NATIVE_APP"));
+          envVars.get("SAUCE_NATIVE_APP"),
+          "SAUCE_NATIVE_APP is not set when native package is not set");
     } else {
       assertThat(
           "SAUCE_NATIVE_APP is set when native package is set",
@@ -282,12 +323,12 @@ public class ParameterizedSauceBuildWrapperTest {
 
     } else {
       assertNull(
-          "TUNNEL_NAME is not set when we are not managing it", envVars.get("SAUCE_NATIVE_APP"));
+          envVars.get("SAUCE_NATIVE_APP"), "TUNNEL_NAME is not set when we are not managing it");
     }
     if (sauceBuildWrapper.isUseChromeForAndroid()) {
       assertNull(
-          "SAUCE_USE_CHROME is not set when use chrome is not set",
-          envVars.get("SAUCE_USE_CHROME"));
+          envVars.get("SAUCE_USE_CHROME"),
+          "SAUCE_USE_CHROME is not set when use chrome is not set");
     } else {
       assertThat(
           "SAUCE_USE_CHROME is set when use chrome is set",
