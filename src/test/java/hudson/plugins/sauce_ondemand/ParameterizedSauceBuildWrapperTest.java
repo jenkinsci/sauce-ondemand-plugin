@@ -56,6 +56,9 @@ public class ParameterizedSauceBuildWrapperTest {
   /** Build Wrapper with all the parameters set right */
   private SauceOnDemandBuildWrapper sauceBuildWrapper;
 
+  /** Credentials created in {@link #setUp()}, used by the build wrapper */
+  private String credentialsId;
+
   public void initParameterizedSauceBuildWrapperTest(
       boolean enableSauceConnect,
       boolean launchSauceConnectOnSlave,
@@ -66,6 +69,7 @@ public class ParameterizedSauceBuildWrapperTest {
       String seleniumPort,
       String seleniumHost) {
     sauceBuildWrapper = new TestSauceOnDemandBuildWrapper(null);
+    sauceBuildWrapper.setCredentialId(credentialsId);
     sauceBuildWrapper.setEnableSauceConnect(enableSauceConnect);
     sauceBuildWrapper.setLaunchSauceConnectOnSlave(launchSauceConnectOnSlave);
     sauceBuildWrapper.setUseGeneratedTunnelIdentifier(useGeneratedTunnelIdentifier);
@@ -114,7 +118,7 @@ public class ParameterizedSauceBuildWrapperTest {
 
   @BeforeEach
   public void setUp() throws Exception {
-    String credentialsId =
+    credentialsId =
         SauceCredentials.migrateToCredentials("fakeuser", "fakekey", null, "unittest");
 
     SauceConnectManager sauceConnectManager =
@@ -149,8 +153,6 @@ public class ParameterizedSauceBuildWrapperTest {
     pluginConfig.put("disableUsageStats", true);
     pluginConfig.put("sauceConnectMaxRetries", "");
     pluginConfig.put("sauceConnectRetryWaitTime", "");
-
-    sauceBuildWrapper.setCredentialId(credentialsId);
 
     PluginManager manager = jenkinsRule.getPluginManager();
     PluginWrapper plugin = manager.getPlugin("sauce-ondemand");
