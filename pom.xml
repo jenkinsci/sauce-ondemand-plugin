@@ -15,7 +15,7 @@
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <ci-sauce.version>2.6</ci-sauce.version>
-    <saucerest.version>2.5.3</saucerest.version>
+    <saucerest.version>3.2.0</saucerest.version>
   </properties>
 
 
