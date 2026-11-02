@@ -25,6 +25,7 @@ package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.saucerest.DataCenter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.*;
@@ -33,7 +34,7 @@ import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.io.IOException;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkins.ui.icon.Icon;
@@ -41,7 +42,7 @@ import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconType;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.verb.POST;
 
 /**
@@ -89,7 +90,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
   private String credentialId;
 
   public static PluginImpl get() {
-    Jenkins j = Jenkins.getInstance();
+    Jenkins j = Jenkins.getInstanceOrNull();
     if (j == null) {
       return null;
     }
@@ -149,7 +150,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
   }
 
   @Override
-  public void configure(StaplerRequest req, JSONObject formData)
+  public void configure(StaplerRequest2 req, JSONObject formData)
       throws IOException, ServletException, Descriptor.FormException {
     sauceConnectDirectory = formData.getString("sauceConnectDirectory");
     sauceConnectOptions = formData.getString("sauceConnectOptions");
@@ -162,7 +163,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
   }
 
   public DescriptorImpl getDescriptor() {
-    Jenkins j = Jenkins.getInstance();
+    Jenkins j = Jenkins.getInstanceOrNull();
     if (j == null) {
       return null;
     }
@@ -242,6 +243,7 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
   @Extension
   public static final class DescriptorImpl extends Descriptor<PluginImpl> {
+    @NonNull
     @Override
     public String getDisplayName() {
       return "Sauce OnDemand";

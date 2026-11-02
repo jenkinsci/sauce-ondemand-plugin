@@ -231,7 +231,7 @@ public class SauceOnDemandBuildActionTest {
     LinkedHashMap<String, JenkinsJobInformation> jobInformation =
         SauceOnDemandBuildAction.retrieveJobIdsFromSauce(mockSauceREST, build, credentials);
 
-    assertEquals(jobInformation.keySet().size(), 0);
+    assertEquals(0, jobInformation.size());
   }
 
   private List<String> makeJobIds(int jobCount) {
