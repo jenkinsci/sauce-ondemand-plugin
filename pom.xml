@@ -14,7 +14,7 @@
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <ci-sauce.version>2.6</ci-sauce.version>
+    <ci-sauce.version>2.8</ci-sauce.version>
     <saucerest.version>3.2.0</saucerest.version>
   </properties>
 
