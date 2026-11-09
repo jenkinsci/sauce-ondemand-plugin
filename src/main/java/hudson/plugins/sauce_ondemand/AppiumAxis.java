@@ -1,6 +1,7 @@
 package hudson.plugins.sauce_ondemand;
 
 import com.saucelabs.ci.Browser;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.matrix.AxisDescriptor;
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class AppiumAxis extends BrowserAxis {
          *
          * @return label to be displayed in supported multi-configuration axis list
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Sauce Labs Appium tests";

@@ -63,11 +63,8 @@ public class SauceOnDemandReport extends TestAction {
     }
 
     public List<String[]> getIDs() {
-        List<String[]> ids = new ArrayList<String[]>();
-        for (String[] sessionId : sessionIds) {
-            ids.add(sessionId);
-        }
-        logger.fine("Retrieving Sauce job ids, found " + ids.toString());
+        List<String[]> ids = new ArrayList<>(sessionIds);
+        logger.fine("Retrieving Sauce job ids, found " + ids);
         return Collections.unmodifiableList(ids);
     }
 

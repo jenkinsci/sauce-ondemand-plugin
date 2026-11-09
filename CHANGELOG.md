@@ -1,4 +1,12 @@
-# Jenkins 2.2.1 - unreleased
+# Jenkins 2.3.0 - unreleased
+
+- Fix `NoClassDefFoundError: org/apache/commons/lang/StringUtils` on Jenkins versions that removed Commons Lang 2 from core.
+  The plugin now uses Commons Lang 3.
+- The plugin now requires Jenkins 2.492.3 or newer and Java 17.
+- Update ci-sauce to 2.8, saucerest to 3.2.0 and other dependencies.
+- Migrate tests to JUnit Jupiter.
+
+# Jenkins 2.2.1 - 2026-09-30
 
 Security release for [SECURITY-3770 / CVE-2026-70445](https://www.jenkins.io/security/advisory/2026-08-05/#SECURITY-3770)
 (missing permission checks allowed users with Overall/Read to enumerate Sauce credentials IDs).

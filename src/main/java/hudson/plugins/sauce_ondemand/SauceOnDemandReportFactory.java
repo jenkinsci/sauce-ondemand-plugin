@@ -68,9 +68,8 @@ public class SauceOnDemandReportFactory extends Data {
     @Override
     public List<SauceOnDemandReport> getTestAction(TestObject testObject) {
 
-        if (testObject instanceof CaseResult) {
-            CaseResult cr = (CaseResult) testObject;
-            List<String[]> ids = new ArrayList<String[]>();
+        if (testObject instanceof CaseResult cr) {
+            List<String[]> ids = new ArrayList<>();
 
             logger.log(Level.FINE, "Attempting to find Sauce SessionID for test object: " + cr.getFullName());
             logger.log(Level.FINER, "Test object display name: " + cr.getDisplayName());
@@ -127,8 +126,8 @@ public class SauceOnDemandReportFactory extends Data {
 
         logger.log(Level.FINE, cr == null ? "Parsing Sauce Session ids in stdout" : "Parsing Sauce Session ids in test results"); //cr shouldn't be null?
 
-        List<String[]> sessions = new ArrayList<String[]>();
-        List<String[]> matchedSessions = new ArrayList<String[]>();
+        List<String[]> sessions = new ArrayList<>();
+        List<String[]> matchedSessions = new ArrayList<>();
 
         for (String text : output) {
             if (text == null) continue;

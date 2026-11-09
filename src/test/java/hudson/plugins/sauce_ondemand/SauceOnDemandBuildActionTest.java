@@ -3,8 +3,8 @@ package hudson.plugins.sauce_ondemand;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -49,14 +49,21 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
+@WithJenkins
 public class SauceOnDemandBuildActionTest {
-  @ClassRule public static JenkinsRule jenkins = new JenkinsRule();
+  private static JenkinsRule jenkins;
+
+  @BeforeAll
+  static void setUpJenkins(JenkinsRule rule) {
+    jenkins = rule;
+  }
 
   @Test
   public void doJobReportTest() throws Exception {
@@ -231,7 +238,7 @@ public class SauceOnDemandBuildActionTest {
     LinkedHashMap<String, JenkinsJobInformation> jobInformation =
         SauceOnDemandBuildAction.retrieveJobIdsFromSauce(mockSauceREST, build, credentials);
 
-    assertEquals(jobInformation.keySet().size(), 0);
+    assertEquals(0, jobInformation.size());
   }
 
   private List<String> makeJobIds(int jobCount) {

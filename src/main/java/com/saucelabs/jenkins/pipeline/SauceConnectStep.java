@@ -21,6 +21,7 @@ import hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper;
 import hudson.plugins.sauce_ondemand.credentials.SauceCredentials;
 import hudson.util.ListBoxModel;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +30,7 @@ import java.util.Set;
 
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.BodyExecution;
 import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
 import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
@@ -136,7 +137,9 @@ public class SauceConnectStep extends Step {
     @Extension
     public static final class DescriptorImpl extends StepDescriptor {
 
-        @Override public String getDisplayName() {
+        @NonNull
+        @Override
+        public String getDisplayName() {
             return "Sauce Connect";
         }
 
@@ -247,6 +250,7 @@ public class SauceConnectStep extends Step {
         private final String sauceConnectPath;
         private final boolean useLatestSauceConnect;
 
+        @Serial
         private static final long serialVersionUID = 1L;
         private final ProxyConfiguration proxy;
 
@@ -299,7 +303,7 @@ public class SauceConnectStep extends Step {
                 new SauceOnDemandBuildWrapper.GetAvailablePort()
             );
 
-            ArrayList<String> optionsArray = new ArrayList<String>();
+            ArrayList<String> optionsArray = new ArrayList<>();
             optionsArray.add(globalOptions);
             if (legacyCLI) {
                 optionsArray.add(options);
@@ -310,7 +314,7 @@ public class SauceConnectStep extends Step {
 
             String combinedOptions = StringUtils.join(optionsArray, " ");
 
-            HashMap<String,String> overrides = new HashMap<String,String>();
+            HashMap<String,String> overrides = new HashMap<>();
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_PORT, String.valueOf(port));
             overrides.put(SauceOnDemandBuildWrapper.SELENIUM_HOST, "localhost");
 
